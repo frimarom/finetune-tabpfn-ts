@@ -4,6 +4,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from task_1.load_datasets import short_datasets, med_long_datasets
+
 # Add parent directory to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -266,7 +268,7 @@ def main(args):
             ds_prediction_length=sub_dataset.prediction_length,
             ds_freq=sub_dataset.freq,
             # tabpfn_mode=TabPFNMode.LOCAL,
-            tabpfn_mode=TabPFNMode.CLIENT,
+            tabpfn_mode=TabPFNMode.LOCAL,
             context_length=4096,
             debug=args.debug,
         )
@@ -301,20 +303,21 @@ def main(args):
 
 if __name__ == "__main__":
     # short_datasets = "m4_yearly m4_quarterly m4_monthly m4_weekly m4_daily m4_hourly electricity/15T electricity/H electricity/D electricity/W solar/10T solar/H solar/D solar/W hospital covid_deaths us_births/D us_births/M us_births/W saugeenday/D saugeenday/M saugeenday/W temperature_rain_with_missing kdd_cup_2018_with_missing/H kdd_cup_2018_with_missing/D car_parts_with_missing restaurant hierarchical_sales/D hierarchical_sales/W LOOP_SEATTLE/5T LOOP_SEATTLE/H LOOP_SEATTLE/D SZ_TAXI/15T SZ_TAXI/H M_DENSE/H M_DENSE/D ett1/15T ett1/H ett1/D ett1/W ett2/15T ett2/H ett2/D ett2/W jena_weather/10T jena_weather/H jena_weather/D bitbrains_fast_storage/5T bitbrains_fast_storage/H bitbrains_rnd/5T bitbrains_rnd/H bizitobs_application bizitobs_service bizitobs_l2c/5T bizitobs_l2c/H"
-    short_datasets = "m4_weekly"
+    #short_datasets = "m4_weekly "
+    short_datasets = "m4_yearly m4_quarterly solar/W hospital covid_deaths"
 
     # med_long_datasets = "electricity/15T electricity/H solar/10T solar/H kdd_cup_2018_with_missing/H LOOP_SEATTLE/5T LOOP_SEATTLE/H SZ_TAXI/15T M_DENSE/H ett1/15T ett1/H ett2/15T ett2/H jena_weather/10T jena_weather/H bitbrains_fast_storage/5T bitbrains_rnd/5T bizitobs_application bizitobs_service bizitobs_l2c/5T bizitobs_l2c/H"
-    med_long_datasets = "bizitobs_l2c/H"
+    #med_long_datasets = "bizitobs_l2c/H"
+    med_long_datasets = "bizitobs_l2c/H SZ_TAXI/15T M_DENSE/H ett1/15T"
+
+    datasets_to_evaluate = short_datasets.split() + med_long_datasets.split()
 
     storage_env_var = "GIFT_EVAL"
 
     load_dotenv()
 
-
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", type=str, default="tabpfn-ts-paper")
-    parser.add_argument("--dataset", type=str, default=short_datasets.split()[0])
+    parser.add_argument("--model_name", type=str, default="tabpfn-ts-local")
     parser.add_argument(
         "--output_dir", type=str, default=str(Path(__file__).parent / "results")
     )
@@ -335,17 +338,21 @@ if __name__ == "__main__":
         "--wandb_tags", type=str, default=""
     )  # model_name will be added later anyway
 
-    args = parser.parse_args()
-    args.dataset_storage_path = Path(args.dataset_storage_path)
-    args.output_dir = Path(args.output_dir)
-    args.terms = args.terms.split(",")
 
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        logger.debug("Debug mode enabled")
-    else:
-        logging.basicConfig(level=logging.INFO)
+    for dataset in datasets_to_evaluate:
+        parser.add_argument("--dataset", type=str, default=dataset)
 
-    logger.info(f"Command Line Arguments: {vars(args)}")
+        args = parser.parse_args()
+        args.dataset_storage_path = Path(args.dataset_storage_path)
+        args.output_dir = Path(args.output_dir)
+        args.terms = args.terms.split(",")
 
-    main(args)
+        if args.debug:
+            logging.basicConfig(level=logging.DEBUG)
+            logger.debug("Debug mode enabled")
+        else:
+            logging.basicConfig(level=logging.INFO)
+
+        logger.info(f"Command Line Arguments: {vars(args)}")
+
+        main(args)

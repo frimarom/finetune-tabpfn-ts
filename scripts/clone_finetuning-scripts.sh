@@ -7,14 +7,17 @@ COMMIT="144cf00"
 
 mkdir -p external
 
-if [ ! -d "$REPO_DIR/.git" ]; then
+if [ ! -d "$REPO_DIR" ]; then
   git clone "$REPO_URL" "$REPO_DIR"
 fi
 
 cd "$REPO_DIR"
 
-git fetch origin
-git checkout "$COMMIT"
+if [ -d ".git" ]; then
+  git fetch origin
+  git checkout "$COMMIT"
+  rm -rf .git
+fi
 
 PYPROJECT="pyproject.toml"
 
@@ -59,11 +62,11 @@ EOF
   fi
 fi
 
-
 if [ ! -f "finetuning_scripts/__init__.py" ]; then
   touch finetuning_scripts/__init__.py
 fi
 
-echo "✔ Repo bereit unter $REPO_DIR"
+echo "✔ Repo bereit unter $REPO_DIR (ohne .git)"
+echo "✔ Commit $COMMIT ausgecheckt"
 echo "✔ pyproject.toml konfiguriert"
 echo "✔ finetuning_scripts als Package verfügbar"

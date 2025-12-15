@@ -1,0 +1,98 @@
+% !TeX spellcheck = en_GB
+\documentclass{ffds}                % import ffds.cls
+\usepackage[utf8]{inputenc}         % use UTF-8 encoding to support extended characters for foreign names
+\usepackage{textcomp}               % add support for symbols in text
+\usepackage{graphicx}               % to import figures
+\usepackage{url}                    % allow URL formatting
+\usepackage[locale=UK,
+number-mode=math,
+unit-mode=text,
+per-mode=symbol,
+number-unit-product=\ ,
+retain-zero-exponent=false]{siunitx}[=v2]
+
+\usepackage{amsmath,mathtools,amssymb} % math facilities
+\usepackage{xstring}						% macros for string manipulation
+\usepackage{soul}							% find proper hyphens automatically
+\usepackage{cleveref}					% enhanced cross-referencing
+\usepackage[language=english]{lipsum}
+%
+\usepackage[authoryear]{natbib}
+\bibliographystyle{plainnat}
+
+\title{B.Sc. thesis Proposal ``Continued-pretraining for TabPFN with time-series data``}
+\author{Friedrich Romberg}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+
+
+\section{Motivation}
+In today's present world, tabular data is one of the most common data formats used in various fields like healthcare, finance etc.
+But with the rise of machine learning and deep learning, this type of data has long been overlooked.
+Until 2023, gradient boost decision trees have dominated classification problems in tabular data, but with release of TabPFN, a transformer model pre-trained
+to solve artificially generated classification tasks from a synthetic prior, a new benchmark for tabular inference tasks has been set.
+In a single forward pass, TabPFN is able to solve classification, regression, and inference tasks.
+\\
+There are two main ways to enhance the performance of this specific model even more.
+One of them is finetuning a pre-trained model and the other is continued pre-training a pre-trained model.
+The key difference between those two is that in finetuning one uses real-world data to train a pre-trained model for a specific domain like healthcare etc. and in continued pre-training
+one uses a specific prior for this domain to generate synthetical classification, regression, or inference tasks to further train the model.
+\\
+Although there are already some models which achive top rank results in time series data, the impact of finetuning or continued pretraining has not been studied and potential benefits remain uncovered.
+
+
+\section{Related Work}
+Continued pre-training on large real-world datasets in a specific domain yields superior downstream predictive accuracy in the specified domain compared to an only pre-trained model \citep{Hollmann_2025} .
+This validates the assumption that TabPFN performs better if we adapt weights to a downstream task.\newline
+In \citet{kolberg2025tabpfn} we saw that if we continue pre-training TabPFNv2 (so continued training on a synthetic prior) in a similar modality (tabular data with high feature and low sample count) will not decrease performance on non high dimension, low sample size data.\newline
+\citet{hoo2025tables} introduces TabPFN-TS: A model that combines TabPFN-v2 with lightweight feature engineering to enable both point and probabilistic forecasting.\newline
+\citet{dooley2023forecastpfn} is especially relevant since they created a synthetic prior for time-series data.
+They create the synthetic data by generating a trend, seasonal, and noise factor all either observed once a day, month, or year.
+
+\section{What We Want to Explore}
+The task for this thesis is to investigate how much a pre-trained TabPFNv2 model forgets if we continue pre-training to a new modality using a prior.
+For this task, we will use time-series as a new modality.
+TabPFNv2 can work with time-series as well, as \citet{hoo2025tables} showed, although it has not seen time-series data during pre-training.
+Good performance in time-series data via preprocessing the data into a bunch of features is only a ``byproduct`` from a broad of pre-training data. \newline
+The questions we will address are:
+\begin{enumerate}
+    \item Can we finetune TabPFN-TS on time-series data (and does it improve performance)?
+    \item Can we build a prior that generates realistic time-series data?
+    \item Can we continue pre-training TabPFN-TS with a given prior?
+    %\item How much does TabPFN-TS with continued-pretraining forget about previously learned tasks?
+    \item Which one of the following models performs best on various high scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?
+    \item (If we have time) Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN \citep{Hollmann_2025}
+\end{enumerate}
+\section{Planned Experiments}
+To answer all the questions we defined above, we will conduct the following experiments.\newline
+We are using the code from TabPFN-TS.
+They used the time series datasets from GIFT-Eval as benchmark, so we are using datasets of this collection for finetuning.\newline
+For this, we will create a list of tasks we will carry out for every question we defined above.
+\begin{enumerate}
+    \item For the first question, we first have to do the following things:
+    \begin{enumerate}
+        \item Look at the TabPFN-TS code and check if it works properly. If not, fix the problems.
+        \item Choose one or two datasets, used by~\cite{hoo2025tables} for evaluation, to finetune TabPFN-TS with.
+    \end{enumerate}
+    \item The second question will be answered by completing the following tasks:
+    \begin{enumerate}
+        \item Look at the prior used in \citet{dooley2023forecastpfn} and check if the prior can be used to continue pre-training of TabPFN-TS. If not: Look for another prior or adjust this one.
+        \item Continue Pre-training on TabPFN-TS with the given prior.
+        \item Use the datasets we utilized for finetuning in Step 1 to evaluate the continued pretrained model.
+    \end{enumerate}
+    \item If there is still enough time left, or we encounter issues while answering question 2, we will address this question and work on the following tasks:
+    \begin{enumerate}
+        \item Finetune TabPFN-TS with the methods of \citet{Hollmann_2025} on 4-5 datasets from GIFT-Eval used in \citet{hoo2025tables} and select a new one for evaluation. Then cross-validate the datasets.
+        \item Apply continued pre-trained TabPFN-TS from Step 2 on each one of the datasets used above and evaluate if multi-dataset finetuning is better than continued pretraining on synthetic time-series data.
+    \end{enumerate}
+\end{enumerate}
+
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%\bibliographystyle{plain}
+\bibliography{../references}
+\end{document}
