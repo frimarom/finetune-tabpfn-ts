@@ -1,0 +1,6 @@
+git+https://github.com/SalesforceAIResearch/gift-eval.git
+numpy
+pandas
+torch
+schedulefree
+wandb
