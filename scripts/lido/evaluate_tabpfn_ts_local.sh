@@ -12,6 +12,8 @@ export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 
+source /home/smfrromb/finetune-tabpfn-ts/.venv/bin/activate
+
 DATASETS=(
   m4_yearly
   m4_quarterly
