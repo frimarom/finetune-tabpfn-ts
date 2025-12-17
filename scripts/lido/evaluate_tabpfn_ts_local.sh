@@ -1,17 +1,16 @@
 #!/bin/bash -l
-
-#!/bin/bash -l
 #SBATCH --partition=med
-#SBATCH --nodes=4
-#SBATCH --ntasks-per-node=2
-#SBATCH --exclusive
-#SBATCH --cpus-per-task=8
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=1
 #SBATCH --time=04:00:00
 #SBATCH --job-name=tabpfn-local-eval
 #SBATCH --output=/work/smfrromb/tabpfn.%j.out
+#SBATCH --error=/work/smfrromb/tabpfn.%j_err.out
 
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
 
 DATASETS=(
   m4_yearly
@@ -26,9 +25,8 @@ DATASETS=(
 )
 
 for ds in "${DATASETS[@]}"; do
-  srun --exclusive --nodes=1 \
+  srun --exclusive -n1 -c1 --gres=gpu:tesla:1\
     python /home/smfrromb/finetune-tabpfn-ts/task_1/evaluate_local_tabpfn_gift_eval.py \
     --dataset "$ds" &
 done
-
 wait
