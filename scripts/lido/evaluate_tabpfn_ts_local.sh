@@ -2,7 +2,7 @@
 #SBATCH --partition=med
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=16
 #SBATCH --time=04:00:00
 #SBATCH --job-name=tabpfn-local-eval
 #SBATCH --output=/work/smfrromb/tabpfn.%j.out
