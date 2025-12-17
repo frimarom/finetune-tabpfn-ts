@@ -238,6 +238,7 @@ def main(args):
         name=f"{args.model_name}/{args.dataset}",
         config=vars(args),
         tags=[args.model_name] + args.wandb_tags.split(",") if args.wandb_tags else [],
+        reinit = True
     )
 
     output_dir = args.output_dir / args.model_name / args.dataset
@@ -338,21 +339,20 @@ if __name__ == "__main__":
         "--wandb_tags", type=str, default=""
     )  # model_name will be added later anyway
 
+    parser.add_argument("--dataset", type=str, default=datasets_to_evaluate[0])
 
-    for dataset in datasets_to_evaluate:
-        parser.add_argument("--dataset", type=str, default=dataset)
+    args = parser.parse_args()
 
-        args = parser.parse_args()
-        args.dataset_storage_path = Path(args.dataset_storage_path)
-        args.output_dir = Path(args.output_dir)
-        args.terms = args.terms.split(",")
+    args.dataset_storage_path = Path(args.dataset_storage_path)
+    args.output_dir = Path(args.output_dir)
+    args.terms = args.terms.split(",")
 
-        if args.debug:
-            logging.basicConfig(level=logging.DEBUG)
-            logger.debug("Debug mode enabled")
-        else:
-            logging.basicConfig(level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+        logger.debug("Debug mode enabled")
+    else:
+        logging.basicConfig(level=logging.INFO)
 
-        logger.info(f"Command Line Arguments: {vars(args)}")
+    logger.info(f"Command Line Arguments: {vars(args)}")
 
-        main(args)
+    main(args)
