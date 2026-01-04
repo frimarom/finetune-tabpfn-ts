@@ -1,12 +1,11 @@
-import load_datasets
-
-import edits
-import load_datasets
-from edits.finetune_tabpfn_main import fine_tune_tabpfn
+from finetune_tabpfn_ts.task_1.load_datasets import load_dataset
+from finetune_tabpfn_ts.task_1.load_datasets import to_timeseries_dataframe_list
+from finetune_tabpfn_ts.task_1.load_datasets import transform_data
+from finetune_tabpfn_ts.edits.finetune_tabpfn_main import fine_tune_tabpfn
 
 if __name__ == "__main__":
-    dataset = load_datasets.load_dataset("m4_hourly")
-    record = load_datasets.to_timeseries_dataframe_list(dataset, maxdata=2)
+    dataset = load_dataset("m4_hourly")
+    record = to_timeseries_dataframe_list(dataset, maxdata=2)
 
     train = record[0]["train"]
     test = record[0]["test"]
@@ -17,7 +16,7 @@ if __name__ == "__main__":
     # test = test.to_frame(name="target").reset_index()
     # test = test.drop('target', axis=1)
 
-    train_data, test_data = load_datasets.transform_data(train, test)
+    train_data, test_data = transform_data(train, test)
     train_y = train_data["target"]
     train_X = train_data.drop("target", axis=1)
     test_X = test_data.drop("target", axis=1)

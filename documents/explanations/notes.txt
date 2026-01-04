@@ -1,0 +1,8 @@
+- in fine_tune_tabpfn werden die batches wahrscheinlich randomiesiert für jede einzelne iteration. aber da soll man einfach iterativ und inkrementell die batches erstellen
+TODO:
+- data path variabel als parameter übergeben
+- alles besser dokumentieren
+- randomization rausnehmen für finetuning
+    - dafür vielleicht gift_eval struktur anschauen weil es da ja für ein dataset auch viele untersets gibt
+    - step by step inkerementell die datensets machen statt randomized. wenn zuende neues unterset benutzen
+- pr bei finetuning projekt machen

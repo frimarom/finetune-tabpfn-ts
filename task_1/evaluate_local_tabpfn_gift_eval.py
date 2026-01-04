@@ -4,8 +4,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from task_1.load_datasets import short_datasets, med_long_datasets
-
 # Add parent directory to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
