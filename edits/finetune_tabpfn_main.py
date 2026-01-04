@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Literal, Union, Sequence
 import numpy as np
 import pandas as pd
 import torch
-import wandb
 
 from finetuning_scripts.constant_utils import (
     SupportedDevice,
@@ -195,6 +194,7 @@ def fine_tune_tabpfn(
     model.to(device)
 
     if use_wandb:
+        import wandb
         wandb.watch(model, log_freq=1, log="all")
 
     # Setup validation

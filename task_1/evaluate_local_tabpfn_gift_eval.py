@@ -11,7 +11,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 import csv
 import logging
 import argparse
-import wandb
+
 from pathlib import Path
 from typing import Tuple, List
 
@@ -231,13 +231,15 @@ def main(args):
         )
 
     # Initialize wandb
-    wandb.init(
-        project=args.wandb_project,
-        name=f"{args.model_name}/{args.dataset}",
-        config=vars(args),
-        tags=[args.model_name] + args.wandb_tags.split(",") if args.wandb_tags else [],
-        reinit = True
-    )
+    if args.use_wandb:
+        import wandb
+        wandb.init(
+            project=args.wandb_project,
+            name=f"{args.model_name}/{args.dataset}",
+            config=vars(args),
+            tags=[args.model_name] + args.wandb_tags.split(",") if args.wandb_tags else [],
+            reinit = True
+        )
 
     output_dir = args.output_dir / args.model_name / args.dataset
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -283,10 +285,11 @@ def main(args):
         )
 
         # Log results to wandb
-        log_results_to_wandb(
-            res=res,
-            dataset_metadata=dataset_metadata,
-        )
+        if args.use_wandb:
+            log_results_to_wandb(
+                res=res,
+                dataset_metadata=dataset_metadata,
+            )
 
         # Write results to csv
         append_results_to_csv(
@@ -297,7 +300,8 @@ def main(args):
         )
 
     # Finish wandb run
-    wandb.finish()
+    if args.use_wandb:
+        wandb.finish()
 
 
 if __name__ == "__main__":
@@ -332,6 +336,7 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true")
 
     # Wandb settings
+    parser.add_argument("--use_wandb", action="store_true", default=False)
     parser.add_argument("--wandb_project", type=str, default="tabpfn-ts-experiments")
     parser.add_argument(
         "--wandb_tags", type=str, default=""
