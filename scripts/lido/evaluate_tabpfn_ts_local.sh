@@ -1,7 +1,7 @@
 #!/bin/bash -l
 #SBATCH --partition=med
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:tesla:1
 #SBATCH --time=04:00:00
