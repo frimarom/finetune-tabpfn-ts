@@ -10,6 +10,9 @@ if [ ! -d "..external/finetune_tabpfn_v2" ]; then
 fi
 
 # wishi washi because of lido... grr
+pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 torchaudio==2.0.2 \
+  --index-url https://download.pytorch.org/whl/cu118
+
 pip3 install pyarrow=20.0.0 --only-binary=:all: # on a cluster pyarrow has to be installed via conda
 pip3 install "datasets<4.0"
 pip3 install tabpfn-time-series==1.0.7 --no-build-isolation --no-deps

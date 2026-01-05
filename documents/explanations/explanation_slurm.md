@@ -1,5 +1,16 @@
 # Explanation of SLURM on Lido Cluster
 
+## Information
+
+### Cuda Version 11.8
+```
+module add nvidia/cuda/11.8
+```
+### Python Version 3.11.7
+```
+module add 
+```
+
 ## Helpful commands
 
 ### Interactive Slurm Test Scripts if script runs
@@ -33,6 +44,11 @@ exit
 ssh lido-cluster
 ```
 
+### Check nvidia driver on node
+```
+nvidia-smi
+```
+
 ## Common Errors
 
 ### Checksum Mismatch 
@@ -59,7 +75,3 @@ and then add the right python module
 module add <python-module>
 ```
 Check the python version now and then create a conda environment without a specific python version
-
-```
-python -m main.task_1.file_to_execute
-```
