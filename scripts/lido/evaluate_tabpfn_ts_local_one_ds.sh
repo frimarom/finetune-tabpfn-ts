@@ -4,7 +4,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:1
-#SBATCH --time=04:00:00
+#SBATCH --time=08:00:00
 #SBATCH --job-name=tabpfn-local-eval
 #SBATCH --output=/work/smfrromb/sbatch_log/tabpfn.%j.out
 #SBATCH --error=/work/smfrromb/sbatch_log/tabpfn.%j.err
