@@ -6,8 +6,8 @@
 #SBATCH --gres=gpu:tesla:1
 #SBATCH --time=04:00:00
 #SBATCH --job-name=tabpfn-local-eval
-#SBATCH --output=/work/smfrromb/tabpfn.%j.out
-#SBATCH --error=/work/smfrromb/tabpfn.%j.err
+#SBATCH --output=/work/smfrromb/sbatch_log/tabpfn.%j.out
+#SBATCH --error=/work/smfrromb/sbatch_log/tabpfn.%j.err
 
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
