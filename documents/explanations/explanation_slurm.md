@@ -23,6 +23,16 @@ srun --partition=short --nodes=1 --cpus-per-task=4 --gres=gpu:tesla:1 --time=00:
 squeue -u $USER
 ```
 
+### Cancel own job
+```
+scancel <job_id>
+```
+
+### Submit batch job
+```
+sbatch <script_name>.sh
+```
+
 ### Check nvidia driver on node
 ```
 nvidia-smi

@@ -13,8 +13,8 @@ export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 
-source /home/smfrromb/finetune_tabpfn_ts/.venv/bin/activate
-cd /home/smfrromb || exit
+source /work/smfrromb/finetune_tabpfn_ts/.venv/bin/activate
+cd /work/smfrromb || exit
 
 DATASETS=(
   m4_yearly
