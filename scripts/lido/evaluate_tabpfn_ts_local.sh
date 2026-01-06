@@ -9,9 +9,9 @@
 #SBATCH --output=/work/smfrromb/sbatch_log/tabpfn.%j.out
 #SBATCH --error=/work/smfrromb/sbatch_log/tabpfn.%j.err
 
-export OMP_NUM_THREADS=1
-export MKL_NUM_THREADS=1
-export OPENBLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=8
+export MKL_NUM_THREADS=8
+export OPENBLAS_NUM_THREADS=8
 
 source /work/smfrromb/finetune_tabpfn_ts/.venv/bin/activate
 cd /work/smfrromb || exit
