@@ -29,7 +29,7 @@ DATASETS=(
 )
 
 for ds in "${DATASETS[@]}"; do
-  srun -n1 -c4 \
+  srun -n1 -c8 \
     python -m finetune_tabpfn_ts.task_1.evaluate_local_tabpfn_gift_eval \
     --dataset "$ds"
 done
