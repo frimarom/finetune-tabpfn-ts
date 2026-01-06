@@ -1,6 +1,8 @@
 # Explanation of SLURM on Lido Cluster
 
 ## Information
+- Only available nodes for this project are from partition `gpu_short` and `gpu_med` since the other ones are too old
+
 
 ### Cuda Version 11.8
 ```
