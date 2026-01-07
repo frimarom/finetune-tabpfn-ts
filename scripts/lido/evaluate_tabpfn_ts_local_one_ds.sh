@@ -16,9 +16,15 @@ export OPENBLAS_NUM_THREADS=8
 source /work/smfrromb/finetune_tabpfn_ts/.venv/bin/activate
 cd /work/smfrromb || exit
 
-DATASETS=m4_yearly
+DATASETS="$1"
+
+if [ -z "$DATASETS" ]; then
+    echo "Usage: sbatch run.sh <dataset>"
+    exit 1
+fi
 
 srun -n1 -c8 \
     python -m finetune_tabpfn_ts.task_1.evaluate_local_tabpfn_gift_eval \
     --dataset "$DATASETS"
+
 wait
