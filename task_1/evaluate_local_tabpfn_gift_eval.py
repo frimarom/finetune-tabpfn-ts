@@ -250,6 +250,7 @@ def main(args):
 
     # Construct evaluation data (i.e. sub-datasets) for this dataset
     # (some datasets contain different forecasting terms, e.g. short, medium, long)
+    # only datasets with terms medium or long might be split
     sub_datasets = construct_evaluation_data(
         args.dataset, args.dataset_storage_path, args.terms
     )
@@ -269,7 +270,7 @@ def main(args):
             ds_prediction_length=sub_dataset.prediction_length,
             ds_freq=sub_dataset.freq,
             # tabpfn_mode=TabPFNMode.LOCAL,
-            tabpfn_mode=TabPFNMode.LOCAL,
+            tabpfn_mode=TabPFNMode.CLIENT,
             context_length=4096,
             debug=args.debug,
         )

@@ -160,7 +160,7 @@ def fine_tune_tabpfn(
 
     # Meta
     is_classification = task_type != TaskType.REGRESSION
-    use_autocast = False
+    use_autocast = False # Autocast für wenn model parameter zu groß für GPU sind. Tensoren werden zu einem kleineren Speicherformat konvertiert(ge-autocastet).
     if device == SupportedDevice.GPU:
         # Autocast on CPU too slow for unsupported hardware + env: https://github.com/pytorch/pytorch/issues/118499
         use_autocast = True
@@ -191,13 +191,14 @@ def fine_tune_tabpfn(
         model = DataParallel(model, device_ids=multiple_device_ids)
         is_data_parallel = True
 
-    model.to(device)
+    model.to(device) # Wenn eine GPU vorhanden ist, wird das Modell auf die GPU verschoben.
 
     if use_wandb:
         import wandb
         wandb.watch(model, log_freq=1, log="all")
 
     # Setup validation
+    # Only necessary if no validation data is provided
     create_val_data = (X_val is None) and (y_val is None)
     n_classes = len(np.unique(y_train)) if is_classification else None
     n_samples = len(X_train)

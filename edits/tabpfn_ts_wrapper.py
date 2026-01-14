@@ -48,12 +48,12 @@ class TabPFNTSPredictor:
 
         self.feature_transformer = FeatureTransformer(self.DEFAULT_FEATURES)
 
-    def predict(self, test_data_input) -> Iterator[Forecast]:
+    def predict(self, test_data_input) -> Iterator[Forecast]: # gets called by gluonts Predictor
         logger.debug(f"len(test_data_input): {len(test_data_input)}")
 
         forecasts = []
-        for batch in batcher(test_data_input, batch_size=1024):
-            forecasts.extend(self._predict_batch(batch))
+        for batch in batcher(test_data_input, batch_size=1024): # Split data into batches of size 1024 time series
+            forecasts.extend(self._predict_batch(batch)) # Process each batch and collect forecasts
 
         return forecasts
 

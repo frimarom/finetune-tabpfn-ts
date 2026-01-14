@@ -3,7 +3,8 @@ from tabpfn_time_series import TimeSeriesDataFrame
 from gift_eval.data import Dataset, itemize_start
 from enum import Enum
 
-from tabpfn_time_series import FeatureTransformer
+import torch
+from finetune_tabpfn_ts.edits.feature_transformer import FeatureTransformer
 from tabpfn_time_series.features import (
     RunningIndexFeature,
     CalendarFeature,
@@ -83,7 +84,7 @@ def load_dataset(name: str) -> Dataset:
         dataset = Dataset(name=name, term=term, to_univariate=to_univariate)
     return dataset
 
-def transform_data(train_data: TimeSeriesDataFrame, test_data: TimeSeriesDataFrame):
+def transform_data(train_data: TimeSeriesDataFrame):
     selected_features = [
         RunningIndexFeature(),
         CalendarFeature(),
@@ -91,8 +92,33 @@ def transform_data(train_data: TimeSeriesDataFrame, test_data: TimeSeriesDataFra
     ]
     feature_transformer = FeatureTransformer(selected_features)
 
-    return feature_transformer.transform(train_data, test_data)
+    return feature_transformer.transform_one_dataframe(train_data)
 
+def load_and_transform_dataset(name: str):
+    dataset = load_dataset(name)
+
+    records = []
+    for time_series in dataset.gluonts_dataset:
+        pandas_ts = to_pandas(time_series)
+
+        dataframe = pandas_ts.to_frame().reset_index()
+        dataframe.columns = ["timestamp", "target"]
+
+        dataframe["timestamp"] = dataframe["timestamp"].dt.to_timestamp()
+
+        dataframe["item_id"] = time_series["item_id"]
+
+        train_part_ts = TimeSeriesDataFrame(dataframe)
+        transformed_data = transform_data(train_part_ts)
+
+        records.append(transformed_data)
+
+    return records
+
+def to_x_y(data: TimeSeriesDataFrame):
+    y = data["target"]
+    X = data.drop("target", axis=1)
+    return X, y
 
 if __name__ == "__main__":
     ds_name = "m4_monthly"  # Name of the dataset
@@ -103,22 +129,24 @@ if __name__ == "__main__":
     print("Prediction length: ", dataset.prediction_length)
     print("Number of windows in the rolling evaluation: ", dataset.windows)
 
-    arshc = iter(dataset.test_data)
-    a = next(arshc)
-    print(a)
+    print("covid_deaths")
+    data = load_and_transform_dataset("covid_deaths")
+    print(data)
 
-    print(to_pandas(a[0]))
-    record = to_timeseries_dataframe_list(dataset, maxdata=2)
-    print(record)
+    X_1, y_1 = to_x_y(data[0])
+    X_2, y_2 = to_x_y(data[1])
+
+    X_train = torch.tensor(X_1.copy().values).float()
+    y_train = torch.tensor(y_1.copy().values).reshape(-1, 1).float()
+    X_train_1 = torch.tensor(X_2.copy().values).float()
+    y_train_1 = torch.tensor(y_2.copy().values).reshape(-1, 1).float()
+
+    X_stacked = torch.stack([X_train, X_train_1], dim=-1)  # dim=-1 = neue z-Achse
+    y_stacked = torch.stack([y_train, y_train_1], dim=-1)
 
 
-    train = record[0]["train"]
-    test = record[0]["test"]
-    print("test", test)
-    test["target"] = None
-    #test = test.to_frame(name="target").reset_index()
-    #test = test.drop('target', axis=1)
-
-    b = transform_data(train, test)
-    print(b)
-    #to_timeseries_dataframe(dataset)
+    print(X_train, y_train)
+    x_len = X_stacked.shape[0]
+    y_len = X_stacked.shape[1]
+    z_len = X_stacked.shape[2]
+    print("X_stacked shape:", X_stacked.shape)
