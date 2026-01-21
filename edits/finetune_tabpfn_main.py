@@ -22,7 +22,8 @@ from finetuning_scripts.constant_utils import (
 from finetuning_scripts.data_classes import FineTuneSetup, FineTuneStepResults
 from finetuning_scripts.metric_utils.ag_metrics import get_metric
 from finetuning_scripts.training_utils.ag_early_stopping import AdaptiveES
-from finetuning_scripts.training_utils.data_utils import get_data_loader
+#from finetuning_scripts.training_utils.data_utils import get_data_loader
+from finetune_tabpfn_ts.edits.data_utils import get_data_loader
 from finetuning_scripts.training_utils.model_utils import save_model
 from finetuning_scripts.training_utils.training_loss import compute_loss, get_loss
 from finetuning_scripts.training_utils.validation_utils import validate_tabpfn
@@ -59,16 +60,17 @@ def fine_tune_tabpfn(
     finetuning_config: dict,
     validation_metric: SupportedValidationMetric,
     # Input Data
-    X_train: pd.DataFrame | np.ndarray,
-    y_train: pd.Series | np.ndarray,
+    X_train: np.ndarray | torch.Tensor,
+    y_train: np.ndarray | torch.Tensor,
     categorical_features_index: list[int] | None,
     task_type: TaskType,
     device: SupportedDevice,
     use_multiple_gpus: bool = False,
     multiple_device_ids: Sequence[Union[int, torch.device]] | None  = None,
-    X_val: pd.DataFrame | np.ndarray | None = None,
-    y_val: pd.Series | np.ndarray | None = None,
+    X_val: np.ndarray | torch.Tensor | None,
+    y_val: np.ndarray | torch.Tensor | None,
     random_seed: int = 42,
+    pred_length: int,
     # Other
     logger_level: int = 20,
     show_training_curve: bool = False,
@@ -133,19 +135,6 @@ def fine_tune_tabpfn(
     """
     st_time = time.time()
 
-    # Coerce input data into pandas structures
-    if not isinstance(X_train, pd.DataFrame):
-        X_train = pd.DataFrame(X_train)
-
-    if not isinstance(y_train, pd.Series):
-        y_train = pd.Series(y_train)
-
-    if X_val is not None and not isinstance(X_val, pd.DataFrame):
-        X_val = pd.DataFrame(X_val)
-
-    if y_val is not None and not isinstance(y_val, pd.Series):
-        y_val = pd.Series(y_val)
-
     # Control logging
     logger.setLevel(logger_level)
     disable_progress_bar = logger_level >= 20
@@ -159,7 +148,6 @@ def fine_tune_tabpfn(
     torch_rng.manual_seed(random_seed)
 
     # Meta
-    is_classification = task_type != TaskType.REGRESSION
     use_autocast = False # Autocast für wenn model parameter zu groß für GPU sind. Tensoren werden zu einem kleineren Speicherformat konvertiert(ge-autocastet).
     if device == SupportedDevice.GPU:
         # Autocast on CPU too slow for unsupported hardware + env: https://github.com/pytorch/pytorch/issues/118499
@@ -177,7 +165,7 @@ def fine_tune_tabpfn(
         model_path=model_path,
         check_bar_distribution_criterion=False,
         cache_trainset_representation=False,
-        which="classifier" if is_classification else "regressor",
+        which="regressor",
         version="v2",
         download_if_not_exists=True,
     )
@@ -200,7 +188,7 @@ def fine_tune_tabpfn(
     # Setup validation
     # Only necessary if no validation data is provided
     create_val_data = (X_val is None) and (y_val is None)
-    n_classes = len(np.unique(y_train)) if is_classification else None
+    n_classes = None
     n_samples = len(X_train)
     if not create_val_data:
         n_samples += len(X_val)
@@ -212,7 +200,7 @@ def fine_tune_tabpfn(
             y_train=y_train,
             rng=rng,
             n_samples=n_samples,
-            is_classification=is_classification,
+            is_classification=False,
         )
     val_report = f"""
     === Basic / Validation State ===
@@ -228,7 +216,7 @@ def fine_tune_tabpfn(
         **finetuning_config,
         model=model,
         task_type=task_type,
-        is_classification=is_classification,
+        is_classification=False,
         is_data_parallel=is_data_parallel,
     )
     logger.debug(fts.report_str)
@@ -263,20 +251,29 @@ def fine_tune_tabpfn(
             model_for_validation = TabPFNRegressor() if task_type == TaskType.REGRESSION else TabPFNClassifier()
         # this is required as memory_saving_mode can not be used during training
         model_for_validation.memory_saving_mode = False
+
+    def ensure_tensor(x):
+        return x if isinstance(x, torch.Tensor) else torch.tensor(x)
+
+    Xv = ensure_tensor(X_val).float()
+    yv = ensure_tensor(y_val).float()
+    Xv = Xv.unsqueeze(1)
+    yv = yv.unsqueeze(1)
+
+    train_idx = slice(0, Xv.shape[0] - pred_length)
+    test_idx = slice(Xv.shape[0] - pred_length, Xv.shape[0])
+
+    Xv_train = Xv[train_idx]
+    yv_train = yv[train_idx]
+    Xv_test = Xv[test_idx]
+    yv_test = yv[test_idx]
+
     validate_tabpfn_fn = partial(
         validate_tabpfn,
-        X_train=torch.tensor(X_train.values)
-        .reshape(X_train.shape[0], 1, X_train.shape[1])
-        .float(),
-        y_train=torch.tensor(y_train.values)
-        .reshape(y_train.shape[0], 1, 1)
-        .float(),
-        X_val=torch.tensor(X_val.values)
-        .reshape(X_val.shape[0], 1, X_val.shape[1])
-        .float(),
-        y_val=torch.tensor(y_val.values)
-        .reshape(y_val.shape[0], 1, 1)
-        .float(),
+        X_train=Xv_train,
+        y_train=yv_train,
+        X_val=Xv_test,
+        y_val=yv_test,
         validation_metric=validation_metric,
         model_forward_fn=model_forward_fn,
         task_type=task_type,
@@ -325,10 +322,12 @@ def fine_tune_tabpfn(
     data_loader = get_data_loader(
         X_train=X_train,
         y_train=y_train,
-        batch_size=fts.batch_size,
         max_steps=fts.max_steps,
-        torch_rng=torch_rng,
-        is_classification=is_classification,
+        torch_rng=torch.Generator(),
+        context_size=pred_length * 2,
+        forecast_horizon=pred_length,
+        batch_size=fts.batch_size,
+        sample_offset=2,
         num_workers=fts.data_loader_workers,
     )
     # Setup progress bar
@@ -502,12 +501,10 @@ def _model_forward(
             - classification: (n_samples, batch_size, n_classes)
             - regression: (n_samples, batch_size)
     """
-    is_classification = n_classes is not None
-    if not is_classification:
-        # TabPFN model assumes z-normalized inputs.
-        mean = y_train.mean(dim=0)
-        std = y_train.std(dim=0)
-        y_train = (y_train - mean) / std
+    # TabPFN model assumes z-normalized inputs.
+    mean = y_train.mean(dim=0)
+    std = y_train.std(dim=0)
+    y_train = (y_train - mean) / std
 
     X_all = torch.cat([X_train, X_test], dim=0)
     y_all = y_train
@@ -525,27 +522,21 @@ def _model_forward(
         with autocast(device_type=device, enabled=use_autocast):
             pred_logits = model(**forward_kwargs)
 
-    if is_classification:
-        pred_logits = pred_logits[:, :, :n_classes].float()
+    # Need to go step-wise over batch size as bar_dist.mean() does not support batched output.
+    pred_logits = pred_logits.float()
 
-        if softmax_temperature is not None:
-            pred_logits = pred_logits / softmax_temperature
-    else:
-        # Need to go step-wise over batch size as bar_dist.mean() does not support batched output.
-        pred_logits = pred_logits.float()
+    if softmax_temperature is not None:
+        pred_logits = pred_logits / softmax_temperature
 
-        if softmax_temperature is not None:
-            pred_logits = pred_logits / softmax_temperature
-
-        if forward_for_validation:
-            new_pred_logits = []
-            for batch_i in range(pred_logits.shape[1]):
-                bar_dist = deepcopy(model.module.criterion if is_data_parallel else model.criterion)
-                bar_dist.borders = (
+    if forward_for_validation:
+        new_pred_logits = []
+        for batch_i in range(pred_logits.shape[1]):
+            bar_dist = deepcopy(model.module.criterion if is_data_parallel else model.criterion)
+            bar_dist.borders = (
                     bar_dist.borders * std[batch_i] + mean[batch_i]
-                ).float()
-                new_pred_logits.append(bar_dist.mean(pred_logits[:, batch_i, :]))
-            pred_logits = torch.stack(new_pred_logits, dim=-1)
+            ).float()
+            new_pred_logits.append(bar_dist.mean(pred_logits[:, batch_i, :]))
+        pred_logits = torch.stack(new_pred_logits, dim=-1)
 
     return pred_logits
 

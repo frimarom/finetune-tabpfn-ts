@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 if TYPE_CHECKING:
     import pandas as pd
 
+RANDOM_SEED = 4213
 
 class TimeSeriesDataset(Dataset):
     """Tabular dataset.
@@ -74,7 +75,7 @@ class TimeSeriesDataset(Dataset):
             train_test_bound = start_idx + context_size
             end_idx = start_idx + context_size + forecast_horizon
 
-            yield from (time_series, start_idx, train_test_bound, end_idx)
+            yield time_series, start_idx, train_test_bound, end_idx
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -102,11 +103,14 @@ class TimeSeriesDataset(Dataset):
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         time_series, start_idx, train_test_bound, end_idx = self.get_splits()
 
+        # TODO for storage efficiency maybe save different
         # Correct for equal batch size
         sample_X_train = self.X_train[start_idx:train_test_bound, :, time_series]
         sample_X_test = self.X_train[train_test_bound:end_idx, :, time_series]
         sample_y_train = self.y_train[start_idx:train_test_bound, :, time_series]
         sample_y_test = self.y_train[train_test_bound:end_idx, :, time_series]
+        sample_y_train.squeeze(-1)
+        sample_y_test.squeeze(-1)
 
         return dict(
             X_train=sample_X_train,
@@ -118,11 +122,13 @@ class TimeSeriesDataset(Dataset):
 
 def get_data_loader(
     *,
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
+    X_train: torch.Tensor,
+    y_train: torch.Tensor,
     max_steps: int,
     torch_rng: torch.Generator,
     batch_size: int,
+    context_size: int,
+    forecast_horizon: int,
     sample_offset: int,
     num_workers: int,
 ) -> DataLoader:
@@ -152,8 +158,9 @@ def get_data_loader(
     DataLoader
         Data loader.
     """
-    X_train = torch.tensor(X_train.copy().values).float()
-    y_train = torch.tensor(y_train.copy().values).reshape(-1, 1).float()
+    # TODO move to finetuning code
+    # X_train = torch.tensor(X_train.copy().values).float()
+    # y_train = torch.tensor(y_train.copy().values).reshape(-1, 1).float()
     dataset = TimeSeriesDataset(
         X_train=X_train,
         y_train=y_train,
@@ -192,8 +199,8 @@ def create_batch(dataset: TimeSeriesDataset, batch_size: int) -> dict[str, torch
 
 def get_batches_with_variable_forecast_horizon(
     *,
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
+    X_train: torch.Tensor,
+    y_train: torch.Tensor,
     max_steps: int,
     torch_rng: torch.Generator,
     batch_size: int,
@@ -205,14 +212,12 @@ def get_batches_with_variable_forecast_horizon(
         fh = forecast_horizon()
         forecast_horizons.append(fh)
 
-    counts = Counter(lst)
-    X_train = torch.tensor(X_train.copy().values).float()
-    y_train = torch.tensor(y_train.copy().values).reshape(-1, 1).float()
+    counts = Counter(forecast_horizons)
 
     batches = []
     for forecast_horizon_element, amount in counts.items():
         forecast_horizon_element = int(forecast_horizon_element)
-        context_size = 2 * forecast_horizon_element
+        context_size = 2 * forecast_horizon_element # TODO maybe find a better way by doing
 
         dataset = TimeSeriesDataset(
             X_train=X_train,
@@ -226,7 +231,7 @@ def get_batches_with_variable_forecast_horizon(
             batch = create_batch(dataset, batch_size)
             batches.append(batch)
 
-    indices = torch.randperm(len(lst), generator=torch_rng).numpy()
+    indices = torch.randperm(len(batches), generator=torch_rng).numpy()
     shuffled_batches = [batches[i] for i in indices]
 
     return shuffled_batches

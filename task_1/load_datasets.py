@@ -4,6 +4,9 @@ from gift_eval.data import Dataset, itemize_start
 from enum import Enum
 
 import torch
+import pandas as pd
+import numpy as np
+from finetune_tabpfn_ts.edits.data_utils import get_data_loader, create_batch, get_batches_with_variable_forecast_horizon
 from finetune_tabpfn_ts.edits.feature_transformer import FeatureTransformer
 from tabpfn_time_series.features import (
     RunningIndexFeature,
@@ -110,8 +113,12 @@ def load_and_transform_dataset(name: str):
 
         train_part_ts = TimeSeriesDataFrame(dataframe)
         transformed_data = transform_data(train_part_ts)
+        X, y = to_x_y(transformed_data)
 
-        records.append(transformed_data)
+        records.append({
+            "X": X,
+            "y": y,
+        })
 
     return records
 
@@ -120,7 +127,35 @@ def to_x_y(data: TimeSeriesDataFrame):
     X = data.drop("target", axis=1)
     return X, y
 
-if __name__ == "__main__":
+def stack_records_along_z(records):
+    X_list = []
+    y_list = []
+
+    for record in records:
+        X = record["X"]
+        y = record["y"]
+
+        X_tensor = torch.tensor(X.copy().values).float()
+        y_tensor = torch.tensor(y.copy().values).reshape(-1, 1).float()
+
+        X_list.append(X_tensor)
+        y_list.append(y_tensor)
+
+    X_stacked = torch.stack(X_list, dim=-1)
+    y_stacked = torch.stack(y_list, dim=-1)
+
+    return X_stacked, y_stacked
+
+def get_transformed_stacked_dataset(dataset: str):
+    data = load_and_transform_dataset(dataset)
+    X_stacked, y_stacked = stack_records_along_z(data)
+    return X_stacked, y_stacked
+
+def calculate_forecast_horizon():
+    return np.random.randint(1, 5)
+
+
+def test_batching_and_dataloader():
     ds_name = "m4_monthly"  # Name of the dataset
     dataset = load_dataset(ds_name)
 
@@ -133,8 +168,8 @@ if __name__ == "__main__":
     data = load_and_transform_dataset("covid_deaths")
     print(data)
 
-    X_1, y_1 = to_x_y(data[0])
-    X_2, y_2 = to_x_y(data[1])
+    X_1, y_1 = data[0]["X"], data[0]["y"]
+    X_2, y_2 = data[1]["X"], data[1]["y"]
 
     X_train = torch.tensor(X_1.copy().values).float()
     y_train = torch.tensor(y_1.copy().values).reshape(-1, 1).float()
@@ -145,8 +180,65 @@ if __name__ == "__main__":
     y_stacked = torch.stack([y_train, y_train_1], dim=-1)
 
 
+
     print(X_train, y_train)
     x_len = X_stacked.shape[0]
     y_len = X_stacked.shape[1]
     z_len = X_stacked.shape[2]
+
     print("X_stacked shape:", X_stacked.shape)
+    print("y_stacked shape:", y_stacked.shape)
+
+    dataloader = get_data_loader(
+        X_train = X_stacked,
+        y_train = y_stacked,
+        max_steps = 10,
+        torch_rng = torch.Generator(),
+        context_size = 4, # TODO context_size function with forecast_horizon just like in get_batches_with_variable_forecast_horizon
+        forecast_horizon = 2,
+        batch_size = 16,
+        sample_offset = 2,
+        num_workers = 1,
+    )
+    print(dataloader)
+
+    print("Start")
+    for batch_idx, batch in enumerate(dataloader):
+        print("Batch index:", batch_idx)
+        print("Batch X_train shape:", batch["X_train"].shape)
+        print("Batch y_train shape:", batch["y_train"].shape)
+        print("Batch X_test shape:", batch["X_test"].shape)
+        print("Batch y_test shape:", batch["y_test"].shape)
+
+
+    print("")
+    print("")
+    print("Get batches with variable forecast horizon")
+    batches = get_batches_with_variable_forecast_horizon(
+        X_train= X_stacked,
+        y_train= y_stacked,
+        max_steps= 10,
+        torch_rng= torch.Generator(),
+        batch_size = 16,
+        forecast_horizon= calculate_forecast_horizon,
+        sample_offset = 2,
+    )
+
+    for batch_idx, batch in enumerate(batches):
+        print("Batch index:", batch_idx)
+        print("Batch X_train shape:", batch["X_train"].shape)
+        print("Batch y_train shape:", batch["y_train"].shape)
+        print("Batch X_test shape:", batch["X_test"].shape)
+        print("Batch y_test shape:", batch["y_test"].shape)
+
+
+def test_get_transformed_stacked_dataset():
+    ds_name = "covid_deaths"  # Name of the dataset
+    X_stacked, y_stacked = get_transformed_stacked_dataset(ds_name)
+
+    print("X_stacked shape:", X_stacked.shape)
+    print("y_stacked shape:", y_stacked.shape)
+
+if __name__ == "__main__":
+    # test_get_transformed_stacked_dataset()
+    test_batching_and_dataloader()
