@@ -13,6 +13,8 @@ export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
 export OPENBLAS_NUM_THREADS=8
 
+export GIFT_EVAL=/work/smfrromb/finetune_tabpfn_ts/data
+
 source /work/smfrromb/finetune_tabpfn_ts/.venv/bin/activate
 cd /work/smfrromb || exit
 
