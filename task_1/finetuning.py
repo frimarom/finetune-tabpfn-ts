@@ -34,17 +34,8 @@ if __name__ == "__main__":
     parser.add_argument("--time_limit", type=int, default=600, help="Time limit for fine-tuning in seconds")
     parser.add_argument("--learning_rate", type=float, default=0.00001, help="Learning rate for fine-tuning")
     parser.add_argument("--batch_size", type=int, default=16, help="Batch size for fine-tuning")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 
     args = parser.parse_args()
-
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        logger.debug("Debug mode enabled")
-    else:
-        logging.basicConfig(level=logging.INFO)
-
-    logger.info(f"Command Line Arguments: {vars(args)}")
 
     ds_name = args.dataset
     dataset = Dataset(ds_name)

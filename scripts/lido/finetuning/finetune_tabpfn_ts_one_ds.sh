@@ -22,11 +22,10 @@ PRED_LENGTH=$3
 TIME_LIMIT=$4
 LEARNING_RATE=$5
 BATCH_SIZE=$6
-DEBUG=$7
 
-if [ "$#" -lt 7 ]; then
+if [ "$#" -lt 6 ]; then
     echo "Usage:"
-    echo "  sbatch run.sh <dataset> <checkpoint_name> <pred_length> <time_limit> <learning_rate> <batch_size> <debug>"
+    echo "  sbatch run.sh <dataset> <checkpoint_name> <pred_length> <time_limit> <learning_rate> <batch_size>"
     exit 1
 fi
 
@@ -38,6 +37,5 @@ srun -n1 -c8 \
     --time_limit "$TIME_LIMIT" \
     --learning_rate "$LEARNING_RATE" \
     --batch_size "$BATCH_SIZE" \
-    --debug "$DEBUG"
 
 wait
