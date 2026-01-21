@@ -31,7 +31,7 @@ if [ "$#" -lt 7 ]; then
 fi
 
 srun -n1 -c8 \
-    python -m finetune_tabpfn_ts.task_1.evaluate_local_tabpfn_gift_eval \
+    python -m finetune_tabpfn_ts.task_1.finetuning \
     --dataset "$DATASET" \
     --checkpoint_name "$CHECKPOINT_NAME" \
     --pred_length "$PRED_LENGTH" \
