@@ -32,7 +32,7 @@ name = "finetuning-scripts"
 version = "0.1.0"
 
 [tool.setuptools]
-packages = ["finetuning_scripts"]
+packages = { find = {} }
 EOF
 else
   if ! grep -q "^\[build-system\]" "$PYPROJECT"; then
@@ -53,11 +53,13 @@ version = "0.1.0"
 EOF
   fi
 
-  if ! grep -q "^\[tool.setuptools\]" "$PYPROJECT"; then
+  if grep -q "^\[tool.setuptools\]" "$PYPROJECT"; then
+    sed -i 's/^packages *=.*/packages = { find = {} }/' "$PYPROJECT"
+  else
     cat >> "$PYPROJECT" <<'EOF'
 
 [tool.setuptools]
-packages = ["finetuning_scripts"]
+packages = { find = {} }
 EOF
   fi
 fi
@@ -68,5 +70,5 @@ fi
 
 echo "✔ Repo bereit unter $REPO_DIR (ohne .git)"
 echo "✔ Commit $COMMIT ausgecheckt"
-echo "✔ pyproject.toml konfiguriert"
-echo "✔ finetuning_scripts als Package verfügbar"
+echo "✔ pyproject.toml korrekt für Subpackages konfiguriert"
+echo "✔ finetuning_scripts inkl. Submodule installierbar"
