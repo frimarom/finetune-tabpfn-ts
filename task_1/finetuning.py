@@ -55,7 +55,7 @@ if __name__ == "__main__":
         X_train=train_X,
         y_train=train_y,
         categorical_features_index=None,
-        device="cpu" if torch.cuda.is_available() else "cuda",  # use "cpu" if you don't have a GPU
+        device="cuda" if torch.cuda.is_available() else "cpu",  # use "cpu" if you don't have a GPU
         task_type="regression",
         X_val = val_X, # hier keine Daten angeben
         y_val = val_y,

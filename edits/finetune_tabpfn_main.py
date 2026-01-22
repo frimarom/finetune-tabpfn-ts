@@ -796,7 +796,9 @@ def _tore_down_tuning(
             )
 
         hp_text = (
-            f"lr={finetuning_config.get("learning_rate", "not avail")} | batch_size=1{finetuning_config.get("batch_size", "not avail")} | update_every={fts.update_every_n_steps}\n"
+            f"lr={finetuning_config.get('learning_rate', 'not avail')} | "
+            f"batch_size={finetuning_config.get('batch_size', 'not avail')} | "
+            f"update_every={fts.update_every_n_steps}\n"
             "loss=train: FullSupportBarDistribution | val: Mean absolute error\n"
             f"dataset={dataset_name} | time_limit={time_limit}s | pred_length={pred_length}"
         )
