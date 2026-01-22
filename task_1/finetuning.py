@@ -64,4 +64,5 @@ if __name__ == "__main__":
         show_training_curve=True,  # Shows a final report after finetuning.
         logger_level=0,  # Shows all logs, higher values shows less
         use_wandb=False,  # Init wandb yourself, and set to True
+        dataset_name= ds_name
     )

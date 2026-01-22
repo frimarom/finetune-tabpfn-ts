@@ -76,7 +76,8 @@ def fine_tune_tabpfn(
     show_training_curve: bool = False,
     use_wandb: bool = False,
     use_sklearn_interface_for_validation: bool = False,
-    model_for_validation: TabPFNClassifier | TabPFNRegressor = None
+    model_for_validation: TabPFNClassifier | TabPFNRegressor = None,
+    dataset_name: str
 ) -> None:
     """Fine-tune a TabPFN model.
 
@@ -448,6 +449,10 @@ def fine_tune_tabpfn(
         early_stop_no_time=early_stop_no_time,
         show_training_curve=show_training_curve,
         st_time=st_time,
+        finetuning_config=finetuning_config,
+        dataset_name=dataset_name,
+        pred_length=pred_length,
+        time_limit=time_limit
     )
 
 
@@ -698,6 +703,10 @@ def _tore_down_tuning(
     step_results_over_time: list[FineTuneStepResults],
     fts: FineTuneSetup,
     task_type: TaskType,
+    finetuning_config: dict,
+    dataset_name: str,
+    pred_length: int,
+    time_limit: int,
 ) -> None:
     # -- Early Stopping reason (after tqdm finished)
     es_reason = None
@@ -785,6 +794,20 @@ def _tore_down_tuning(
                 alpha=0.5,
                 linewidth=3,
             )
+
+        hp_text = (
+            f"lr={finetuning_config.get("learning_rate", "not avail")} | batch_size=1{finetuning_config.get("batch_size", "not avail")} | update_every={fts.update_every_n_steps}\n"
+            "loss=train: FullSupportBarDistribution | val: Mean absolute error\n"
+            f"dataset={dataset_name} | time_limit={time_limit}s | pred_length={pred_length}"
+        )
+        fig.text(
+            0.5,
+            -0.15,
+            hp_text,
+            ha="center",
+            va="top",
+            fontsize=10,
+        )
 
         plt.savefig(f"fine_tuning_loss_plot_{task_type}.png")
         plt.show()
