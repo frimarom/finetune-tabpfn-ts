@@ -811,5 +811,5 @@ def _tore_down_tuning(
             fontsize=10,
         )
 
-        plt.savefig(f"fine_tuning_loss_plot_{task_type}_{dataset_name}_{time_limit}s.png")
+        plt.savefig(f"fine_tuning_loss_plot_{task_type}_{dataset_name.replace('/', '_')}_{time_limit}s.png")
         plt.show()
