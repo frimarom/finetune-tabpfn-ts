@@ -49,7 +49,7 @@ if __name__ == "__main__":
         save_path_to_fine_tuned_model=f"./{args.checkpoint_name}.ckpt",
         # Finetuning HPs
         time_limit=args.time_limit,
-        finetuning_config={"learning_rate": 0.00001, "batch_size": 16},
+        finetuning_config={"learning_rate": args.learning_rate, "batch_size": args.batch_size, "min_patience": 100, "max_patience": 200},
         validation_metric="mean_absolute_error",
         X_train=train_X,
         y_train=train_y,

@@ -233,12 +233,17 @@ def test_batching_and_dataloader():
 
 
 def test_get_transformed_stacked_dataset():
-    ds_name = "covid_deaths"  # Name of the dataset
+    ds_name = "SZ_TAXI/H"  # Name of the dataset
     X_stacked, y_stacked = get_transformed_stacked_dataset(ds_name)
 
     print("X_stacked shape:", X_stacked.shape)
     print("y_stacked shape:", y_stacked.shape)
+    time_series = X_stacked[:, 0, 0]
+    target_series = y_stacked[:, :, 0]
+    print(time_series)
+    plt.plot(time_series, target_series)
+    plt.savefig("finetune_tabpfn_ts/time_series.png")
 
 if __name__ == "__main__":
-    # test_get_transformed_stacked_dataset()
-    test_batching_and_dataloader()
+    test_get_transformed_stacked_dataset()
+    # test_batching_and_dataloader()

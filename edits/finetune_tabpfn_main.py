@@ -659,7 +659,7 @@ def _setup_tuning(
     max_steps: int = 10000,
     adaptive_rate: float = 0.2,
     adaptive_offset: int = 5,
-    min_patience: int = 20,
+    min_patience: int = 50,
     max_patience: int = 100,
     data_loader_workers: int = 1,
     # Metadata
