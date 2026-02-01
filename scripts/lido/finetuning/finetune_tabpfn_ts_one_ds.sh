@@ -5,6 +5,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:1
 #SBATCH --time=02:00:00
+#SBATCH --mem-per-cpu=4G
 #SBATCH --job-name=tabpfn-local-eval
 #SBATCH --output=/work/smfrromb/sbatch_log/tabpfn.%j.out
 #SBATCH --error=/work/smfrromb/sbatch_log/tabpfn.%j.err
