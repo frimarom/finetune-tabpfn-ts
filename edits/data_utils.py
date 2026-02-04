@@ -29,6 +29,7 @@ class TimeSeriesDataset(Dataset):
     max_steps: int
         Maximum number of steps (splits of the data).
     """
+    time_series_window_count = []
 
     def __init__(
         self,
@@ -36,9 +37,8 @@ class TimeSeriesDataset(Dataset):
         X_train: torch.Tensor,
         y_train: torch.Tensor,
         max_steps: int,
-        context_size: int,
+        windows: int,
         forecast_horizon: int,
-        sample_offset: int
     ):
         self.X_train = X_train
         self.y_train = y_train
@@ -46,36 +46,43 @@ class TimeSeriesDataset(Dataset):
         self._splits_generator = self.splits_generator(
             X_train=X_train,
             y_train=y_train,
-            context_size=context_size,
+            windows = windows,
             forecast_horizon=forecast_horizon,
             seed=RANDOM_SEED,
         )
         self._rng = np.random.RandomState(RANDOM_SEED)
+        TimeSeriesDataset.time_series_window_count = np.zeros(X_train.shape[2])
 
     @staticmethod
     def splits_generator(
         *,
         X_train: torch.Tensor,
         y_train: torch.Tensor, # TODO obsolete?
-        context_size: int,
+        windows: int,
         forecast_horizon: int,
         seed: int,
     ):
         """Endless generator for splits of a time series sliding window."""
-        x_len = X_train.shape[0]
+        series_length = X_train.shape[0]
         z_len = X_train.shape[2]
 
         rng = np.random.RandomState(seed)
 
         while True:
-            # TODO Outsource like in finetuning data_utils so that samples can also be created in a linear deterministic way
             time_series = rng.randint(0, z_len)
-            # TODO start index with sample_offset to avoid starting at same point mutiple times
-            start_idx = rng.randint(0, x_len - context_size - forecast_horizon + 1)
-            train_test_bound = start_idx + context_size
-            end_idx = start_idx + context_size + forecast_horizon
+            while TimeSeriesDataset.time_series_window_count[time_series] >= windows :
+                time_series = rng.randint(0, z_len)
 
-            yield time_series, start_idx, train_test_bound, end_idx
+            window_count = TimeSeriesDataset.time_series_window_count[time_series]
+            context_length = (series_length - forecast_horizon) // windows
+
+            start_idx = max(0, series_length - forecast_horizon - (windows-window_count) * context_length)
+            origin = start_idx+context_length
+            end_idx = origin+forecast_horizon
+
+            TimeSeriesDataset.time_series_window_count[time_series] += 1
+
+            yield int(time_series), int(start_idx), int(origin), int(end_idx)
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -100,23 +107,30 @@ class TimeSeriesDataset(Dataset):
         time_series, start_idx, train_test_bound, end_idx = next(self._splits_generator)
         return time_series, start_idx, train_test_bound, end_idx
 
-    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
-        time_series, start_idx, train_test_bound, end_idx = self.get_splits()
-
-        # TODO for storage efficiency maybe save different
-        # Correct for equal batch size
+    def create_data(self, time_series, start_idx, train_test_bound, end_idx):
         sample_X_train = self.X_train[start_idx:train_test_bound, :, time_series]
         sample_X_test = self.X_train[train_test_bound:end_idx, :, time_series]
         sample_y_train = self.y_train[start_idx:train_test_bound, :, time_series]
         sample_y_test = self.y_train[train_test_bound:end_idx, :, time_series]
-        sample_y_train.squeeze(-1)
-        sample_y_test.squeeze(-1)
+        return sample_X_train, sample_X_test, sample_y_train, sample_y_test
+
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
+        time_series, start_idx, train_test_bound, end_idx = self.get_splits()
+        s_X_train, s_X_test, s_y_train, s_y_test = self.create_data(
+            time_series, start_idx, train_test_bound, end_idx
+        )
+        # filter out padding filled time series
+        while (s_X_train[:, 28].numpy() == 0).sum() >= s_X_train.shape[0]*0.5:
+            time_series, start_idx, train_test_bound, end_idx = self.get_splits()
+            s_X_train, s_X_test, s_y_train, s_y_test = self.create_data(
+                time_series, start_idx, train_test_bound, end_idx
+            )
 
         return dict(
-            X_train=sample_X_train,
-            X_test=sample_X_test,
-            y_train=sample_y_train,
-            y_test=sample_y_test,
+            X_train=s_X_train,
+            X_test=s_X_test,
+            y_train=s_y_train,
+            y_test=s_y_test,
         )
 
 
@@ -127,9 +141,7 @@ def get_data_loader(
     max_steps: int,
     torch_rng: torch.Generator,
     batch_size: int,
-    context_size: int,
-    forecast_horizon: int,
-    sample_offset: int,
+    dataset_attributes: DatasetAttributes,
     num_workers: int,
 ) -> DataLoader:
     """Get data loader.
@@ -165,9 +177,8 @@ def get_data_loader(
         X_train=X_train,
         y_train=y_train,
         max_steps=max_steps * batch_size,
-        context_size=context_size,
-        forecast_horizon=forecast_horizon,
-        sample_offset=sample_offset
+        windows=dataset_attributes.windows,
+        forecast_horizon=dataset_attributes.forecast_horizon,
     )
 
     return DataLoader(
@@ -230,6 +241,34 @@ def get_batches_with_variable_forecast_horizon(
         for _ in range(amount):
             batch = create_batch(dataset, batch_size)
             batches.append(batch)
+
+    indices = torch.randperm(len(batches), generator=torch_rng).numpy()
+    shuffled_batches = [batches[i] for i in indices]
+
+    return shuffled_batches
+
+def get_batches_with_whole_ts(
+    *,
+    X_train: torch.Tensor,
+    y_train: torch.Tensor,
+    max_steps: int,
+    torch_rng: torch.Generator,
+    batch_size: int,
+    forecast_horizon: int,
+    sample_offset: int,
+):
+    batches = []
+    for _ in range(amount):
+        dataset = TimeSeriesDataset(
+            X_train=X_train,
+            y_train=y_train,
+            max_steps=max_steps * batch_size,
+            context_size=context_size,
+            forecast_horizon=forecast_horizon,
+            sample_offset=sample_offset
+        )
+        batch = create_batch(dataset, batch_size)
+        batches.append(batch)
 
     indices = torch.randperm(len(batches), generator=torch_rng).numpy()
     shuffled_batches = [batches[i] for i in indices]

@@ -24,9 +24,10 @@ from finetuning_scripts.metric_utils.ag_metrics import get_metric
 from finetuning_scripts.training_utils.ag_early_stopping import AdaptiveES
 #from finetuning_scripts.training_utils.data_utils import get_data_loader
 from finetune_tabpfn_ts.edits.data_utils import get_data_loader
+from finetune_tabpfn_ts.edits.data_utils import get_batches_with_whole_ts
 from finetuning_scripts.training_utils.model_utils import save_model
 from finetuning_scripts.training_utils.training_loss import compute_loss, get_loss
-from finetuning_scripts.training_utils.validation_utils import validate_tabpfn
+from finetune_tabpfn_ts.edits.validation_utils import validate_tabpfn_fixed_context
 from schedulefree import AdamWScheduleFree
 from tabpfn import TabPFNClassifier, TabPFNRegressor
 from tabpfn.base import load_model_criterion_config
@@ -58,6 +59,7 @@ def fine_tune_tabpfn(
     # Finetuning HPs
     time_limit: int,
     finetuning_config: dict,
+    dataset_attributes: DatasetAttributes,
     validation_metric: SupportedValidationMetric,
     # Input Data
     X_train: np.ndarray | torch.Tensor,
@@ -70,14 +72,13 @@ def fine_tune_tabpfn(
     X_val: np.ndarray | torch.Tensor | None,
     y_val: np.ndarray | torch.Tensor | None,
     random_seed: int = 42,
-    pred_length: int,
+    val_time_series_amount: int = None,
     # Other
     logger_level: int = 20,
     show_training_curve: bool = False,
     use_wandb: bool = False,
     use_sklearn_interface_for_validation: bool = False,
     model_for_validation: TabPFNClassifier | TabPFNRegressor = None,
-    dataset_name: str
 ) -> None:
     """Fine-tune a TabPFN model.
 
@@ -194,14 +195,15 @@ def fine_tune_tabpfn(
     if not create_val_data:
         n_samples += len(X_val)
     else:
-        from finetuning_scripts.training_utils.validation_utils import create_val_data
+        from finetune_tabpfn_ts.edits.validation_utils import create_val_data
 
         X_train, X_val, y_train, y_val = create_val_data(
             X_train=X_train,
             y_train=y_train,
             rng=rng,
-            n_samples=n_samples,
-            is_classification=False,
+            n_time_series=dataset_attributes.ts_amount,
+            windows_per_series = dataset_attributes.windows,
+            val_time_series = val_time_series_amount
         )
     val_report = f"""
     === Basic / Validation State ===
@@ -258,30 +260,23 @@ def fine_tune_tabpfn(
 
     Xv = ensure_tensor(X_val).float()
     yv = ensure_tensor(y_val).float()
-    Xv = Xv.unsqueeze(1)
-    yv = yv.unsqueeze(1)
 
-    train_idx = slice(0, Xv.shape[0] - pred_length)
-    test_idx = slice(Xv.shape[0] - pred_length, Xv.shape[0])
-
-    Xv_train = Xv[train_idx]
-    yv_train = yv[train_idx]
-    Xv_test = Xv[test_idx]
-    yv_test = yv[test_idx]
+    if Xv.dim() == 2:
+        Xv = Xv.unsqueeze(1)
+    if yv.dim() == 2:
+        yv = yv.unsqueeze(1)
 
     validate_tabpfn_fn = partial(
-        validate_tabpfn,
-        X_train=Xv_train,
-        y_train=yv_train,
-        X_val=Xv_test,
-        y_val=yv_test,
+        validate_tabpfn_fixed_context,
+        X_val=Xv,
+        y_val=yv,
+        dataset_attributes = dataset_attributes,
         validation_metric=validation_metric,
         model_forward_fn=model_forward_fn,
         task_type=task_type,
         device=device,
-        use_sklearn_interface_for_validation=use_sklearn_interface_for_validation,
-        model_for_validation=model_for_validation
     )
+
     model.eval()
     optimizer.eval()
     with torch.no_grad():
@@ -325,10 +320,8 @@ def fine_tune_tabpfn(
         y_train=y_train,
         max_steps=fts.max_steps,
         torch_rng=torch.Generator(),
-        context_size=pred_length * 2,
-        forecast_horizon=pred_length,
+        dataset_attributes = dataset_attributes,
         batch_size=fts.batch_size,
-        sample_offset=2,
         num_workers=fts.data_loader_workers,
     )
     # Setup progress bar
@@ -603,6 +596,8 @@ def _fine_tune_step(
     batch_y_train = torch.movedim(batch_y_train, 0, 1).to(device)
     batch_y_test = torch.movedim(batch_y_test, 0, 1).to(device)
 
+    print("batch_X_test", batch_X_test.shape)
+    print("batch_y_test", batch_y_test.shape)
     # Forward Mixed Precision
     with autocast(device_type=device, enabled=scaler.is_enabled()):
         pred_logits = model_forward_fn(  # autocast in model_forward_fn

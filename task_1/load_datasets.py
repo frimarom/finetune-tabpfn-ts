@@ -138,11 +138,13 @@ def stack_records_along_z(records):
         X_tensor = torch.tensor(X.copy().values).float()
         y_tensor = torch.tensor(y.copy().values).reshape(-1, 1).float()
 
-        X_list.append(X_tensor)
-        y_list.append(y_tensor)
+        X_list.append(X_tensor.numpy())
+        y_list.append(y_tensor.numpy())
 
-    X_stacked = torch.stack(X_list, dim=-1)
-    y_stacked = torch.stack(y_list, dim=-1)
+    X_stacked = np.array(X_list, dtype=object)
+    y_stacked = np.array(y_list, dtype=object)
+    #X_stacked = torch.stack(X_list, dim=-1)
+    #y_stacked = torch.stack(y_list, dim=-1)
 
     return X_stacked, y_stacked
 
@@ -153,6 +155,33 @@ def get_transformed_stacked_dataset(dataset: str):
 
 def calculate_forecast_horizon():
     return np.random.randint(1, 5)
+
+def load_m4_datasets(name: str):
+    if not name.startswith("m4"):
+        raise ValueError("Only m4 datasets are supported in load_m4_datasets")
+    dataset = load_dataset(name)
+
+    records = []
+    for time_series in dataset.gluonts_dataset:
+        pandas_ts = to_pandas(time_series)
+
+        dataframe = pandas_ts.to_frame().reset_index()
+        dataframe.columns = ["timestamp", "target"]
+
+        dataframe["timestamp"] = dataframe["timestamp"].dt.to_timestamp()
+
+        dataframe["item_id"] = time_series["item_id"]
+
+        train_part_ts = TimeSeriesDataFrame(dataframe)
+        transformed_data = transform_data(train_part_ts)
+        X, y = to_x_y(transformed_data)
+
+        records.append({
+            "X": X,
+            "y": y,
+        })
+
+    return records
 
 
 def test_batching_and_dataloader():
@@ -245,5 +274,17 @@ def test_get_transformed_stacked_dataset():
     plt.savefig("finetune_tabpfn_ts/time_series.png")
 
 if __name__ == "__main__":
-    test_get_transformed_stacked_dataset()
+    dataset = load_dataset("covid_deaths")
+    print("Dataset:", "SZ_TAXI/15T")
+
+    print("windows", dataset.windows)
+
+    print("dataset", len(next(iter(dataset.gluonts_dataset))["target"]))
+    print("forecast_horizon", dataset.prediction_length)
+    print("min series length", dataset._min_series_length)
+    print("sum series length", dataset.sum_series_length)
+    print("training:", dataset.training_dataset)
+    print("validation:", dataset.validation_dataset)
+    print("test data:", dataset.test_data)
+    #test_get_transformed_stacked_dataset()
     # test_batching_and_dataloader()
