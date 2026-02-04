@@ -26,7 +26,7 @@ if __name__ == "__main__":
     ds_name = args.dataset
     dataset = Dataset(ds_name)
     dataset_attributes = DatasetAttributes(name = dataset.name,
-                                           time_series_length = 744, # desired length
+                                           time_series_length = len(next(iter(dataset.gluonts_dataset))["target"]), # TODO make variable
                                            ts_amount = len(dataset.gluonts_dataset),
                                            forecast_horizon = dataset.prediction_length,
                                            context_size = 0,

@@ -119,12 +119,16 @@ class TimeSeriesDataset(Dataset):
         s_X_train, s_X_test, s_y_train, s_y_test = self.create_data(
             time_series, start_idx, train_test_bound, end_idx
         )
+        #TODO overwork this part
+        """
         # filter out padding filled time series
         while (s_X_train[:, 28].numpy() == 0).sum() >= s_X_train.shape[0]*0.5:
+            TimeSeriesDataset.time_series_window_count[time_series] += 1
             time_series, start_idx, train_test_bound, end_idx = self.get_splits()
             s_X_train, s_X_test, s_y_train, s_y_test = self.create_data(
                 time_series, start_idx, train_test_bound, end_idx
             )
+        """
 
         return dict(
             X_train=s_X_train,
