@@ -69,6 +69,9 @@ class TimeSeriesDataset(Dataset):
         rng = np.random.RandomState(seed)
 
         while True:
+            if TimeSeriesDataset.time_series_window_count.count(windows) == len(TimeSeriesDataset.time_series_window_count):
+                TimeSeriesDataset.time_series_window_count = np.zeros(X_train.shape[2])
+
             time_series = rng.randint(0, z_len)
             while TimeSeriesDataset.time_series_window_count[time_series] >= windows :
                 time_series = rng.randint(0, z_len)
