@@ -34,6 +34,7 @@ if __name__ == "__main__":
                                            windows = dataset.windows)
     print("Dataset:", ds_name)
     print("Prediction length:", dataset.prediction_length)
+    print("Windows:", dataset.windows)
     train_X, train_y = create_homgenous_ts_dataset(ds_name, dataset_attributes.time_series_length)
     print("shapes", train_X.shape, train_y.shape)
 

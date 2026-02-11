@@ -19,7 +19,7 @@ from finetuning_scripts.constant_utils import (
     SupportedValidationMetric,
     TaskType,
 )
-from finetuning_scripts.data_classes import FineTuneSetup, FineTuneStepResults
+from finetune_tabpfn_ts.edits.data_classes import FineTuneSetup, FineTuneStepResults
 from finetuning_scripts.metric_utils.ag_metrics import get_metric
 from finetuning_scripts.training_utils.ag_early_stopping import AdaptiveES
 #from finetuning_scripts.training_utils.data_utils import get_data_loader
@@ -50,7 +50,6 @@ warnings.filterwarnings(
     category=UserWarning,
     message=".*input value tensor is non-contiguous.*",
 )
-
 
 def fine_tune_tabpfn(
     *,
@@ -175,6 +174,10 @@ def fine_tune_tabpfn(
     model = models[0]
     model.criterion = criterion
     checkpoint_config = checkpoint_configs[0].__dict__
+
+    ref_params = {
+            name: p.detach().clone()
+            for name, p in model.named_parameters()}
 
     is_data_parallel = False
     if device == "cuda" and use_multiple_gpus and torch.cuda.device_count() > 1:
@@ -362,6 +365,8 @@ def fine_tune_tabpfn(
             model=model,
             scaler=scaler,
             step_with_update=update_now,
+            l2_sp_lambda = fts.l2_sp_lambda,
+            ref_params = ref_params,
         )
 
         if step_results.optimizer_step_skipped:
@@ -553,6 +558,8 @@ def _fine_tune_step(
     scaler: GradScaler,
     step_with_update: bool,
     gradient_accumulation_steps: int | None = None,
+    l2_sp_lambda: float,
+    ref_params: dict,
 ) -> FineTuneStepResults:
     """Perform one fine-tuning step for a TabPFN model.
 
@@ -607,7 +614,14 @@ def _fine_tune_step(
             X_test=batch_X_test,
             outer_loop_autocast=True,
         )
-        loss = compute_loss(loss_fn=loss_fn, logits=pred_logits, target=batch_y_test)
+        task_loss = compute_loss(loss_fn=loss_fn, logits=pred_logits, target=batch_y_test)
+
+        l2_sp_loss = 0.0
+        for name, p in model.named_parameters():
+            if p.requires_grad:
+                l2_sp_loss += torch.sum((p - ref_params[name]) ** 2)
+
+        loss = task_loss + 0.5 * l2_sp_lambda * l2_sp_loss
 
         if gradient_accumulation_steps is not None:
             loss = loss / gradient_accumulation_steps
@@ -662,6 +676,7 @@ def _setup_tuning(
     min_patience: int = 50,
     max_patience: int = 100,
     data_loader_workers: int = 1,
+    l2_sp_lambda: float = 1e-4,
     # Metadata
     model: PerFeatureTransformer,
     task_type: TaskType,
@@ -669,7 +684,7 @@ def _setup_tuning(
     is_data_parallel: bool,
 ) -> FineTuneSetup:
     return FineTuneSetup(
-        optimizer=AdamWScheduleFree(model.parameters(), lr=learning_rate),
+        optimizer=AdamWScheduleFree(model.parameters(), lr=learning_rate, weight_decay=0.0),
         max_steps=max_steps,
         adaptive_es=AdaptiveES(
             adaptive_rate=adaptive_rate,
@@ -686,6 +701,7 @@ def _setup_tuning(
             borders=None if is_classification else
                     (model.module.criterion.borders if is_data_parallel else model.criterion.borders),
         ),
+        l2_sp_lambda=l2_sp_lambda,
     )
 
 
