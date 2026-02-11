@@ -41,6 +41,7 @@ if __name__ == "__main__":
     print("Windows:", dataset.windows)
     train_X, train_y = create_homgenous_ts_dataset(ds_name, dataset_attributes.time_series_length)
     print("shapes", train_X.shape, train_y.shape)
+    print(dataset_attributes.report_str)
 
     fine_tune_tabpfn(
         path_to_base_model="./tabpfn-v2-regressor-2noar4o2.ckpt",

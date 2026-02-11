@@ -448,9 +448,8 @@ def fine_tune_tabpfn(
         show_training_curve=show_training_curve,
         st_time=st_time,
         finetuning_config=finetuning_config,
-        dataset_name=dataset_name,
-        pred_length=pred_length,
-        time_limit=time_limit
+        dataset_attributes=dataset_attributes,
+        time_limit = time_limit
     )
 
 
@@ -505,17 +504,22 @@ def _model_forward(
             - regression: (n_samples, batch_size)
     """
     # TabPFN model assumes z-normalized inputs.
-    mean = y_train.mean(dim=0)
-    std = y_train.std(dim=0)
-    y_train = (y_train - mean) / std
+    mean = y_train.mean(dim=0, keepdim=True)
+    std = y_train.std(dim=0, keepdim=True) + 1e-8  # Verhindere Division durch 0
+
+    y_train_normalized = (y_train - mean) / std
+
+    # WICHTIG: Borders auch normalisieren für das Training!
+    if not forward_for_validation:
+        criterion = model.module.criterion if is_data_parallel else model.criterion
+        original_borders = criterion.borders.clone()
+        criterion.borders = (original_borders - mean) / std
 
     X_all = torch.cat([X_train, X_test], dim=0)
-    y_all = y_train
 
     forward_kwargs = dict(
         x=X_all,
-        y=y_all,
-       # X_test=X_test,
+        y=y_train_normalized,
         categorical_inds=categorical_features_index,
     )
 
@@ -525,21 +529,22 @@ def _model_forward(
         with autocast(device_type=device, enabled=use_autocast):
             pred_logits = model(**forward_kwargs)
 
-    # Need to go step-wise over batch size as bar_dist.mean() does not support batched output.
     pred_logits = pred_logits.float()
 
     if softmax_temperature is not None:
         pred_logits = pred_logits / softmax_temperature
 
+    # Für Validation: Denormalisiere die Predictions
     if forward_for_validation:
         new_pred_logits = []
         for batch_i in range(pred_logits.shape[1]):
             bar_dist = deepcopy(model.module.criterion if is_data_parallel else model.criterion)
-            bar_dist.borders = (
-                    bar_dist.borders * std[batch_i] + mean[batch_i]
-            ).float()
+            bar_dist.borders = (bar_dist.borders * std[0, batch_i] + mean[0, batch_i]).float()
             new_pred_logits.append(bar_dist.mean(pred_logits[:, batch_i, :]))
         pred_logits = torch.stack(new_pred_logits, dim=-1)
+    else:
+        # Borders zurücksetzen nach dem Training Forward Pass
+        criterion.borders = original_borders
 
     return pred_logits
 
@@ -603,18 +608,25 @@ def _fine_tune_step(
     batch_y_train = torch.movedim(batch_y_train, 0, 1).to(device)
     batch_y_test = torch.movedim(batch_y_test, 0, 1).to(device)
 
-    print("batch_X_test", batch_X_test.shape)
-    print("batch_y_test", batch_y_test.shape)
-    # Forward Mixed Precision
+    # WICHTIG: Gleiche Normalisierung wie in model_forward!
+    mean = batch_y_train.mean(dim=0, keepdim=True)
+    std = batch_y_train.std(dim=0, keepdim=True) + 1e-8
+    batch_y_test_normalized = (batch_y_test - mean) / std
+
     with autocast(device_type=device, enabled=scaler.is_enabled()):
-        pred_logits = model_forward_fn(  # autocast in model_forward_fn
+        pred_logits = model_forward_fn(
             model=model,
             X_train=batch_X_train,
             y_train=batch_y_train,
             X_test=batch_X_test,
             outer_loop_autocast=True,
         )
-        task_loss = compute_loss(loss_fn=loss_fn, logits=pred_logits, target=batch_y_test)
+        # Loss mit normalisiertem Target!
+        task_loss = compute_loss(
+            loss_fn=loss_fn,
+            logits=pred_logits,
+            target=batch_y_test_normalized
+        )
 
         l2_sp_loss = 0.0
         for name, p in model.named_parameters():
@@ -715,10 +727,11 @@ def _tore_down_tuning(
     fts: FineTuneSetup,
     task_type: TaskType,
     finetuning_config: dict,
-    dataset_name: str,
-    pred_length: int,
+    dataset_attributes: DatasetAttributes,
     time_limit: int,
 ) -> None:
+    dataset_name = dataset_attributes.name
+    pred_length = dataset_attributes.forecast_horizon
     # -- Early Stopping reason (after tqdm finished)
     es_reason = None
     if early_stop_no_imp:

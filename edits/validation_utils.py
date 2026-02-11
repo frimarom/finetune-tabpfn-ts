@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
+from matplotlib import pyplot as plt
 from finetuning_scripts.constant_utils import SupportedDevice, TaskType
 from sklearn.model_selection import train_test_split
 
@@ -51,6 +52,7 @@ def create_val_data(
     # create true/false mask array with ntime_series * test_size true values
     mask = np.zeros(n_time_series, dtype=bool)
     mask_indices = random.sample(range(n_time_series), int(val_time_series))
+    print("Val indices", mask_indices)
     mask[mask_indices] = True
 
     X_t = X_train
@@ -81,7 +83,6 @@ def validate_tabpfn_fixed_context(
     """
     n_samples = X_val.shape[2]
     forecast_horizon = dataset_attributes.forecast_horizon
-    offset = dataset_attributes.offset
     windows = dataset_attributes.windows
 
     all_window_scores = []
@@ -103,10 +104,11 @@ def validate_tabpfn_fixed_context(
             series_length - forecast_horizon - w * context_length
             for w in reversed(range(windows))
         ]
-
+        print("origins", origins)
+        print("context_length", context_length)
         window_scores = []
 
-        for origin in origins:
+        for index, origin in enumerate(origins):
             origin = max(0, origin)
 
             # Slice History bis zum origin
@@ -130,9 +132,24 @@ def validate_tabpfn_fixed_context(
             if task_type == TaskType.REGRESSION:
                 y_pred = pred_logits.float().flatten().cpu().detach().numpy()
                 y_true = y_window_true.float().flatten().cpu().detach().numpy()
+                print("y_pred Validation", y_pred)
+                print("y_true Validation", y_true)
             else:
                 raise ValueError(f"Task type {task_type} not supported.")
 
+            """
+            print("X_window_train shape", X_window_train.shape)
+            print("X_window_test shape", X_window_test.shape)
+            print("y_window_train shape", y_window_train.shape)
+            print("y_window_test shape", y_window_true.shape)
+
+            plt.plot(X_window_train[:, 0, 0], y_window_train[:, 0, 0], color="blue")
+            plt.plot(X_window_test[:, 0, 0], y_window_true[:, 0, 0], color="green")
+            plt.plot(X_window_test[:, 0, 0], y_pred, color="red")
+
+            plt.savefig(f"finetune_tabpfn_ts/training_prediction_tsidx_{ts_idx}_windowidx_{index}.png")
+            plt.clf()
+            """
             score = validation_metric(y_true=y_true, y_pred=y_pred)
             window_scores.append(score)
 
