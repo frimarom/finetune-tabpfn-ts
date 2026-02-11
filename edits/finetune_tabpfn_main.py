@@ -175,16 +175,16 @@ def fine_tune_tabpfn(
     model.criterion = criterion
     checkpoint_config = checkpoint_configs[0].__dict__
 
-    ref_params = {
-            name: p.detach().clone()
-            for name, p in model.named_parameters()}
-
     is_data_parallel = False
     if device == "cuda" and use_multiple_gpus and torch.cuda.device_count() > 1:
         model = DataParallel(model, device_ids=multiple_device_ids)
         is_data_parallel = True
 
     model.to(device) # Wenn eine GPU vorhanden ist, wird das Modell auf die GPU verschoben.
+
+    ref_params = {
+        name: p.detach().clone()
+        for name, p in model.named_parameters()}
 
     if use_wandb:
         import wandb
