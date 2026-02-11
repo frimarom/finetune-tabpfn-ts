@@ -25,10 +25,12 @@ TIME_LIMIT=$3
 LEARNING_RATE=$4
 BATCH_SIZE=$5
 VAL_AMOUNT=$6
+VAL_STEPS=$7
+UPDATE_STEPS=$8
 
-if [ "$#" -lt 6 ]; then
+if [ "$#" -lt 8 ]; then
     echo "Usage:"
-    echo "  sbatch run.sh <dataset> <checkpoint_name> <time_limit> <learning_rate> <batch_size> <time_series_val_amount>"
+    echo "  sbatch run.sh <dataset> <checkpoint_name> <time_limit> <learning_rate> <batch_size> <time_series_val_amount> <val_steps> <update_steps>"
     exit 1
 fi
 
@@ -39,6 +41,8 @@ srun -n1 -c8 \
     --time_limit "$TIME_LIMIT" \
     --learning_rate "$LEARNING_RATE" \
     --batch_size "$BATCH_SIZE" \
-    --time_series_val_amount "$VAL_AMOUNT"
+    --time_series_val_amount "$VAL_AMOUNT"\
+    --validate_every_n_steps "$VAL_STEPS" \
+    --update_every_n_steps "$UPDATE_STEPS"
 
 wait

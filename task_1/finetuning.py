@@ -20,6 +20,10 @@ if __name__ == "__main__":
     parser.add_argument("--learning_rate", type=float, default=0.00001, help="Learning rate for fine-tuning")
     parser.add_argument("--batch_size", type=int, default=16, help="Batch size for fine-tuning")
     parser.add_argument("--time_series_val_amount", type=int, default=-1, help="Number of time series to use for validation")
+    #update_every_n_steps: int = 1,
+    parser.add_argument("--update_every_n_steps", type=int, default=1, help="Number of steps to update the model before validation")
+    #validate_every_n_steps: int = 1,
+    parser.add_argument("--validate_every_n_steps", type=int, default=1, help="Number of steps to validate the model")
 
     args = parser.parse_args()
 
@@ -43,7 +47,12 @@ if __name__ == "__main__":
         save_path_to_fine_tuned_model=f"./{args.checkpoint_name}.ckpt",
         # Finetuning HPs
         time_limit=args.time_limit,
-        finetuning_config={"learning_rate": args.learning_rate, "batch_size": args.batch_size, "min_patience": 100, "max_patience": 200},
+        finetuning_config={"learning_rate": args.learning_rate,
+                           "batch_size": args.batch_size,
+                           "min_patience": 100,
+                           "max_patience": 200,
+                           "validate_every_n_steps": args.validate_every_n_steps,
+                           "update_every_n_steps": args.update_every_n_steps},
         validation_metric="mean_absolute_error",
         dataset_attributes = dataset_attributes,
         X_train=train_X,
