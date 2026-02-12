@@ -509,12 +509,6 @@ def _model_forward(
 
     y_train_normalized = (y_train - mean) / std
 
-    # WICHTIG: Borders auch normalisieren für das Training!
-    if not forward_for_validation:
-        criterion = model.module.criterion if is_data_parallel else model.criterion
-        original_borders = criterion.borders.clone()
-        criterion.borders = (original_borders - mean) / std
-
     X_all = torch.cat([X_train, X_test], dim=0)
 
     forward_kwargs = dict(
@@ -534,17 +528,14 @@ def _model_forward(
     if softmax_temperature is not None:
         pred_logits = pred_logits / softmax_temperature
 
-    # Für Validation: Denormalisiere die Predictions
     if forward_for_validation:
         new_pred_logits = []
         for batch_i in range(pred_logits.shape[1]):
             bar_dist = deepcopy(model.module.criterion if is_data_parallel else model.criterion)
-            bar_dist.borders = (bar_dist.borders * std[0, batch_i] + mean[0, batch_i]).float()
-            new_pred_logits.append(bar_dist.mean(pred_logits[:, batch_i, :]))
+            pred_mean_normalized = bar_dist.mean(pred_logits[:, batch_i, :])
+            pred_mean = pred_mean_normalized * std[0, batch_i] + mean[0, batch_i]
+            new_pred_logits.append(pred_mean)
         pred_logits = torch.stack(new_pred_logits, dim=-1)
-    else:
-        # Borders zurücksetzen nach dem Training Forward Pass
-        criterion.borders = original_borders
 
     return pred_logits
 
