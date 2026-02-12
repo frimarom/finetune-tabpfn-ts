@@ -75,6 +75,9 @@ def validate_tabpfn_fixed_context(
     model: PerFeatureTransformer,
     model_forward_fn: Callable,
     task_type: TaskType,
+    plotting: bool = False,
+    plot_save_path: str = "./validation_plots",
+    iteration: int = 0,
     device: str,
 ) -> float:
     """
@@ -137,19 +140,14 @@ def validate_tabpfn_fixed_context(
             else:
                 raise ValueError(f"Task type {task_type} not supported.")
 
-            """
-            print("X_window_train shape", X_window_train.shape)
-            print("X_window_test shape", X_window_test.shape)
-            print("y_window_train shape", y_window_train.shape)
-            print("y_window_test shape", y_window_true.shape)
+            if plotting:
+                plt.plot(X_window_train[:, 0, 0], y_window_train[:, 0, 0], color="blue")
+                plt.plot(X_window_test[:, 0, 0], y_window_true[:, 0, 0], color="green")
+                plt.plot(X_window_test[:, 0, 0], y_pred, color="red")
 
-            plt.plot(X_window_train[:, 0, 0], y_window_train[:, 0, 0], color="blue")
-            plt.plot(X_window_test[:, 0, 0], y_window_true[:, 0, 0], color="green")
-            plt.plot(X_window_test[:, 0, 0], y_pred, color="red")
+                plt.savefig(f"{plot_save_path}/validation_pred_{dataset_attributes.name.replace('/', '_')}_iter_{iteration}_{ts_idx}_windowidx_{index}.png")
+                plt.clf()
 
-            plt.savefig(f"finetune_tabpfn_ts/training_prediction_tsidx_{ts_idx}_windowidx_{index}.png")
-            plt.clf()
-            """
             score = validation_metric(y_true=y_true, y_pred=y_pred)
             window_scores.append(score)
 
