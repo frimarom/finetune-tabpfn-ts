@@ -73,6 +73,7 @@ def fine_tune_tabpfn(
     random_seed: int = 42,
     val_time_series_amount: int = None,
     # Other
+    path_for_graphs: str = ".",
     logger_level: int = 20,
     show_training_curve: bool = False,
     use_wandb: bool = False,
@@ -278,6 +279,7 @@ def fine_tune_tabpfn(
         model_forward_fn=model_forward_fn,
         task_type=task_type,
         device=device,
+        plot_save_path = f"./{path_for_graphs}",
     )
 
     model.eval()
@@ -285,6 +287,8 @@ def fine_tune_tabpfn(
     with torch.no_grad():
         best_validation_loss = validate_tabpfn_fn(
             model=model,
+            plotting = True,
+            iteration = 0,
         )  # Initial validation loss
     adaptive_es.update(cur_round=0, is_best=True)
 
@@ -437,6 +441,11 @@ def fine_tune_tabpfn(
         # Break from adaptive early stopping
         # Break if not enough time for another epoch
         if early_stop_no_imp or early_stop_no_time:
+            validate_tabpfn_fn(
+                model=model,
+                plotting=True,
+                iteration=step_i,
+            )
             break
 
     _tore_down_tuning(

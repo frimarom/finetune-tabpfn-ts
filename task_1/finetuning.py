@@ -7,6 +7,7 @@ from finetune_tabpfn_ts.task_1.dataset_utils import DatasetAttributes
 import argparse
 import logging
 import torch.cuda
+import os
 
 from gift_eval.data import Dataset
 
@@ -20,11 +21,9 @@ if __name__ == "__main__":
     parser.add_argument("--learning_rate", type=float, default=0.00001, help="Learning rate for fine-tuning")
     parser.add_argument("--batch_size", type=int, default=16, help="Batch size for fine-tuning")
     parser.add_argument("--time_series_val_amount", type=int, default=-1, help="Number of time series to use for validation")
-    #update_every_n_steps: int = 1,
     parser.add_argument("--update_every_n_steps", type=int, default=1, help="Number of steps to update the model before validation")
-    #validate_every_n_steps: int = 1,
     parser.add_argument("--validate_every_n_steps", type=int, default=1, help="Number of steps to validate the model")
-
+    parser.add_argument("--path_for_graphs" , type=str, default="finetuning_graphs", help="Path to save the training graphs")
     args = parser.parse_args()
 
     ds_name = args.dataset
@@ -42,6 +41,9 @@ if __name__ == "__main__":
     train_X, train_y = create_homgenous_ts_dataset(ds_name, dataset_attributes.time_series_length)
     print("shapes", train_X.shape, train_y.shape)
     print(dataset_attributes.report_str)
+
+    if args.path_for_graphs is not None and not os.path.exists(args.path_for_graphs):
+        os.makedirs(args.path_for_graphs)
 
     fine_tune_tabpfn(
         path_to_base_model="./tabpfn-v2-regressor-2noar4o2.ckpt",
@@ -65,6 +67,7 @@ if __name__ == "__main__":
         y_val = None,
         val_time_series_amount = None if args.time_series_val_amount == -1 else args.time_series_val_amount,
         # Optional
+        path_for_graphs = args.path_for_graphs,
         show_training_curve=True,  # Shows a final report after finetuning.
         logger_level=0,  # Shows all logs, higher values shows less
         use_wandb=False,  # Init wandb yourself, and set to True
