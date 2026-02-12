@@ -141,9 +141,15 @@ def validate_tabpfn_fixed_context(
                 raise ValueError(f"Task type {task_type} not supported.")
 
             if plotting:
-                plt.plot(X_window_train[:, 0, 0], y_window_train[:, 0, 0], color="blue")
-                plt.plot(X_window_test[:, 0, 0], y_window_true[:, 0, 0], color="green")
-                plt.plot(X_window_test[:, 0, 0], y_pred, color="red")
+                x_train_plot = X_window_train[:, 0, 0].detach().cpu().numpy()
+                y_train_plot = y_window_train[:, 0, 0].detach().cpu().numpy()
+
+                x_test_plot = X_window_test[:, 0, 0].detach().cpu().numpy()
+                y_test_plot = y_window_true[:, 0, 0].detach().cpu().numpy()
+
+                plt.plot(x_train_plot, y_train_plot, color="blue")
+                plt.plot(x_test_plot, y_test_plot, color="green")
+                plt.plot(x_test_plot, y_pred, color="red")
 
                 plt.savefig(f"{plot_save_path}/validation_pred_{dataset_attributes.name.replace('/', '_')}_iter_{iteration}_{ts_idx}_windowidx_{index}.png")
                 plt.clf()
