@@ -171,7 +171,7 @@ def fine_tune_tabpfn(
         version="v2",
         download_if_not_exists=True,
     )
-
+    torch.set_printoptions(threshold=10000)
     model = models[0]
     model.criterion = criterion
     checkpoint_config = checkpoint_configs[0].__dict__
@@ -182,6 +182,9 @@ def fine_tune_tabpfn(
         is_data_parallel = True
 
     model.to(device) # Wenn eine GPU vorhanden ist, wird das Modell auf die GPU verschoben.
+
+    #print("Borders shape: ", model.module.criterion.borders.shape if is_data_parallel else model.criterion.borders.shape)
+    #print("Borders:" , model.module.criterion.borders if is_data_parallel else model.criterion.borders)
 
     ref_params = {
         name: p.detach().clone()
@@ -514,7 +517,7 @@ def _model_forward(
     """
     # TabPFN model assumes z-normalized inputs.
     mean = y_train.mean(dim=0, keepdim=True)
-    std = y_train.std(dim=0, keepdim=True) + 1e-8  # Verhindere Division durch 0
+    std = y_train.std(dim=0, keepdim=True) + 1e-8
 
     y_train_normalized = (y_train - mean) / std
 
@@ -536,6 +539,24 @@ def _model_forward(
 
     if softmax_temperature is not None:
         pred_logits = pred_logits / softmax_temperature
+
+    """
+        if not forward_for_validation:
+        criterion = model.module.criterion if is_data_parallel else model.criterion
+        original_borders = criterion.borders.clone()
+        criterion.borders = (original_borders - mean) / std
+    """
+
+    """    if forward_for_validation:
+        new_pred_logits = []
+        for batch_i in range(pred_logits.shape[1]):
+            bar_dist = deepcopy(model.module.criterion if is_data_parallel else model.criterion)
+            bar_dist.borders = (bar_dist.borders * std[0, batch_i] + mean[0, batch_i]).float()
+            new_pred_logits.append(bar_dist.mean(pred_logits[:, batch_i, :]))
+        pred_logits = torch.stack(new_pred_logits, dim=-1)
+    else:
+        # Borders zurücksetzen nach dem Training Forward Pass
+        criterion.borders = original_borders"""
 
     if forward_for_validation:
         new_pred_logits = []
@@ -608,7 +629,6 @@ def _fine_tune_step(
     batch_y_train = torch.movedim(batch_y_train, 0, 1).to(device)
     batch_y_test = torch.movedim(batch_y_test, 0, 1).to(device)
 
-    # WICHTIG: Gleiche Normalisierung wie in model_forward!
     mean = batch_y_train.mean(dim=0, keepdim=True)
     std = batch_y_train.std(dim=0, keepdim=True) + 1e-8
     batch_y_test_normalized = (batch_y_test - mean) / std
@@ -756,7 +776,6 @@ def _tore_down_tuning(
     logger.info(fine_tuning_report)
 
     if show_training_curve:
-        # --- Short Plot Hack
         import matplotlib.pyplot as plt
         import seaborn as sns
 
@@ -764,7 +783,7 @@ def _tore_down_tuning(
         raw_train_loss_over_time = train_loss_over_time[:]
         for i in range(1, len(train_loss_over_time) + 1):
             train_loss_over_time[i - 1] = np.mean(
-                raw_train_loss_over_time[max(0, i - fts.update_every_n_steps) : i],
+                raw_train_loss_over_time[max(0, i - fts.update_every_n_steps): i],
             )
         validation_loss_over_time = [
             step.validation_loss for step in step_results_over_time
@@ -777,47 +796,41 @@ def _tore_down_tuning(
                 "step": range(len(train_loss_over_time)),
             },
         )
-        sns_plot_df = plot_df.melt(
-            id_vars="step",
-            value_vars=["train_loss", "validation_loss"],
-            var_name="loss_type",
-            value_name="loss",
-        )
-        fig, ax = plt.subplots(figsize=(8, 8))
-        ax = sns.lineplot(
-            data=sns_plot_df,
-            x="step",
-            y="loss",
-            hue="loss_type",
-            ax=ax,
-            linewidth=3,
-        )
-        ax.axvline(
-            x=best_step,
-            color="red",
-            linestyle="--",
-            linewidth=2,
-            label="Best Step",
-        )
-        ax.legend(title="Legend")
+
+        fig, ax1 = plt.subplots(figsize=(8, 8))
+
+        # Erste y-Achse für training_loss
+        color_train = 'tab:blue'
+        ax1.set_xlabel('step')
+        ax1.set_ylabel('train_loss', color=color_train)
+        ax1.plot(plot_df['step'], plot_df['train_loss'], color=color_train, linewidth=3, label='train_loss')
 
         if fts.update_every_n_steps > 1:
-            sns_plot_df = plot_df.melt(
-                id_vars="step",
-                value_vars=["raw_train_loss"],
-                var_name="loss_type",
-                value_name="loss",
-            )
-            sns.lineplot(
-                data=sns_plot_df,
-                x="step",
-                y="loss",
-                hue="loss_type",
-                ax=ax,
-                c="blue",
-                alpha=0.5,
-                linewidth=3,
-            )
+            ax1.plot(plot_df['step'], plot_df['raw_train_loss'], color=color_train, alpha=0.5, linewidth=3,
+                     label='raw_train_loss')
+
+        ax1.tick_params(axis='y', labelcolor=color_train)
+
+        # Zweite y-Achse für validation_loss
+        ax2 = ax1.twinx()
+        color_val = 'tab:red'
+        ax2.set_ylabel('validation_loss', color=color_val)
+        ax2.plot(plot_df['step'], plot_df['validation_loss'], color=color_val, linewidth=3, label='validation_loss')
+        ax2.tick_params(axis='y', labelcolor=color_val)
+
+        # Best Step Linie
+        ax1.axvline(
+            x=best_step,
+            color='green',
+            linestyle='--',
+            linewidth=2,
+            label='Best Step',
+        )
+
+        # Legenden kombinieren
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', title='Legend')
 
         hp_text = (
             f"lr={finetuning_config.get('learning_rate', 'not avail')} | "
@@ -835,5 +848,6 @@ def _tore_down_tuning(
             fontsize=10,
         )
 
-        plt.savefig(f"fine_tuning_loss_plot_{task_type}_{dataset_name.replace('/', '_')}_{time_limit}s.png")
+        plt.savefig(f"fine_tuning_loss_plot_{task_type}_{dataset_name.replace('/', '_')}_{time_limit}s.png",
+                    bbox_inches='tight')
         plt.show()
