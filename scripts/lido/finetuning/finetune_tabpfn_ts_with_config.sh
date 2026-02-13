@@ -33,6 +33,6 @@ fi
 srun -n1 -c8 \
     python -m finetune_tabpfn_ts.task_1.finetuning \
     --finetuning_config "${CONFIG}" \
-    --path_to_save_all "finetuning.${SLURM_JOB_ID}"
+    --path_to_save_all "finetuning_results/finetuning.${SLURM_JOB_ID}"
 
 wait
