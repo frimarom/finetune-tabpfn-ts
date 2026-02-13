@@ -1,0 +1,18 @@
+dataset:
+  name: "m4_daily"
+  prediction_length: -1
+  windows: 1
+finetuning:
+  time_limit: 1200
+  batch_size: 16
+  learning_rate: 0.000005
+  l2_sp_lambda: 0.0001
+  weight_decay: 0.0
+  update_every_n_steps: 2
+  validation:
+    validate_every_n_steps: 10
+    ts_val_amount: 50
+    early_stopping:
+      min_patience: 100
+      max_patience: 200
+  checkpoint_to_save: m4_daily_16_5e-6_ckpt

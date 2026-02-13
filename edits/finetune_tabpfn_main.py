@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import random
 import time
 import warnings
@@ -73,7 +74,7 @@ def fine_tune_tabpfn(
     random_seed: int = 42,
     val_time_series_amount: int = None,
     # Other
-    path_for_graphs: str = ".",
+    path_for_all: str = ".",
     logger_level: int = 20,
     show_training_curve: bool = False,
     use_wandb: bool = False,
@@ -273,6 +274,9 @@ def fine_tune_tabpfn(
     if yv.dim() == 2:
         yv = yv.unsqueeze(1)
 
+
+    os.makedirs(f"./{path_for_all}/validation_plots", exist_ok=True)
+
     validate_tabpfn_fn = partial(
         validate_tabpfn_fixed_context,
         X_val=Xv,
@@ -282,7 +286,7 @@ def fine_tune_tabpfn(
         model_forward_fn=model_forward_fn,
         task_type=task_type,
         device=device,
-        plot_save_path = f"./{path_for_graphs}",
+        plot_save_path = f"./{path_for_all}/validation_plots",
     )
 
     model.eval()
@@ -461,7 +465,8 @@ def fine_tune_tabpfn(
         st_time=st_time,
         finetuning_config=finetuning_config,
         dataset_attributes=dataset_attributes,
-        time_limit = time_limit
+        time_limit = time_limit,
+        path_for_all = path_for_all,
     )
 
 
@@ -748,6 +753,7 @@ def _tore_down_tuning(
     task_type: TaskType,
     finetuning_config: dict,
     dataset_attributes: DatasetAttributes,
+    path_for_all: str,
     time_limit: int,
 ) -> None:
     dataset_name = dataset_attributes.name
@@ -859,6 +865,6 @@ def _tore_down_tuning(
             fontsize=10,
         )
 
-        plt.savefig(f"fine_tuning_loss_plot_{task_type}_{dataset_name.replace('/', '_')}_{time_limit}s.png",
+        plt.savefig(f"./{path_for_all}/fine_tuning_loss_plot_{task_type}_{dataset_name.replace('/', '_')}_{time_limit}s.png",
                     bbox_inches='tight')
         plt.show()
