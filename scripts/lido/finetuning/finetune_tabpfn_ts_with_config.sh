@@ -19,7 +19,7 @@ export GIFT_EVAL=/work/smfrromb/finetune_tabpfn_ts/data
 source /work/smfrromb/finetune_tabpfn_ts/.venv/bin/activate
 cd /work/smfrromb || exit
 
-RESULT_DIR="/work/smfrromb/finetuning_results/finetuning.${SLURM_JOB_ID}"
+RESULT_DIR="finetuning_results/finetuning.${SLURM_JOB_ID}"
 mkdir -p "${RESULT_DIR}"
 
 CONFIG="$1"
