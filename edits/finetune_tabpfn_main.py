@@ -776,24 +776,39 @@ def _tore_down_tuning(
     logger.info(fine_tuning_report)
 
     if show_training_curve:
+        # --- Short Plot Hack
         import matplotlib.pyplot as plt
         import seaborn as sns
 
         train_loss_over_time = [step.training_loss for step in step_results_over_time]
         raw_train_loss_over_time = train_loss_over_time[:]
-        for i in range(1, len(train_loss_over_time) + 1):
-            train_loss_over_time[i - 1] = np.mean(
-                raw_train_loss_over_time[max(0, i - fts.update_every_n_steps): i],
-            )
+
+        # Training Loss in 5er-Gruppen zusammenfassen
+        aggregated_train_loss = []
+        aggregated_steps = []
+        window_size = 5
+
+        for i in range(len(train_loss_over_time)):
+            if i == 0:
+                # Punkt 0: nur der erste Wert
+                aggregated_train_loss.append(train_loss_over_time[0])
+                aggregated_steps.append(0)
+            elif i % window_size == 0:
+                # Bei 5, 10, 15, etc.: Mittelwert der letzten 5 Werte
+                start_idx = i - window_size
+                end_idx = i
+                aggregated_train_loss.append(np.mean(train_loss_over_time[start_idx:end_idx]))
+                aggregated_steps.append(i)
+
         validation_loss_over_time = [
             step.validation_loss for step in step_results_over_time
         ]
+
         plot_df = pd.DataFrame(
             {
-                "train_loss": train_loss_over_time,
-                "raw_train_loss": raw_train_loss_over_time,
-                "validation_loss": validation_loss_over_time,
-                "step": range(len(train_loss_over_time)),
+                "train_loss": aggregated_train_loss,
+                "validation_loss": [validation_loss_over_time[i] for i in aggregated_steps],
+                "step": aggregated_steps,
             },
         )
 
@@ -803,12 +818,8 @@ def _tore_down_tuning(
         color_train = 'tab:blue'
         ax1.set_xlabel('step')
         ax1.set_ylabel('train_loss', color=color_train)
-        ax1.plot(plot_df['step'], plot_df['train_loss'], color=color_train, linewidth=3, label='train_loss')
-
-        if fts.update_every_n_steps > 1:
-            ax1.plot(plot_df['step'], plot_df['raw_train_loss'], color=color_train, alpha=0.5, linewidth=3,
-                     label='raw_train_loss')
-
+        ax1.plot(plot_df['step'], plot_df['train_loss'], color=color_train, linewidth=3,
+                 label='train_loss (avg 5 steps)')
         ax1.tick_params(axis='y', labelcolor=color_train)
 
         # Zweite y-Achse für validation_loss
