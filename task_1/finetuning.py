@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     fine_tune_tabpfn(
         path_to_base_model="./tabpfn-v2-regressor-2noar4o2.ckpt",
-        save_path_to_fine_tuned_model=f"./{args.path_to_save_all}/{finetuning_config["finetuning"]["checkpoint_to_save"]}.ckpt",
+        save_path_to_fine_tuned_model=f"./{args.path_to_save_all}/{finetuning_config['finetuning']['checkpoint_to_save']}.ckpt",
         # Finetuning HPs
         time_limit=finetuning_config["finetuning"]["time_limit"],
         finetuning_config={"learning_rate": finetuning_config["finetuning"]["learning_rate"],
