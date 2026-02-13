@@ -24,7 +24,7 @@ mkdir -p "${RESULT_DIR}"
 
 CONFIG="$1"
 
-if [ "$#" -lt 8 ]; then
+if [ "$#" -lt 1 ]; then
     echo "Usage:"
     echo "  sbatch finetune_tabpfn_ts_with_config.sh <path_to_config>"
     exit 1
