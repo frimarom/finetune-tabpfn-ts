@@ -50,7 +50,7 @@ if __name__ == "__main__":
                     "max_patience": 200,
                 },
                 "validate_every_n_steps": 10,
-                "ts_val_amount": 100
+                "ts_val_amount": 30
             },
             "checkpoint_to_save": "test"
         }

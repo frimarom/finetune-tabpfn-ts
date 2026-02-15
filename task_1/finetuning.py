@@ -8,6 +8,7 @@ from finetune_tabpfn_ts.task_1.load_datasets import stack_records_along_z
 from finetune_tabpfn_ts.edits.finetune_tabpfn_main import fine_tune_tabpfn
 from finetune_tabpfn_ts.task_1.dataset_utils import create_homgenous_ts_dataset
 from finetune_tabpfn_ts.task_1.dataset_utils import DatasetAttributes
+from finetune_tabpfn_ts.task_1.dataset_utils import get_prediction_length
 import argparse
 import logging
 import numpy as np
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--finetuning_config", type=str, default=None, help="Path to a yml file containing the fine-tuning config")
     parser.add_argument("--path_to_save_all" , type=str, default="finetuning_graphs", help="Path to save the training graphs")
-    #TODO add pid of cluster
+    #TODO add pid of cluster for later csv logging of results and add option to log results to csv after finetuning is done
     """
     parser.add_argument("--dataset", type=str, help="Name of the dataset to use for fine-tuning")
     parser.add_argument("--checkpoint_name", type=str, default="finetune_tabpfn", help="Name of the checkpoint to save the fine-tuned model")
@@ -61,23 +62,18 @@ if __name__ == "__main__":
         finetuning_config = yaml.safe_load(config_file)
 
     #ensure_correct_config(finetuning_config)
-    dataset = Dataset(finetuning_config["dataset"]["name"]) # TODO make for every type of dataset
 
-    ts_iter = iter(dataset.gluonts_dataset)
-    median_time_series_length = np.median([len(ts["target"]) for ts in ts_iter])
-    print("median",median_time_series_length)
+    train_X, train_y, ts_length = create_homgenous_ts_dataset(finetuning_config["dataset"]["name"])
+
     dataset_attributes = DatasetAttributes(name = finetuning_config["dataset"]["name"],
-                                           time_series_length = len(next(iter(dataset.gluonts_dataset))["target"]), # TODO make variable
-                                           ts_amount = len(dataset.gluonts_dataset),
-                                           forecast_horizon = dataset.prediction_length
+                                           time_series_length = ts_length,
+                                           ts_amount = train_X.shape[2],
+                                           forecast_horizon = get_prediction_length(finetuning_config["dataset"]["name"])
                                            if finetuning_config["dataset"]["prediction_length"] == -1
                                            else finetuning_config["dataset"]["prediction_length"],
                                            context_size = 0,
                                            offset = 0,
                                            windows = finetuning_config["dataset"]["windows"],)
-
-    train_X, train_y = create_homgenous_ts_dataset(dataset_attributes.name, dataset_attributes.time_series_length)
-    print("shapes", train_X.shape, train_y.shape)
     print(dataset_attributes.report_str)
 
     if args.path_to_save_all is not None and not os.path.exists(args.path_to_save_all):

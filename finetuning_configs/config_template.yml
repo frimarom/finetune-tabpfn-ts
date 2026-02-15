@@ -1,0 +1,19 @@
+dataset:
+  name:
+  prediction_length:
+  windows:
+finetuning:
+  time_limit:
+  batch_size:
+  learning_rate:
+  l2_sp_lambda:
+  weight_decay:
+  update_every_n_steps:
+  validation:
+    validate_every_n_steps:
+    ts_val_amount:
+    early_stopping:
+      min_patience:
+      max_patience:
+  checkpoint_to_save:
+  path_to_save_all:

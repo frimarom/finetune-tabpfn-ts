@@ -23,12 +23,37 @@ from tabpfn_time_series.features import (
     AutoSeasonalFeature,
 )
 
+import datasets
 from pathlib import Path
 from gluonts.dataset.util import to_pandas
+from tabpfn_time_series.data_preparation import to_gluonts_univariate
 import matplotlib.pyplot as plt
 
 short_datasets = "m4_yearly m4_quarterly m4_monthly m4_weekly m4_daily m4_hourly electricity/15T electricity/H electricity/D electricity/W solar/10T solar/H solar/D solar/W hospital covid_deaths us_births/D us_births/M us_births/W saugeenday/D saugeenday/M saugeenday/W temperature_rain_with_missing kdd_cup_2018_with_missing/H kdd_cup_2018_with_missing/D car_parts_with_missing restaurant hierarchical_sales/D hierarchical_sales/W LOOP_SEATTLE/5T LOOP_SEATTLE/H LOOP_SEATTLE/D SZ_TAXI/15T SZ_TAXI/H M_DENSE/H M_DENSE/D ett1/15T ett1/H ett1/D ett1/W ett2/15T ett2/H ett2/D ett2/W jena_weather/10T jena_weather/H jena_weather/D bitbrains_fast_storage/5T bitbrains_fast_storage/H bitbrains_rnd/5T bitbrains_rnd/H bizitobs_application bizitobs_service bizitobs_l2c/5T bizitobs_l2c/H"
 med_long_datasets = "electricity/15T electricity/H solar/10T solar/H kdd_cup_2018_with_missing/H LOOP_SEATTLE/5T LOOP_SEATTLE/H SZ_TAXI/15T M_DENSE/H ett1/15T ett1/H ett2/15T ett2/H jena_weather/10T jena_weather/H bitbrains_fast_storage/5T bitbrains_rnd/5T bizitobs_application bizitobs_service bizitobs_l2c/5T bizitobs_l2c/H"
+
+gift_eval_datasets = short_datasets.split() + med_long_datasets.split()
+autogluon_chronos_datasets = "weatherbench_daily wiki_daily_100k solar_1h"
+
+
+dataset_metadata = {
+    "weatherbench_daily": {
+        "prediction_length": 30,
+        "frequency": "D",
+    },
+    "wiki_daily_100k": {
+        "prediction_length": 30,
+        "frequency": "D",
+    },
+    "solar_1h": {
+        "prediction_length": 48,
+        "frequency": "H",
+    },
+    "monash_tourism_monthly": {
+        "prediction_length": 24,
+        "frequency": "M",
+    }
+}
 
 class Term(Enum):
     SHORT = "short"
@@ -90,7 +115,24 @@ def transform_data(train_data: TimeSeriesDataFrame):
 
     return feature_transformer.transform_one_dataframe(train_data)
 
-def load_and_transform_dataset(name: str):
+def load_and_transform_autogluon_dataset(dataset_choice: str):
+    dataset = datasets.load_dataset("autogluon/chronos_datasets", dataset_choice)
+
+    tsdf = TimeSeriesDataFrame(to_gluonts_univariate(dataset["train"]))
+    tsdf = tsdf[
+        tsdf.index.get_level_values("item_id").isin(tsdf.item_ids[:2])
+    ]
+    print(tsdf)
+    record = []
+    for item_id, ts in tsdf.groupby(level="item_id"):
+        time_series = ts.sort_index()
+        transformed_time_series = transform_data(time_series)
+        X, y = to_x_y(transformed_time_series)
+        record.append({"X": X, "y": y})
+    return record
+
+
+def load_and_transform_gift_eval_dataset(name: str):
     dataset = load_dataset(name)
 
     records = []
@@ -120,67 +162,42 @@ def to_x_y(data: TimeSeriesDataFrame):
     X = data.drop("target", axis=1)
     return X, y
 
-def stack_records_along_z(records):
-    X_list = []
-    y_list = []
-
-    for record in records:
-        X = record["X"]
-        y = record["y"]
-
-        X_tensor = torch.tensor(X.copy().values).float()
-        y_tensor = torch.tensor(y.copy().values).reshape(-1, 1).float()
-
-        X_list.append(X_tensor.numpy())
-        y_list.append(y_tensor.numpy())
-
-    X_stacked = np.array(X_list, dtype=object)
-    y_stacked = np.array(y_list, dtype=object)
-    #X_stacked = torch.stack(X_list, dim=-1)
-    #y_stacked = torch.stack(y_list, dim=-1)
-
-    return X_stacked, y_stacked
-
-def get_transformed_stacked_dataset(dataset: str):
-    data = load_and_transform_dataset(dataset)
-    X_stacked, y_stacked = stack_records_along_z(data)
-    return X_stacked, y_stacked
-
 def create_homgenous_ts_dataset(
     dataset_name: str,
-    target_length: int,
 ):
-    records = load_and_transform_dataset(dataset_name)
+
+    if dataset_name in gift_eval_datasets:
+        records = load_and_transform_gift_eval_dataset(dataset_name)
+    elif dataset_name in autogluon_chronos_datasets.split():
+        records = load_and_transform_autogluon_dataset(dataset_name)
+    else:
+        raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
+
+    target_length = np.median([len(ts["y"]) for ts in records]).astype(np.int64)
+
 
     X_out = []
     y_out = []
 
     for record in records:
-        X_df = record["X"]          # DataFrame (T_i, F)
-        y_series = record["y"]      # Series (T_i,)
+        X_df = record["X"]
+        y_series = record["y"]
 
         X_np = X_df.values.astype(float)
         y_np = y_series.values.astype(float).reshape(-1, 1)
 
         T_i, F = X_np.shape
 
-        # -------------------------------
-        # Truncate from left if too long
-        # -------------------------------
         if T_i > target_length:
             X_np = X_np[-target_length:]
             y_np = y_np[-target_length:]
             padding_mask = np.ones((target_length, 1), dtype=float)
 
-        # -------------------------------
-        # Pad from left if too short
-        # -------------------------------
         elif T_i < target_length:
             pad_len = target_length - T_i
 
             X_pad = np.zeros((pad_len, F), dtype=float)
             y_pad = np.zeros((pad_len, 1), dtype=float)
-
             X_np = np.concatenate([X_pad, X_np], axis=0)
             y_np = np.concatenate([y_pad, y_np], axis=0)
 
@@ -190,20 +207,11 @@ def create_homgenous_ts_dataset(
                 axis=0
             )
 
-        # -------------------------------
-        # Exact length → no pad, but mask still needed
-        # -------------------------------
         else:
             padding_mask = np.ones((target_length, 1), dtype=float)
 
-        # -------------------------------
-        # Append padding feature
-        # -------------------------------
         X_with_padding = np.concatenate([X_np, padding_mask], axis=1)
 
-        # -------------------------------
-        # Convert to torch + reshape
-        # -------------------------------
         X_tensor = torch.tensor(X_with_padding).float().transpose(0, 1)
         y_tensor = torch.tensor(y_np).float().transpose(0, 1)
 
@@ -216,7 +224,16 @@ def create_homgenous_ts_dataset(
     X_out = X_out.permute(2, 1, 0)  # (L, F+1, N_ts)
     y_out = y_out.permute(2, 1, 0)  # (L, 1, N_ts)
 
-    return X_out, y_out
+    return X_out, y_out, target_length
+
+def get_prediction_length(dataset_name: str):
+    if dataset_name in gift_eval_datasets:
+        dataset = load_dataset(dataset_name)
+        return dataset.prediction_length
+    elif dataset_name in autogluon_chronos_datasets.split():
+        return dataset_metadata[dataset_name]["prediction_length"]
+    else:
+        raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
 
 
 if __name__ == "__main__":
