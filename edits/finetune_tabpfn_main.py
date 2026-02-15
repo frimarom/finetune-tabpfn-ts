@@ -5,6 +5,7 @@ import os
 import random
 import time
 import warnings
+import json
 from collections.abc import Callable
 from copy import deepcopy
 from functools import partial
@@ -51,6 +52,16 @@ warnings.filterwarnings(
     category=UserWarning,
     message=".*input value tensor is non-contiguous.*",
 )
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 
 def fine_tune_tabpfn(
     *,
@@ -646,7 +657,6 @@ def _fine_tune_step(
             X_test=batch_X_test,
             outer_loop_autocast=True,
         )
-        # Loss mit normalisiertem Target!
         task_loss = compute_loss(
             loss_fn=loss_fn,
             logits=pred_logits,
@@ -767,6 +777,29 @@ def _tore_down_tuning(
     if es_reason is not None:
         logger.log(10, es_reason)
 
+    finetuning_json_report = {
+        "dataset": {
+            "name": dataset_attributes.name,
+            "forecast_horizon": dataset_attributes.forecast_horizon,
+            "ts_amount": dataset_attributes.ts_amount,
+            "windows": dataset_attributes.windows,
+        },
+        "hyperparameters": finetuning_config,
+        "finetuning_stats": {
+            "total_time_spent": time.time() - st_time,
+            "initial_validation_loss": step_results_over_time[0].validation_loss,
+            "best_validation_loss": step_results_over_time[-1].best_validation_loss,
+            "last_validation_loss": step_results_over_time[len(step_results_over_time) - 1].validation_loss,
+            "total_steps": len(step_results_over_time),
+            "best_step": np.argmin([x.validation_loss for x in step_results_over_time]),
+            "early_stopping_reason": es_reason,
+            "avg_time_per_step": (time.time() - st_time) / len(step_results_over_time),
+            "avg_device_utilization": np.mean([step.device_utilization for step in step_results_over_time]),
+            "training_loss": [step.training_loss for step in step_results_over_time],
+            "validation_loss": [step.validation_loss for step in step_results_over_time],
+        },
+    }
+
     # -- Final Report
     best_step = np.argmin([x.validation_loss for x in step_results_over_time])
     fine_tuning_report = f"""=== Fine-Tuning Report for TabPFN ===
@@ -789,18 +822,15 @@ def _tore_down_tuning(
         train_loss_over_time = [step.training_loss for step in step_results_over_time]
         raw_train_loss_over_time = train_loss_over_time[:]
 
-        # Training Loss in 5er-Gruppen zusammenfassen
         aggregated_train_loss = []
         aggregated_steps = []
         window_size = 5
 
         for i in range(len(train_loss_over_time)):
             if i == 0:
-                # Punkt 0: nur der erste Wert
                 aggregated_train_loss.append(train_loss_over_time[0])
                 aggregated_steps.append(0)
             elif i % window_size == 0:
-                # Bei 5, 10, 15, etc.: Mittelwert der letzten 5 Werte
                 start_idx = i - window_size
                 end_idx = i
                 aggregated_train_loss.append(np.mean(train_loss_over_time[start_idx:end_idx]))
@@ -820,7 +850,6 @@ def _tore_down_tuning(
 
         fig, ax1 = plt.subplots(figsize=(8, 8))
 
-        # Erste y-Achse für training_loss
         color_train = 'tab:blue'
         ax1.set_xlabel('step')
         ax1.set_ylabel('train_loss', color=color_train)
@@ -828,14 +857,12 @@ def _tore_down_tuning(
                  label='train_loss (avg 5 steps)')
         ax1.tick_params(axis='y', labelcolor=color_train)
 
-        # Zweite y-Achse für validation_loss
         ax2 = ax1.twinx()
         color_val = 'tab:red'
         ax2.set_ylabel('validation_loss', color=color_val)
         ax2.plot(plot_df['step'], plot_df['validation_loss'], color=color_val, linewidth=3, label='validation_loss')
         ax2.tick_params(axis='y', labelcolor=color_val)
 
-        # Best Step Linie
         ax1.axvline(
             x=best_step,
             color='green',
@@ -844,7 +871,6 @@ def _tore_down_tuning(
             label='Best Step',
         )
 
-        # Legenden kombinieren
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', title='Legend')
@@ -867,4 +893,8 @@ def _tore_down_tuning(
 
         plt.savefig(f"./{path_for_all}/fine_tuning_loss_plot_{task_type}_{dataset_name.replace('/', '_')}_{time_limit}s.png",
                     bbox_inches='tight')
-        plt.show()
+
+        print(finetuning_json_report)
+
+        with open(f"./{path_for_all}/finetuning_report.json", 'w', encoding='utf-8') as f:
+            json.dump(finetuning_json_report, f, ensure_ascii=False, indent=4, cls=NumpyEncoder)

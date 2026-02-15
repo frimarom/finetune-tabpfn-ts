@@ -1,3 +1,4 @@
+import datasets
 from finetune_tabpfn_ts.task_1.load_datasets import load_dataset
 from finetune_tabpfn_ts.task_1.load_datasets import get_transformed_stacked_dataset
 from finetune_tabpfn_ts.task_1.load_datasets import transform_data
@@ -9,6 +10,7 @@ from finetune_tabpfn_ts.task_1.dataset_utils import create_homgenous_ts_dataset
 from finetune_tabpfn_ts.task_1.dataset_utils import DatasetAttributes
 import argparse
 import logging
+import numpy as np
 import torch.cuda
 import os
 from gift_eval.data import Dataset
@@ -42,6 +44,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--finetuning_config", type=str, default=None, help="Path to a yml file containing the fine-tuning config")
     parser.add_argument("--path_to_save_all" , type=str, default="finetuning_graphs", help="Path to save the training graphs")
+    #TODO add pid of cluster
     """
     parser.add_argument("--dataset", type=str, help="Name of the dataset to use for fine-tuning")
     parser.add_argument("--checkpoint_name", type=str, default="finetune_tabpfn", help="Name of the checkpoint to save the fine-tuned model")
@@ -58,8 +61,11 @@ if __name__ == "__main__":
         finetuning_config = yaml.safe_load(config_file)
 
     #ensure_correct_config(finetuning_config)
-
     dataset = Dataset(finetuning_config["dataset"]["name"]) # TODO make for every type of dataset
+
+    ts_iter = iter(dataset.gluonts_dataset)
+    median_time_series_length = np.median([len(ts["target"]) for ts in ts_iter])
+    print("median",median_time_series_length)
     dataset_attributes = DatasetAttributes(name = finetuning_config["dataset"]["name"],
                                            time_series_length = len(next(iter(dataset.gluonts_dataset))["target"]), # TODO make variable
                                            ts_amount = len(dataset.gluonts_dataset),
