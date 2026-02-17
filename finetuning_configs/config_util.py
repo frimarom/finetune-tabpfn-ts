@@ -141,4 +141,4 @@ if __name__ == "__main__":
 
     print("test", args.job_ids, args.output_dir)
 
-    create_csv_from_results(args.job_ids, result_folder=args.output_dir, output_csv=f"{args.output_dir}/finetuning_summary.csv")
+    create_csv_from_results(args.job_ids, result_folder="../../finetuning_results", output_csv=f"{args.output_dir}/finetuning_summary.csv")
