@@ -16,7 +16,7 @@ declare -a JOB_IDS=()
 
 for i in "$@"; do
     echo "$i"
-    JOB_ID=$(sbatch ./finetune_tabpfn_ts_with_config.sh "finetuning_configs/$erster/${erster}_${i}.yml" | awk '{print $4}')
+    JOB_ID=$(sbatch ./finetune_tabpfn_ts_with_config.sh "finetune_tabpfn_ts/finetuning_configs/$erster/${erster}_${i}.yml" | awk '{print $4}')
     JOB_IDS+=("${JOB_ID}")
 done
 
