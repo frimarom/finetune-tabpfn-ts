@@ -27,7 +27,7 @@ def create_configs(base_config_path, output_dir, param_grid, base_dataset_config
         config_copy["finetuning"].update(combo)
         config_copy["dataset"].update(base_dataset_config["dataset"])
 
-        output_path = os.path.join(output_dir, f"{base_dataset_config["dataset"]["name"]}_{offset+i+1}.yml")
+        output_path = os.path.join(output_dir, f"{base_dataset_config['dataset']['name']}_{offset+i+1}.yml")
         with open(output_path, 'w') as output_file:
             yaml.dump(config_copy, output_file)
 
@@ -141,4 +141,4 @@ if __name__ == "__main__":
 
     print("test", args.job_ids, args.output_dir)
 
-    #create_csv_from_results(args.job_ids, result_folder=args.output_dir, output_csv=f"{args.output_dir}/finetuning_summary.csv")
+    create_csv_from_results(args.job_ids, result_folder=args.output_dir, output_csv=f"{args.output_dir}/finetuning_summary.csv")

@@ -40,3 +40,9 @@ RESULT_DIR="../../finetuning_results/finetuning.${erster}.$(date '+%Y%m%d_%H%M%S
 mkdir -p "${RESULT_DIR}"
 
 python -m config_util --output_dir "${RESULT_DIR}" --job_ids "${JOB_IDS[@]}"
+
+mkdir -p "${RESULT_DIR}/graphs"
+
+for i in "${JOB_IDS[@]}"; do
+  cp "../../finetuning_results/finetuning.${i}"/fine_tuning_loss_plot_* "${RESULT_DIR}/graphs/" 2>/dev/null || echo "Keine Graphen für Job $i"
+done
