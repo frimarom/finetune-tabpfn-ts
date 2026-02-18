@@ -35,7 +35,6 @@ med_long_datasets = "electricity/15T electricity/H solar/10T solar/H kdd_cup_201
 gift_eval_datasets = short_datasets.split() + med_long_datasets.split()
 autogluon_chronos_datasets = "weatherbench_daily wiki_daily_100k solar_1h"
 
-
 dataset_metadata = {
     "weatherbench_daily": {
         "prediction_length": 30,
@@ -52,7 +51,39 @@ dataset_metadata = {
     "monash_tourism_monthly": {
         "prediction_length": 24,
         "frequency": "M",
-    }
+    },
+    "taxi_1h": {
+        "prediction_length": 48,
+        "frequency": "H",
+    },
+    "taxi_30min": {
+        "prediction_length": 48,
+        "frequency": "30min",
+    },
+    "wind_farms_hourly": {
+        "prediction_length": 48,
+        "frequency": "H",
+    },
+    "uber_tlc_daily": {
+        "prediction_length": 30,
+        "frequency": "D",
+    },
+    "wind_farms_daily": {
+        "prediction_length": 30,
+        "frequency": "D",
+    },
+    "monash_traffic": {
+        "prediction_length": 48,
+        "frequency": "H",
+    },
+    "weatherbench_hourly_10m_v_component_of_wind": {
+        "prediction_length": 48,
+        "frequency": "H",
+    },
+    "weatherbench_hourly_temperature": {
+        "prediction_length": 48,
+        "frequency": "H",
+    },
 }
 
 class Term(Enum):
@@ -115,14 +146,16 @@ def transform_data(train_data: TimeSeriesDataFrame):
 
     return feature_transformer.transform_one_dataframe(train_data)
 
-def load_and_transform_autogluon_dataset(dataset_choice: str):
+def load_and_transform_autogluon_dataset(dataset_choice: str, ts_amount_limit: int = None):
     dataset = datasets.load_dataset("autogluon/chronos_datasets", dataset_choice)
 
     tsdf = TimeSeriesDataFrame(to_gluonts_univariate(dataset["train"]))
-    #TODO add limit to 5000 or so to avoid memory issues and long runtimes, also for gift_eval datasets
-    tsdf = tsdf[
-        tsdf.index.get_level_values("item_id").isin(tsdf.item_ids[:2])
-    ]
+
+    #limit number of ts so lido cluster doesnt oom
+    if tsdf.index.get_level_values("item_id").nunique() > ts_amount_limit:
+        tsdf = tsdf[
+            tsdf.index.get_level_values("item_id").isin(tsdf.item_ids[:ts_amount_limit])
+        ]
     print(tsdf)
     record = []
     for item_id, ts in tsdf.groupby(level="item_id"):
@@ -133,11 +166,13 @@ def load_and_transform_autogluon_dataset(dataset_choice: str):
     return record
 
 
-def load_and_transform_gift_eval_dataset(name: str):
+def load_and_transform_gift_eval_dataset(name: str, ts_amount_limit: int = None):
     dataset = load_dataset(name)
 
     records = []
-    for time_series in dataset.gluonts_dataset:
+    for i, time_series in enumerate(dataset.gluonts_dataset):
+        if i >= ts_amount_limit:
+            break
         pandas_ts = to_pandas(time_series)
 
         dataframe = pandas_ts.to_frame().reset_index()
@@ -165,12 +200,13 @@ def to_x_y(data: TimeSeriesDataFrame):
 
 def create_homgenous_ts_dataset(
     dataset_name: str,
+    ts_amount_limit: int = None
 ):
 
     if dataset_name in gift_eval_datasets:
-        records = load_and_transform_gift_eval_dataset(dataset_name)
-    elif dataset_name in autogluon_chronos_datasets.split():
-        records = load_and_transform_autogluon_dataset(dataset_name)
+        records = load_and_transform_gift_eval_dataset(dataset_name, ts_amount_limit)
+    elif dataset_name in dataset_metadata.keys():
+        records = load_and_transform_autogluon_dataset(dataset_name, ts_amount_limit)
     else:
         raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
 

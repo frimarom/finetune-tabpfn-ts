@@ -676,6 +676,11 @@ def _fine_tune_step(
     # Backward, Scaled for Mixed Precision
     scaler.scale(loss).backward()
 
+    batch_X_train = batch_X_train.cpu()
+    batch_X_test = batch_X_test.cpu()
+    batch_y_train = batch_y_train.cpu()
+    batch_y_test = batch_y_test.cpu()
+
     # Update
     optimizer_step_skipped = False
     grad_norm = -1

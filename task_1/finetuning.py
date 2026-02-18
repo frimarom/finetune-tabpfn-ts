@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     #ensure_correct_config(finetuning_config)
 
-    train_X, train_y, ts_length = create_homgenous_ts_dataset(finetuning_config["dataset"]["name"])
+    train_X, train_y, ts_length = create_homgenous_ts_dataset(finetuning_config["dataset"]["name"], finetuning_config["dataset"]["ts_amount_limit"])
 
     dataset_attributes = DatasetAttributes(name = finetuning_config["dataset"]["name"],
                                            time_series_length = ts_length,
