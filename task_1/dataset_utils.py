@@ -119,7 +119,10 @@ def load_and_transform_autogluon_dataset(dataset_choice: str):
     dataset = datasets.load_dataset("autogluon/chronos_datasets", dataset_choice)
 
     tsdf = TimeSeriesDataFrame(to_gluonts_univariate(dataset["train"]))
-
+    #TODO add limit to 5000 or so to avoid memory issues and long runtimes, also for gift_eval datasets
+    tsdf = tsdf[
+        tsdf.index.get_level_values("item_id").isin(tsdf.item_ids[:2])
+    ]
     print(tsdf)
     record = []
     for item_id, ts in tsdf.groupby(level="item_id"):

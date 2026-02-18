@@ -91,6 +91,7 @@ if __name__ == "__main__":
                            "validate_every_n_steps": finetuning_config["finetuning"]["validation"]["validate_every_n_steps"],
                            "update_every_n_steps": finetuning_config["finetuning"]["update_every_n_steps"],
                            "l2_sp_lambda": finetuning_config["finetuning"]["l2_sp_lambda"],
+                           "weight_decay": finetuning_config["finetuning"]["weight_decay"],
                            },
         validation_metric="mean_absolute_error",
         dataset_attributes = dataset_attributes,

@@ -724,6 +724,7 @@ def _setup_tuning(
     max_patience: int = 100,
     data_loader_workers: int = 1,
     l2_sp_lambda: float = 1e-4,
+    weight_decay: float = 0.0,
     # Metadata
     model: PerFeatureTransformer,
     task_type: TaskType,
@@ -731,7 +732,7 @@ def _setup_tuning(
     is_data_parallel: bool,
 ) -> FineTuneSetup:
     return FineTuneSetup(
-        optimizer=AdamWScheduleFree(model.parameters(), lr=learning_rate, weight_decay=0.0),
+        optimizer=AdamWScheduleFree(model.parameters(), lr=learning_rate, weight_decay=weight_decay),
         max_steps=max_steps,
         adaptive_es=AdaptiveES(
             adaptive_rate=adaptive_rate,
@@ -776,6 +777,8 @@ def _tore_down_tuning(
         es_reason = "Early stopping due no time."
     if es_reason is not None:
         logger.log(10, es_reason)
+
+    finetuning_config["time_limit"] = time_limit
 
     finetuning_json_report = {
         "dataset": {
