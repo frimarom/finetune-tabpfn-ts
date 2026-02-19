@@ -267,7 +267,7 @@ def get_prediction_length(dataset_name: str):
     if dataset_name in gift_eval_datasets:
         dataset = load_dataset(dataset_name)
         return dataset.prediction_length
-    elif dataset_name in autogluon_chronos_datasets.split():
+    elif dataset_name in dataset_metadata.keys():
         return dataset_metadata[dataset_name]["prediction_length"]
     else:
         raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
