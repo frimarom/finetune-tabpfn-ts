@@ -1,0 +1,20 @@
+dataset:
+  name: monash_london_smart_meters
+  prediction_length: -1
+  ts_amount_limit: 5000
+  windows: 1
+finetuning:
+  batch_size: 4
+  checkpoint_to_save: finetuned_model
+  l2_sp_lambda: 0.0
+  learning_rate: 5.0e-05
+  path_to_save_all: null
+  time_limit: 2400
+  update_every_n_steps: 2
+  validation:
+    early_stopping:
+      max_patience: 200
+      min_patience: 100
+    ts_val_amount: 100
+    validate_every_n_steps: 10
+  weight_decay: 0.0

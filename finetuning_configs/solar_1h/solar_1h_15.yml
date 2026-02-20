@@ -4,10 +4,10 @@ dataset:
   ts_amount_limit: 5000
   windows: 1
 finetuning:
-  batch_size: 64
+  batch_size: 32
   checkpoint_to_save: finetuned_model
-  l2_sp_lambda: 0.0
-  learning_rate: 5.0e-06
+  l2_sp_lambda: 0.0015
+  learning_rate: 0.0005
   path_to_save_all: null
   time_limit: 2400
   update_every_n_steps: 2

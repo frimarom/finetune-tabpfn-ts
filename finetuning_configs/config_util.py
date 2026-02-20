@@ -27,19 +27,20 @@ def create_configs(base_config_path, output_dir, param_grid, base_dataset_config
         config_copy["finetuning"].update(combo)
         config_copy["dataset"].update(base_dataset_config["dataset"])
 
-        output_path = os.path.join(output_dir, f"{base_dataset_config['dataset']['name']}_{offset+i+1}.yml")
+        output_path = os.path.join(output_dir, f"{base_dataset_config['dataset']['name'].replace('/', '_')}_{offset+i+1}.yml")
         with open(output_path, 'w') as output_file:
             yaml.dump(config_copy, output_file)
 
 def create_config_main():
     base_config_path = "config_template.yml"  # Path to your base config file
-    dataset_name = "hospital"  # Directory to save generated config files
+    dataset_name = "weatherbench_hourly_temperature"  # Directory to save generated config files
 
     base_dataset_config = {
         "dataset": {
             "name": dataset_name,
             "prediction_length": -1,
-            "windows": 1
+            "windows": 1,
+            "ts_amount_limit": 5000,
         },
         "finetuning":{
             "update_every_n_steps": 2,
@@ -49,7 +50,7 @@ def create_config_main():
                     "max_patience": 200,
                 },
                 "validate_every_n_steps": 10,
-                "ts_val_amount": 30
+                "ts_val_amount": 100
             },
             "checkpoint_to_save": "finetuned_model",
         }
@@ -58,14 +59,14 @@ def create_config_main():
     # Define the parameter grid for hyperparameter search
     param_grid = {
         "time_limit": [2400],
-        "learning_rate": [0.000005],
-        "batch_size": [32, 64],
-        "l2_sp_lambda": [0.0, 0.0001],
+        "learning_rate": [0.0005, 0.00005, 0.000005, 0.0000005],
+        "batch_size": [2, 4, 8, 16, 32, 64],
+        "l2_sp_lambda": [0.0, 0.0001, 0.0015], # 0,0015 from real tabpfn paper
         "weight_decay": [0.0],
     }
 
-    os.makedirs(dataset_name, exist_ok=True)
-    create_configs(base_config_path, dataset_name, param_grid, base_dataset_config)
+    os.makedirs(dataset_name.replace("/", "_"), exist_ok=True)
+    create_configs(base_config_path, dataset_name.replace("/", "_"), param_grid, base_dataset_config)
 
 # wait for jobs to finish
 # last sbatch submission: sbatch --time=0:15:00 --account my-account-abc --wait --dependency afterok:12345678:12345679 /dev/stdin <<< '#!/bin/bash \n sleep 1'
@@ -101,31 +102,55 @@ def create_csv_from_results(pids, result_folder, output_csv):
     results = []
     for pid in pids:
         # Load results from a file named after the PID
-        with open(f"{result_folder}/finetuning.{pid}/finetuning_report.json") as f:
-            json_result = json.load(f)
+        path = f"{result_folder}/finetuning.{pid}/finetuning_report.json"
+        if os.path.exists(path):
+            with open(f"{result_folder}/finetuning.{pid}/finetuning_report.json") as f:
+                json_result = json.load(f)
+                result = {
+                    "PID": pid,
+                    "Dataset": json_result["dataset"]["name"],
+                    "Forecast Horizon": json_result["dataset"]["forecast_horizon"],
+                    "TS Amount": json_result["dataset"]["ts_amount"],
+                    "Windows": json_result["dataset"]["windows"],
+                    "Time Limit": json_result["hyperparameters"]["time_limit"],
+                    "Learning Rate": json_result["hyperparameters"]["learning_rate"],
+                    "Batch Size": json_result["hyperparameters"]["batch_size"],
+                    "L2-SP Lambda": json_result["hyperparameters"]["l2_sp_lambda"],
+                    "Weight Decay": json_result["hyperparameters"]["weight_decay"],
+                    "Total Time Spent": json_result["finetuning_stats"]["total_time_spent"],
+                    "Initial Validation Loss": json_result["finetuning_stats"]["initial_validation_loss"],
+                    "Best Validation Loss": json_result["finetuning_stats"]["best_validation_loss"],
+                    "Last Validation Loss": json_result["finetuning_stats"]["last_validation_loss"],
+                    "Total Steps": json_result["finetuning_stats"]["total_steps"],
+                    "Best Step": json_result["finetuning_stats"]["best_step"],
+                    "Early Stopping Reason": json_result["finetuning_stats"]["early_stopping_reason"],
+                    "Avg Time Per Step": json_result["finetuning_stats"]["avg_time_per_step"],
+                    "Avg Device Utilization": json_result["finetuning_stats"]["avg_device_utilization"],
+                }
+        else:
             result = {
                 "PID": pid,
-                "Dataset": json_result["dataset"]["name"],
-                "Forecast Horizon": json_result["dataset"]["forecast_horizon"],
-                "TS Amount": json_result["dataset"]["ts_amount"],
-                "Windows": json_result["dataset"]["windows"],
-                "Time Limit": json_result["hyperparameters"]["time_limit"],
-                "Learning Rate": json_result["hyperparameters"]["learning_rate"],
-                "Batch Size": json_result["hyperparameters"]["batch_size"],
-                "L2-SP Lambda": json_result["hyperparameters"]["l2_sp_lambda"],
-                "Weight Decay": json_result["hyperparameters"]["weight_decay"],
-                "Total Time Spent": json_result["finetuning_stats"]["total_time_spent"],
-                "Initial Validation Loss": json_result["finetuning_stats"]["initial_validation_loss"],
-                "Best Validation Loss": json_result["finetuning_stats"]["best_validation_loss"],
-                "Last Validation Loss": json_result["finetuning_stats"]["last_validation_loss"],
-                "Total Steps": json_result["finetuning_stats"]["total_steps"],
-                "Best Step": json_result["finetuning_stats"]["best_step"],
-                "Early Stopping Reason": json_result["finetuning_stats"]["early_stopping_reason"],
-                "Avg Time Per Step": json_result["finetuning_stats"]["avg_time_per_step"],
-                "Avg Device Utilization": json_result["finetuning_stats"]["avg_device_utilization"],
+                "Dataset": None,
+                "Forecast Horizon": None,
+                "TS Amount": None,
+                "Windows": None,
+                "Time Limit": None,
+                "Learning Rate": None,
+                "Batch Size": None,
+                "L2-SP Lambda": None,
+                "Weight Decay": None,
+                "Total Time Spent": None,
+                "Initial Validation Loss": None,
+                "Best Validation Loss": None,
+                "Last Validation Loss": None,
+                "Total Steps": None,
+                "Best Step": None,
+                "Early Stopping Reason": None,
+                "Avg Time Per Step": None,
+                "Avg Device Utilization": None,
             }
 
-            results.append(result)
+        results.append(result)
 
     df = pd.DataFrame(results)
     df.to_csv(output_csv, index=False)

@@ -9,11 +9,10 @@ from tabpfn_time_series import TimeSeriesDataFrame
 from dataclasses import dataclass
 
 
-from gift_eval.data import Dataset, itemize_start
+from gift_eval.data import Dataset
 from enum import Enum
 
 import torch
-import pandas as pd
 import numpy as np
 from finetune_tabpfn_ts.edits.data_utils import get_data_loader, create_batch, get_batches_with_variable_forecast_horizon
 from finetune_tabpfn_ts.edits.feature_transformer import FeatureTransformer
@@ -24,7 +23,6 @@ from tabpfn_time_series.features import (
 )
 
 import datasets
-from pathlib import Path
 from gluonts.dataset.util import to_pandas
 from tabpfn_time_series.data_preparation import to_gluonts_univariate
 import matplotlib.pyplot as plt
@@ -34,6 +32,36 @@ med_long_datasets = "electricity/15T electricity/H solar/10T solar/H kdd_cup_201
 
 gift_eval_datasets = short_datasets.split() + med_long_datasets.split()
 autogluon_chronos_datasets = "weatherbench_daily wiki_daily_100k solar_1h"
+
+M4_PRED_LENGTH_MAP = {
+    "A": 6,
+    "Q": 8,
+    "M": 18,
+    "W": 13,
+    "D": 14,
+    "H": 48,
+}
+
+PRED_LENGTH_MAP = {
+    "M": 12,
+    "W": 8,
+    "D": 30,
+    "H": 48,
+    "T": 48,
+    "S": 60,
+}
+
+TFB_PRED_LENGTH_MAP = {
+    "A": 6,
+    "H": 48,
+    "Q": 8,
+    "D": 14,
+    "M": 18,
+    "W": 13,
+    "U": 8,
+    "T": 8,
+}
+
 
 dataset_metadata = {
     "weatherbench_daily": {
@@ -47,6 +75,7 @@ dataset_metadata = {
     "solar_1h": {
         "prediction_length": 48,
         "frequency": "H",
+        "target_column": "power_mw"
     },
     "monash_tourism_monthly": {
         "prediction_length": 24,
@@ -60,21 +89,41 @@ dataset_metadata = {
         "prediction_length": 48,
         "frequency": "30min",
     },
-    "wind_farms_hourly": {
-        "prediction_length": 48,
-        "frequency": "H",
-    },
     "uber_tlc_daily": {
         "prediction_length": 30,
         "frequency": "D",
     },
-    "wind_farms_daily": {
-        "prediction_length": 30,
-        "frequency": "D",
+    "uber_tlc_hourly": {
+        "prediction_length": 48,
+        "frequency": "H",
     },
     "monash_traffic": {
         "prediction_length": 48,
         "frequency": "H",
+    },
+    "monash_electricity_hourly": {
+        "prediction_length": 48,
+        "frequency": "H",
+    },
+    "monash_electricity_weekly": {
+        "prediction_length": 13,
+        "frequency": "W",
+    },
+    "monash_fred_md": {
+        "prediction_length": 12,
+        "frequency": "M",
+    },
+    "monash_covid_deaths": {
+        "prediction_length": 30,
+        "frequency": "D",
+    },
+    "monash_hospital": {
+        "prediction_length": 12,
+        "frequency": "M",
+    },
+    "monash_london_smart_meters": {
+        "prediction_length": 48,
+        "frequency": "30min",
     },
     "weatherbench_hourly_10m_v_component_of_wind": {
         "prediction_length": 48,
@@ -161,7 +210,7 @@ def load_and_transform_autogluon_dataset(dataset_choice: str, ts_amount_limit: i
     for item_id, ts in tsdf.groupby(level="item_id"):
         time_series = ts.sort_index()
         transformed_time_series = transform_data(time_series)
-        X, y = to_x_y(transformed_time_series)
+        X, y = to_x_y(dataset_choice, transformed_time_series)
         record.append({"X": X, "y": y})
     return record
 
@@ -184,7 +233,7 @@ def load_and_transform_gift_eval_dataset(name: str, ts_amount_limit: int = None)
 
         train_part_ts = TimeSeriesDataFrame(dataframe)
         transformed_data = transform_data(train_part_ts)
-        X, y = to_x_y(transformed_data)
+        X, y = to_x_y(name, transformed_data)
 
         records.append({
             "X": X,
@@ -193,8 +242,11 @@ def load_and_transform_gift_eval_dataset(name: str, ts_amount_limit: int = None)
 
     return records
 
-def to_x_y(data: TimeSeriesDataFrame):
-    y = data["target"]
+def to_x_y(name: str, data: TimeSeriesDataFrame):
+    if "target" in data.columns:
+        y = data["target"]
+    else:
+        y = data[dataset_metadata[name]["target_column"]]
     X = data.drop("target", axis=1)
     return X, y
 

@@ -8,18 +8,13 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from finetuning_scripts.constant_utils import SupportedDevice, TaskType
-from sklearn.model_selection import train_test_split
 
 if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
     from finetuning_scripts.metric_utils.ag_metrics import Scorer
     from tabpfn.model.transformer import PerFeatureTransformer
-    from tabpfn import TabPFNClassifier, TabPFNRegressor
 
-# Split training data into training and validation sets
-# Only take full time series into account for splitting
-# Use multiple time series for validation and create mean over all time series
 def create_val_data(
     *,
     X_train: pd.DataFrame | np.ndarray,
@@ -51,14 +46,16 @@ def create_val_data(
 
     # create true/false mask array with ntime_series * test_size true values
     mask = np.zeros(n_time_series, dtype=bool)
+    print("time_series",n_time_series)
     mask_indices = random.sample(range(n_time_series), int(val_time_series))
     print("Val indices", mask_indices)
     mask[mask_indices] = True
+    print("Xtrain_shape",X_train.shape)
 
     X_t = X_train
     y_t = y_train
     X_train = X_train[:, :, ~mask]
-    y_train = y_train[:, :, ~mask] # TODO maybe error here because shape maybe ony two dimensional
+    y_train = y_train[:, :, ~mask]
     X_val = X_t[:, :, mask]
     y_val = y_t[:, :, mask]
 
