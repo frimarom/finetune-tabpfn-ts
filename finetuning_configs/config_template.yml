@@ -2,6 +2,7 @@ dataset:
   name:
   prediction_length:
   windows:
+  ts_amount_limit:
 finetuning:
   time_limit:
   batch_size:

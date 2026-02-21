@@ -10,3 +10,6 @@ The feature transformer is a crucial component for TabPFN-TS since it helps TabP
 - contains the base class for all feature generators
 - defines the interface for all feature generators, including the `generate()` method that later will be implemented to transform the base data into the new features
 - the generate method will later be called by the feature transformer via `apply()`
+
+### TabPFN needs
+`(n_samples, batch_size, n_features)`

@@ -1,0 +1,70 @@
+\chapter{Introduction}
+
+\section{Motivation}
+Since the release of ChatGPT in 2022 and the widespread media coverage of AI, machine learning and deep learning have become more accessible to the general public.
+Large Language Models are now known as being a gateway to machine learning and artificial intelligence.
+But LLMs almost only excel on data in textual format or pictures.
+What about tabular data?
+Wether it is patients data in healthcare, sales data in finance or every other data which can be stored in an Excel-like schema, tabular data is one of the most common data formats used in a big scale.
+This type of data has not been in the focus by researchers for quite some time since nobody found a way to utilize deep learning for tabular data.
+\newline
+Furthermore, algorithms like gradient boost decision trees or random forest were much more accessible.
+But with the release of TabPFN, a transformer model pre-trained to solve artificially generated classification tasks from a synthetic prior, a new benchmark for tabular inference tasks has been set.
+In a single forward pass, TabPFN is able to solve classification, regression, and inference tasks.
+%\\
+%Early 2025 TabPFN-TS was released.
+%A method that maps time series data onto tabular data to achieve SOTA forecasting results with the already pre-trained TabPFN model.
+\\
+There are two main ways to presumably enhance the performance of this specific model.
+One is finetuning a pre-trained model and the other is continued pre-training a pre-trained model.
+The key difference between those two is the data the model will further be trained with.
+Only by using real-world datasets for a specific domain like healthcare etc. finetuning trains a pre-trained model to enhance the accuracy of it in this domain. %TODO
+In continued pre-training one uses a specific synthetic prior to generate synthetical classification, regression, or inference tasks for the domain to further train and enhance the model.
+\\
+Although there are already some models which achieve top rank results in time series forecasting, the impact of finetuning or continued pretraining has not been studied and potential benefits remain uncovered.
+
+\section{Exposé}
+TabPFNv2 can work with time-series as well, as \citet{hoo2025tables} showed, although it has not been trained with time-series data during pre-training, treating time series forecasting as a tabular regression problem.
+Good performance in time-series data derives from two main causes: Preprocessing the timestamp feature of the data into Automatic Seasonal Features, Calender Features and Running Index and a pretrained model which has a strong zero shot performance on regression tasks. \newline
+This thesis focuses on finetuning and continuing pretraining on TabPFNv2 with time series data.
+We will address the concept of the aforementioned methods and examine wether or not these methods lead to performance boosts in time series forcasting methods.
+\newline
+The questions we will address are:
+\begin{enumerate}
+    \item Can we finetune TabPFN-TS on time-series data (and does it improve performance)?
+    \item Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN \citep{Hollmann_2025}
+    \item Can we build a prior that generates realistic time-series data?
+    \item Can we continue pre-training TabPFN-TS with a given prior?
+    \item Which one of the following models performs best on various high scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?
+\end{enumerate}
+Chapter 4 will focus on finetuning the model with datasets from the GIFT-EVAL benchmark as well as datasets from autogluon/chronos-datasets.
+Most of the code used in this section was already provided by Lennart Purucker, but we had to adjust some of the code to bring it up to date and to use it with time series data.
+To examine the presumable improvements we use the GIFT-EVAL evaluation code to calculate different types of errors before and after finetuning.
+\newline
+Chapter 5 covers the process of continued pretraining TabPFNv2 on a given prior.
+
+\section{Related Work}
+\subsection{TabPFN}
+
+\subsection{Time Series Forecasting}
+\subsubsection{TabPFN-TS}
+\subsubsection{Other work}
+\subsection{Prior Building}
+\subsection{Finetuning}
+\subsection{Continued Pretraining}
+Continued pre-training on large real-world datasets in a specific domain yields superior downstream predictive accuracy in the specified domain compared to an only pre-trained model \citep{Hollmann_2025} .
+This validates the assumption that TabPFN performs better if we adapt weights to a downstream task.\newline
+In \citet{kolberg2025tabpfn} we saw that if we continue pre-training TabPFNv2 (so continued training on a synthetic prior) in a similar modality (tabular data with high feature and low sample count) will not decrease performance on non high dimension, low sample size data.\newline
+\citet{hoo2025tables} introduces TabPFN-TS: A model that combines TabPFN-v2 with lightweight feature engineering to enable both point and probabilistic forecasting.\newline
+\citet{dooley2023forecastpfn} is especially relevant since they created a synthetic prior for time-series data.
+They create the synthetic data by generating a trend, seasonal, and noise factor all either observed once a day, month, or year.
+%https://arxiv.org/abs/2506.08982
+%
+
+%Tabpfn
+%time series forecasting
+    %Tabpfn ts
+    %other works
+%prior building
+%Finetuning
+%continued pretraining

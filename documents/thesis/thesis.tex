@@ -1,15 +1,143 @@
-%! Author = frimarom
-%! Date = 27.12.25
+\documentclass[english]{abarbeit}
+% If you write in English, set the option "english" instead of "german".
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Zusätzliche Pakete
+% Notizen, mit "disable" ausblendbar
+\usepackage[textsize=scriptsize]{todonotes}
+% Für Grafiken per latex-code bspw. TikZ und pgfplots:
+\usepackage{tikz}
+\usepackage{pgfplots}
+% Pseudocode bspw. eines der folgenden Pakete, nach Wahl
+%\usepackage[plain,chapter]{algorithm}
+%\usepackage{algorithmic}
+%\usepackage{algorithm2e}
+% minted: Syntaxhighlighting, benötigt aber pygmentize
+%\usepackage{minted}
+\usepackage{fancyvrb} % für pygment-Beispiele
+\fvset{listparameters=\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}} % Abstände bei Verbatim vermeiden
+\usepackage[aboveskip=6pt,belowskip=6pt]{subcaption} % für subfigures
 
-% Preamble
-\documentclass[11pt]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Eigene Makros, hier ein paar Beispiele
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+\newcommand{\norm}[1]{\lVert {#1}\rVert}
+\newcommand{\sprod}[2]{\left<{#1},{#2}\right>}
 
-% Packages
-\usepackage{amsmath}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Literaturmanagement
+\usepackage[authoryear]{natbib}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% METADATEN
+\subject{Bachelor Thesis}
+\title{Finetuning and Continued Pretraining on TabPFN with time series data}
+\author{Friedrich Maria Romberg}
+\date{\today} % Abgabedatum eintragen
+\newcommand{\matrikelnummer}{253034}
+\newcommand{\erstgutachterIn}{Prof.{} Dr.{} Katharina Eggensperger}
+\newcommand{\zweitgutachterIn}{JProf.{} Dr.{} Matthias Feurer}
+\newcommand{\arbeitsgruppe}{
+Technische Universität Dortmund \\
+Fakultät für Informatik\\
+Lamarr Institut \\
+\href{https://lamarr.cs.tu-dortmund.de/}{https://lamarr.cs.tu-dortmund.de/}% URL, aber als Text
+}
+%\newcommand{\kooperation}{ % OPTIONAL, einfach weglassen
+%In Kooperation mit:\\
+%Fakultätsname\\
+%Lehrstuhl-/Institutsbezeichnung
+%}
 
-% Document
 \begin{document}
+\maketitle
+\frontmatter
+%%%% Inhaltsverzeichnis
+\tableofcontents
 
+\mainmatter
+\chapter{Einleitung}
 
+Sie können die Arbeit in Deutsch oder Englisch schreiben. Setzen sie dazu die korrekte Option am Anfang des Dokumentes, damit die Überschriften sowie die Silbentrennung entsprechend eingestellt werden.
+
+Sinnvollerweise fängt die Arbeit mit einer Einleitung an, in der Sie den
+Kontext der Arbeit beschreiben. In folgenden Kapiteln werden in der Regel
+zunächst Vorarbeiten besprochen, dann die neue Methodik, Experimente und eine
+Zusammenfassung.
+
+Beachten Sie den üblichen Schreibstil bei \emph{wissenschaftlichen} Arbeiten.
+Zu \href{https://www.tu-dortmund.de/forschung/forschungsethik/gute-wissenschaftliche-praxis/}{guter wissenschaftlicher Praxis}
+und Redlichkeit gehört insbesondere, dass Sie keine fremden Inhalte als ihre eigenen ausgeben.
+Wenn Sie sich auf fremde Beiträge beziehen, benennen Sie die Quellen und schreiben Sie
+so, dass \emph{nicht} der Eindruck entsteht, dies wären ihre eigenen Leistungen.
+Insbesondere experimentelle Ergebnisse aus anderen Arbeiten sind -- leider --
+oft mit Vorsicht zu genießen, und nicht immer reproduzierbar.
+
+Das in der akademischen Literatur häufige \enquote{man} (im Englischen einfacher \enquote{we}) ist in der Regel
+als \enquote{Autorinnen, Autoren, Leserinnen und Leser} zu interpretieren, und bezeichnet nicht nur die Autorinnen und Autoren einer Quelle.
+Die erste Person ist nur üblich, wenn die Subjektivität einer Aussage betont werden soll.
+Verwenden Sie bei Quellen bevorzugt die echten \emph{Namen}.
+Mit dem  Kommando können Sie dabei
+peinliche Tippfehler vermeiden.
+
+Allgemeine Hinweise zum Schreiben von Studien- und Abschlussarbeiten finden Sie unter anderem in folgenden beiden Lehrbüchern,
+auf die Sie über VPN zugreifen können sollten:
+
+\begin{quote}% Eigentlich kein echtes Zitat, aber trotzdem schöner wenn man die Quellenangaben so setzt.
+
+\end{quote}
+
+%%%%%%% Am besten für jedes Kapitel eine eigene Datei!
+\input{introduction.tex}
+
+\input{preliminaries.tex}
+
+\input{finetuning.tex}
+
+\input{continued_pretraining.tex}
+
+\input{conclusion.tex}
+
+\input{additional_information.tex}
+
+\backmatter
+% Literaturverzeichnis
+\bibliographystyle{plainnat}
+\bibliography{../references}
+
+% OPTIONAL: Abbildungsverzeichnis
+\iffalse
+\listoffigures
+\fi
+% OPTIONAL: Algorithmenverzeichnis, je nach package
+\iffalse
+\ifcsname listofalgorithms\endcsname
+\listofalgorithms
+\fi\fi
+
+%%%%% Optionaler Anhang
+\appendix
+%\input{anhang.tex}
+
+\chapter*{Verwendete Hilfsmittel}
+
+Folgende Hilfsmittel wurden beim Erstellen der Arbeit eingesetzt:\todo{ggf. entfernen}
+
+\begin{itemize}
+\item Texteditor, Rechtschreibprüfung, Grammatikprüfung im üblichen Umfang müssen nicht erwähnt werden.
+\item Entwicklungsumgebung, Versionskontrollsystem etc.{} müssen im Normalfall ebenfalls nicht erwähnt werden.
+\item Programmiersprachen, -Versionen, etc.{} sofern nicht vorne bereits erwähnt können Sie hier natürlich aufzählen, aber es ist viel eleganter wenn Sie den verwendeten Quellcode mit abgeben, inkl.{} README um ihre Ergebnisse zu reproduzieren.
+\item ChatGPT möglichst nur nach Absprache einsetzen, den Umfang der Verwendung hier dokumentieren (siehe Eidesstattliche Versicherung!).
+\item Im Zweifelsfalle die Betreuer*innen fragen!
+\item Wenn die Liste leer ist, können Sie sie natürlich auch weglassen.
+\end{itemize}
+%bspw. \include{anhang.tex}
+
+% Eidesstattliche Versicherung
+\cleardoublepage
+\IfFileExists{Eidesstattliche_Versicherung.pdf}{\bgroup\pagestyle{empty}\includepdf{Eidesstattliche_Versicherung.pdf}\egroup}{
+\chapter*{Eidesstattliche Versicherung}
+Laden Sie die aktuelle Erklärung vom Dezernat 4.3
+herunter, und unterzeichnen Sie diese.
+
+\url{https://www.tu-dortmund.de/eidesstattliche-versicherung}
+
+Sie können die Datei dann hier per \texttt{\textbackslash{}includepdf\{Eidesstattliche\_Versicherung.pdf\}} einbinden (siehe source).
+}
 
 \end{document}
