@@ -575,10 +575,10 @@ def _model_forward(
         criterion.borders = original_borders"""
 
     if forward_for_validation:
+        criterion = model.module.criterion if is_data_parallel else model.criterion
         new_pred_logits = []
         for batch_i in range(pred_logits.shape[1]):
-            bar_dist = deepcopy(model.module.criterion if is_data_parallel else model.criterion)
-            pred_mean_normalized = bar_dist.mean(pred_logits[:, batch_i, :])
+            pred_mean_normalized = criterion.mean(pred_logits[:, batch_i, :])
             pred_mean = pred_mean_normalized * std[0, batch_i] + mean[0, batch_i]
             new_pred_logits.append(pred_mean)
         pred_logits = torch.stack(new_pred_logits, dim=-1)

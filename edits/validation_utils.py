@@ -160,8 +160,9 @@ def validate_tabpfn_fixed_context(
     # Mittelwert über alle Serien
     avg_score = sum(all_window_scores) / len(all_window_scores)
 
-    X_val.cpu()
-    y_val.cpu()
+    X_val = X_val.cpu()
+    y_val = y_val.cpu()
+    torch.cuda.empty_cache()
 
     return validation_metric.convert_score_to_error(avg_score)
 

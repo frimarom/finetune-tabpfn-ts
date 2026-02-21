@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --partition=ext_vwl_norm
+#SBATCH --partition=ext_chem2_norm
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
