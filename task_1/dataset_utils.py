@@ -252,7 +252,8 @@ def to_x_y(name: str, data: TimeSeriesDataFrame):
 
 def create_homgenous_ts_dataset(
     dataset_name: str,
-    ts_amount_limit: int = None
+    ts_amount_limit: int = None,
+    ts_length_limit: int = None,
 ):
 
     if dataset_name in gift_eval_datasets:
@@ -262,7 +263,7 @@ def create_homgenous_ts_dataset(
     else:
         raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
 
-    target_length = np.median([len(ts["y"]) for ts in records]).astype(np.int64)
+    target_length = min(ts_length_limit, np.median([len(ts["y"]) for ts in records]).astype(np.int64))
 
 
     X_out = []

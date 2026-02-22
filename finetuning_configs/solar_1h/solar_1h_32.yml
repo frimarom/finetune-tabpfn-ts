@@ -1,4 +1,5 @@
 dataset:
+  max_context_length: 4096
   name: solar_1h
   prediction_length: -1
   ts_amount_limit: 5000
@@ -15,6 +16,6 @@ finetuning:
     early_stopping:
       max_patience: 200
       min_patience: 100
-    ts_val_amount: 100
+    ts_val_amount: 50
     validate_every_n_steps: 10
   weight_decay: 0.0

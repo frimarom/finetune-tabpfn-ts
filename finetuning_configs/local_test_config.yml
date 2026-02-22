@@ -2,6 +2,8 @@ dataset:
   name: "hospital"
   prediction_length: -1
   windows: 1
+  ts_amount_limit: 5000
+  max_context_length: 4096
 finetuning:
   time_limit: 100
   batch_size: 2
