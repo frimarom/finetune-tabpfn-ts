@@ -35,6 +35,7 @@ class TabPFNTSPredictor:
         ds_prediction_length: int,
         ds_freq: str,
         tabpfn_mode: TabPFNMode = TabPFNMode.CLIENT,
+        model_path: str = None,
         context_length: int = 4096,
         debug: bool = False,
     ):
@@ -42,6 +43,9 @@ class TabPFNTSPredictor:
         self.ds_freq = ds_freq
         self.tabpfn_predictor = TabPFNTimeSeriesPredictor(
             tabpfn_mode=tabpfn_mode,
+            tabpfn_config={
+                "model_path": model_path,
+            } if model_path else {},
         )
         self.context_length = context_length
         self.debug = debug

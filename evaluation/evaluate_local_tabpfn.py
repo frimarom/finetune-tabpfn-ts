@@ -30,13 +30,13 @@ from gluonts.ev.metrics import (
     MeanWeightedSumQuantileLoss,
 )
 
-from gift_eval.data import Dataset
-from edits.dataset_definition import (
+from evaluation.data import Dataset
+from evaluation.dataset_definition import (
     MED_LONG_DATASETS,
     ALL_DATASETS,
     DATASET_PROPERTIES_MAP,
 )
-from edits.tabpfn_ts_wrapper import TabPFNTSPredictor, TabPFNMode
+from evaluation.tabpfn_ts_wrapper import TabPFNTSPredictor, TabPFNMode
 
 # Instantiate the metrics
 metrics = [
@@ -105,6 +105,7 @@ def construct_evaluation_data(
         else:
             ds_key = dataset_name.lower()
             ds_key = pretty_names.get(ds_key, ds_key)
+            print(DATASET_PROPERTIES_MAP)
             ds_freq = DATASET_PROPERTIES_MAP[ds_key]["frequency"]
 
         # Initialize the dataset
@@ -270,7 +271,8 @@ def main(args):
             ds_prediction_length=sub_dataset.prediction_length,
             ds_freq=sub_dataset.freq,
             # tabpfn_mode=TabPFNMode.LOCAL,
-            tabpfn_mode=TabPFNMode.CLIENT,
+            tabpfn_mode= TabPFNMode[args.mode.upper()],
+            model_path=args.path_to_model_checkpoint,
             context_length=4096,
             debug=args.debug,
         )
@@ -344,6 +346,8 @@ if __name__ == "__main__":
     )  # model_name will be added later anyway
 
     parser.add_argument("--dataset", type=str, default=datasets_to_evaluate[0])
+    parser.add_argument("--mode", type=str, default="local", choices=["local", "client"])
+    parser.add_argument("--path_to_model_checkpoint", type=str, default=None, help="Path to the model checkpoint to use in local mode")
 
     args = parser.parse_args()
 
