@@ -17,14 +17,20 @@ source /work/smfrromb/finetune_tabpfn_ts/.venv/bin/activate
 cd /work/smfrromb || exit
 
 DATASETS="$1"
+PATH_TO_MODEL_CHECKPOINT="$2"
 
 if [ -z "$DATASETS" ]; then
     echo "Usage: sbatch run.sh <dataset>"
     exit 1
 fi
 
-srun -n1 -c8 \
-    python -m finetune_tabpfn_ts.task_1.evaluate_local_tabpfn_gift_eval \
-    --dataset "$DATASETS"
+ARGS=(python -m finetune_tabpfn_ts.task_1.evaluate_local_tabpfn_gift_eval \
+  --dataset "$DATASETS" \
+  --model_name tabpfn_ts_local \
+  --mode local)
+if [ -n "$PATH_TO_MODEL_CHECKPOINT" ]; then
+  ARGS+=(--path_to_model_checkpoint "$PATH_TO_MODEL_CHECKPOINT")
+fi
+srun -n1 -c8 "${ARGS[@]}"
 
 wait
