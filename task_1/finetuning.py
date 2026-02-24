@@ -63,20 +63,40 @@ if __name__ == "__main__":
 
     #ensure_correct_config(finetuning_config)
 
-    train_X, train_y, ts_length = create_homgenous_ts_dataset(finetuning_config["dataset"]["name"],
-                                                              finetuning_config["dataset"]["ts_amount_limit"],
-                                                              finetuning_config["dataset"]["max_context_length"])
+    train_X_list = []
+    train_y_list = []
+    dataset_attributes_list = []
+    """
+    datasets:
+  - name:
+    prediction_length:
+    windows:
+    ts_amount_limit:
+    max_context_length:
+  - name:
+    prediction_length:
+    windows:
+    ts_amount_limit:
+    max_context_length:
+    """
+    for dataset_config in finetuning_config["datasets"]:
+        train_X, train_y, ts_length, prediction_length = create_homgenous_ts_dataset(dataset_config["name"],
+                                                                  dataset_config["ts_amount_limit"],
+                                                                  dataset_config["max_context_length"])
+        dataset_attributes = DatasetAttributes(name=dataset_config["name"],
+                                               time_series_length=ts_length,
+                                               ts_amount=train_X.shape[2],
+                                               forecast_horizon=prediction_length
+                                               if dataset_config["prediction_length"] == -1
+                                               else dataset_config["prediction_length"],
+                                               context_size=0,
+                                               offset=0,
+                                               windows=dataset_config["windows"], )
 
-    dataset_attributes = DatasetAttributes(name = finetuning_config["dataset"]["name"],
-                                           time_series_length = ts_length,
-                                           ts_amount = train_X.shape[2],
-                                           forecast_horizon = get_prediction_length(finetuning_config["dataset"]["name"])
-                                           if finetuning_config["dataset"]["prediction_length"] == -1
-                                           else finetuning_config["dataset"]["prediction_length"],
-                                           context_size = 0,
-                                           offset = 0,
-                                           windows = finetuning_config["dataset"]["windows"],)
-    print(dataset_attributes.report_str)
+        train_X_list.append(train_X)
+        train_y_list.append(train_y)
+        dataset_attributes_list.append(dataset_attributes)
+        print(dataset_attributes.report_str)
 
     if args.path_to_save_all is not None and not os.path.exists(args.path_to_save_all):
         os.makedirs(args.path_to_save_all)
@@ -96,9 +116,10 @@ if __name__ == "__main__":
                            "weight_decay": finetuning_config["finetuning"]["weight_decay"],
                            },
         validation_metric="mean_absolute_error",
-        dataset_attributes = dataset_attributes,
-        X_train=train_X,
-        y_train=train_y,
+        dataset_attributes = dataset_attributes_list,
+        prior=False,
+        X_train=train_X_list,
+        y_train=train_y_list,
         categorical_features_index=None,
         device="cuda" if torch.cuda.is_available() else "cpu",  # use "cpu" if you don't have a GPU
         task_type="regression",

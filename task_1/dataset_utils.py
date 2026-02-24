@@ -314,12 +314,11 @@ def create_homgenous_ts_dataset(
     X_out = X_out.permute(2, 1, 0)  # (L, F+1, N_ts)
     y_out = y_out.permute(2, 1, 0)  # (L, 1, N_ts)
 
-    return X_out, y_out, target_length
+    return X_out, y_out, target_length, get_prediction_length(dataset)
 
-def get_prediction_length(dataset_name: str):
+def get_prediction_length(p_dataset):
     if dataset_name in gift_eval_datasets:
-        dataset = load_dataset(dataset_name)
-        return dataset.prediction_length
+        return p_dataset.prediction_length
     elif dataset_name in dataset_metadata.keys():
         return dataset_metadata[dataset_name]["prediction_length"]
     else:

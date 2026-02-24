@@ -1,8 +1,14 @@
-dataset:
-  name:
-  prediction_length:
-  windows:
-  ts_amount_limit:
+datasets:
+  - name:
+    prediction_length:
+    windows:
+    ts_amount_limit:
+    max_context_length:
+  - name:
+    prediction_length:
+    windows:
+    ts_amount_limit:
+    max_context_length:
 finetuning:
   time_limit:
   batch_size:

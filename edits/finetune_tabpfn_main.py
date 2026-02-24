@@ -70,11 +70,12 @@ def fine_tune_tabpfn(
     # Finetuning HPs
     time_limit: int,
     finetuning_config: dict,
-    dataset_attributes: DatasetAttributes,
+    dataset_attributes: list[DatasetAttributes],
     validation_metric: SupportedValidationMetric,
     # Input Data
-    X_train: np.ndarray | torch.Tensor,
-    y_train: np.ndarray | torch.Tensor,
+    prior: bool = False,
+    X_train: list[np.ndarray | torch.Tensor],
+    y_train: list[np.ndarray | torch.Tensor],
     categorical_features_index: list[int] | None,
     task_type: TaskType,
     device: SupportedDevice,
@@ -210,28 +211,25 @@ def fine_tune_tabpfn(
     # Only necessary if no validation data is provided
     create_val_data = (X_val is None) and (y_val is None)
     n_classes = None
-    n_samples = len(X_train)
-    if not create_val_data:
-        n_samples += len(X_val)
-    else:
+    if create_val_data:
         from finetune_tabpfn_ts.edits.validation_utils import create_val_data
 
         X_train, X_val, y_train, y_val = create_val_data(
             X_train=X_train,
             y_train=y_train,
             rng=rng,
-            n_time_series=dataset_attributes.ts_amount,
-            windows_per_series = dataset_attributes.windows,
+            dataset_attributes = dataset_attributes,
             val_time_series = val_time_series_amount
         )
-    val_report = f"""
+    #val_report = f
+    """
     === Basic / Validation State ===
         \tTime Limit: {time_limit}
         \tEarly Stopping Metric: {validation_metric}
         \tVal Samples: {len(X_val) if X_val is not None else 0} | Total Samples: {n_samples}
         \tModel #parameter: {sum(p.numel() for p in model.parameters())}
     """
-    logger.debug(val_report)
+    #logger.debug(val_report)
 
     # Setup learning HPs
     fts = _setup_tuning(
@@ -274,25 +272,23 @@ def fine_tune_tabpfn(
         # this is required as memory_saving_mode can not be used during training
         model_for_validation.memory_saving_mode = False
 
-    def ensure_tensor(x):
-        return x if isinstance(x, torch.Tensor) else torch.tensor(x)
-
-    Xv = ensure_tensor(X_val).float()
-    yv = ensure_tensor(y_val).float()
-
-    if Xv.dim() == 2:
-        Xv = Xv.unsqueeze(1)
-    if yv.dim() == 2:
-        yv = yv.unsqueeze(1)
-
+    for i in range(len(X_val)):
+        if not isinstance(X_val[i], torch.Tensor):
+            X_val[i] = torch.tensor(X_val[i])
+        if not isinstance(y_val[i], torch.Tensor):
+            y_val[i] = torch.tensor(y_val[i])
+        if X_val[i].dim() == 2:
+            X_val[i] = X_val[i].unsqueeze(1)
+        if y_val[i].dim() == 2:
+            y_val[i] = y_val[i].unsqueeze(1)
 
     os.makedirs(f"./{path_for_all}/validation_plots", exist_ok=True)
 
     validate_tabpfn_fn = partial(
         validate_tabpfn_fixed_context,
-        X_val=Xv,
-        y_val=yv,
-        dataset_attributes = dataset_attributes,
+        X_val_list=X_val,
+        y_val_list=y_val,
+        dataset_attributes_list = dataset_attributes,
         validation_metric=validation_metric,
         model_forward_fn=model_forward_fn,
         task_type=task_type,
@@ -727,7 +723,7 @@ def _setup_tuning(
     adaptive_offset: int = 5,
     min_patience: int = 20,
     max_patience: int = 100,
-    data_loader_workers: int = 1,
+    data_loader_workers: int = 0,
     l2_sp_lambda: float = 1e-4,
     weight_decay: float = 0.0,
     # Metadata
@@ -768,12 +764,10 @@ def _tore_down_tuning(
     fts: FineTuneSetup,
     task_type: TaskType,
     finetuning_config: dict,
-    dataset_attributes: DatasetAttributes,
+    dataset_attributes: list[DatasetAttributes],
     path_for_all: str,
     time_limit: int,
 ) -> None:
-    dataset_name = dataset_attributes.name
-    pred_length = dataset_attributes.forecast_horizon
     # -- Early Stopping reason (after tqdm finished)
     es_reason = None
     if early_stop_no_imp:
@@ -785,13 +779,17 @@ def _tore_down_tuning(
 
     finetuning_config["time_limit"] = time_limit
 
+    json_dataset_attributes =[]
+    for i in range(len(dataset_attributes)):
+        json_dataset_attributes.append({
+            "name": dataset_attributes[i].name,
+            "forecast_horizon": dataset_attributes[i].forecast_horizon,
+            "ts_amount": dataset_attributes[i].ts_amount,
+            "windows": dataset_attributes[i].windows,
+        })
+
     finetuning_json_report = {
-        "dataset": {
-            "name": dataset_attributes.name,
-            "forecast_horizon": dataset_attributes.forecast_horizon,
-            "ts_amount": dataset_attributes.ts_amount,
-            "windows": dataset_attributes.windows,
-        },
+        "dataset": json_dataset_attributes,
         "hyperparameters": finetuning_config,
         "finetuning_stats": {
             "total_time_spent": time.time() - st_time,
@@ -883,12 +881,24 @@ def _tore_down_tuning(
         lines2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', title='Legend')
 
+        #create dataset name as string with all dataset names
+        dataset_names = ""
+        for i in range(len(dataset_attributes)):
+            dataset_names += dataset_attributes[i].name
+            if i != len(dataset_attributes) - 1:
+                dataset_names += "_"
+
+        pred_lengths = [str(attr.forecast_horizon) for attr in dataset_attributes]
+        dataset_attributes_str = f"{dataset_names} | pred_length(s): {', '.join(pred_lengths)}"
+
+
         hp_text = (
             f"lr={finetuning_config.get('learning_rate', 'not avail')} | "
             f"batch_size={finetuning_config.get('batch_size', 'not avail')} | "
             f"update_every={fts.update_every_n_steps}\n"
             "loss=train: FullSupportBarDistribution | val: Mean absolute error\n"
-            f"dataset={dataset_name} | time_limit={time_limit}s | pred_length={pred_length}"
+            f"time_limit={time_limit}s"
+            f"dataset_attributes={dataset_attributes_str}"
         )
         fig.text(
             0.5,
@@ -899,7 +909,7 @@ def _tore_down_tuning(
             fontsize=10,
         )
 
-        plt.savefig(f"./{path_for_all}/fine_tuning_loss_plot_{task_type}_{dataset_name.replace('/', '_')}_{time_limit}s.png",
+        plt.savefig(f"./{path_for_all}/fine_tuning_loss_plot_{task_type}_{dataset_names.replace('/', '_')}_{time_limit}s.png",
                     bbox_inches='tight')
 
         print(finetuning_json_report)
