@@ -23,6 +23,7 @@ from tabpfn_time_series.features import (
 )
 
 import datasets
+import random
 from gluonts.dataset.util import to_pandas
 from tabpfn_time_series.data_preparation import to_gluonts_univariate
 import matplotlib.pyplot as plt
@@ -200,10 +201,10 @@ def transform_autogluon_dataset(dataset_choice, dataset, ts_amount_limit: int = 
     tsdf = TimeSeriesDataFrame(dataset)
 
     #limit number of ts so lido cluster doesnt oom
-    if tsdf.index.get_level_values("item_id").nunique() > ts_amount_limit:
-        tsdf = tsdf[
-            tsdf.index.get_level_values("item_id").isin(tsdf.item_ids[:ts_amount_limit])
-        ]
+    if ts_amount_limit and tsdf.index.get_level_values("item_id").nunique() > ts_amount_limit:
+        sampled_ids = tsdf.item_ids.to_series().sample(n=ts_amount_limit, random_state=42)
+        tsdf = tsdf[tsdf.index.get_level_values("item_id").isin(sampled_ids)]
+
     print(tsdf)
     record = []
     for item_id, ts in tsdf.groupby(level="item_id"):
@@ -216,9 +217,13 @@ def transform_autogluon_dataset(dataset_choice, dataset, ts_amount_limit: int = 
 
 def transform_gift_eval_dataset(dataset_choice, dataset, ts_amount_limit: int = None):
     records = []
-    for i, time_series in enumerate(dataset):
-        if i >= ts_amount_limit:
-            break
+
+    all_items = list(dataset)
+    if ts_amount_limit and len(all_items) > ts_amount_limit:
+        indices = np.random.default_rng(seed=42).choice(len(all_items), size=int(ts_amount_limit), replace=False)
+        all_items = [all_items[i] for i in indices]
+
+    for time_series in all_items:
         pandas_ts = to_pandas(time_series)
 
         dataframe = pandas_ts.to_frame().reset_index()
