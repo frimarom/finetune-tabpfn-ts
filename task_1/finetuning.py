@@ -3,6 +3,7 @@ from finetune_tabpfn_ts.task_1.load_datasets import load_dataset
 from finetune_tabpfn_ts.task_1.load_datasets import get_transformed_stacked_dataset
 from finetune_tabpfn_ts.task_1.load_datasets import transform_data
 from finetune_tabpfn_ts.task_1.load_datasets import to_x_y
+from finetune_tabpfn_ts.task_1.dataset_utils import create_train_val_split
 from finetune_tabpfn_ts.task_1.load_datasets import transform_data
 from finetune_tabpfn_ts.task_1.load_datasets import stack_records_along_z
 from finetune_tabpfn_ts.edits.finetune_tabpfn_main import fine_tune_tabpfn
@@ -65,6 +66,8 @@ if __name__ == "__main__":
 
     train_X_list = []
     train_y_list = []
+    X_val_list = []
+    y_val_list = []
     dataset_attributes_list = []
     """
     datasets:
@@ -79,10 +82,14 @@ if __name__ == "__main__":
     ts_amount_limit:
     max_context_length:
     """
+    dataset_amount = len(finetuning_config["datasets"])
+    validation_amount_per_dataset = np.floor(dataset_amount/finetuning_config["finetuning"]["validation"]["ts_val_amount"])
     for dataset_config in finetuning_config["datasets"]:
-        train_X, train_y, ts_length, prediction_length = create_homgenous_ts_dataset(dataset_config["name"],
+        print(dataset_config)
+        train_X, train_y, X_val, y_val, ts_length, prediction_length = create_train_val_split(dataset_config["name"],
                                                                   dataset_config["ts_amount_limit"],
-                                                                  dataset_config["max_context_length"])
+                                                                  dataset_config["max_context_length"],
+                                                                  validation_amount_per_dataset)
         dataset_attributes = DatasetAttributes(name=dataset_config["name"],
                                                time_series_length=ts_length,
                                                ts_amount=train_X.shape[2],
@@ -95,6 +102,8 @@ if __name__ == "__main__":
 
         train_X_list.append(train_X)
         train_y_list.append(train_y)
+        X_val_list.append(X_val)
+        y_val_list.append(y_val)
         dataset_attributes_list.append(dataset_attributes)
         print(dataset_attributes.report_str)
 
@@ -117,14 +126,15 @@ if __name__ == "__main__":
                            },
         validation_metric="mean_absolute_error",
         dataset_attributes = dataset_attributes_list,
+        dataset = None,
         prior=False,
         X_train=train_X_list,
         y_train=train_y_list,
         categorical_features_index=None,
         device="cuda" if torch.cuda.is_available() else "cpu",  # use "cpu" if you don't have a GPU
         task_type="regression",
-        X_val = None, # hier keine Daten angeben
-        y_val = None,
+        X_val = X_val_list,
+        y_val = y_val_list,
         val_time_series_amount = None if finetuning_config["finetuning"]["validation"]["ts_val_amount"] == -1
         else finetuning_config["finetuning"]["validation"]["ts_val_amount"],
         # Optional

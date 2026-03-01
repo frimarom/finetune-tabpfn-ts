@@ -26,7 +26,6 @@ from finetuning_scripts.metric_utils.ag_metrics import get_metric
 from finetuning_scripts.training_utils.ag_early_stopping import AdaptiveES
 #from finetuning_scripts.training_utils.data_utils import get_data_loader
 from finetune_tabpfn_ts.edits.data_utils import get_data_loader
-from finetune_tabpfn_ts.edits.data_utils import get_batches_with_whole_ts
 from finetuning_scripts.training_utils.model_utils import save_model
 from finetuning_scripts.training_utils.training_loss import compute_loss, get_loss
 from finetune_tabpfn_ts.edits.validation_utils import validate_tabpfn_fixed_context
@@ -74,6 +73,7 @@ def fine_tune_tabpfn(
     validation_metric: SupportedValidationMetric,
     # Input Data
     prior: bool = False,
+    dataset: list[Dataset | None],
     X_train: list[np.ndarray | torch.Tensor],
     y_train: list[np.ndarray | torch.Tensor],
     categorical_features_index: list[int] | None,
@@ -81,8 +81,8 @@ def fine_tune_tabpfn(
     device: SupportedDevice,
     use_multiple_gpus: bool = False,
     multiple_device_ids: Sequence[Union[int, torch.device]] | None  = None,
-    X_val: np.ndarray | torch.Tensor | None,
-    y_val: np.ndarray | torch.Tensor | None,
+    X_val: list[np.ndarray | torch.Tensor | None],
+    y_val: list[np.ndarray | torch.Tensor | None],
     random_seed: int = 42,
     val_time_series_amount: int = None,
     # Other
@@ -221,6 +221,8 @@ def fine_tune_tabpfn(
             dataset_attributes = dataset_attributes,
             val_time_series = val_time_series_amount
         )
+
+    #TODO hier option dass vielleicht direkt ganzer Train val split erstellt wird mit dataset wenn X_val leer ist und X_train leer ist und dataset übergeben wird
     #val_report = f
     """
     === Basic / Validation State ===

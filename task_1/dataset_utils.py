@@ -9,12 +9,12 @@ from tabpfn_time_series import TimeSeriesDataFrame
 from dataclasses import dataclass
 
 
-from gift_eval.data import Dataset
+from finetune_tabpfn_ts.evaluation.data import Dataset
 from enum import Enum
 
 import torch
 import numpy as np
-from finetune_tabpfn_ts.edits.data_utils import get_data_loader, create_batch, get_batches_with_variable_forecast_horizon
+from finetune_tabpfn_ts.edits.data_utils import get_data_loader
 from finetune_tabpfn_ts.edits.feature_transformer import FeatureTransformer
 from tabpfn_time_series.features import (
     RunningIndexFeature,
@@ -195,10 +195,9 @@ def transform_data(train_data: TimeSeriesDataFrame):
 
     return feature_transformer.transform_one_dataframe(train_data)
 
-def load_and_transform_autogluon_dataset(dataset_choice: str, ts_amount_limit: int = None):
-    dataset = datasets.load_dataset("autogluon/chronos_datasets", dataset_choice)
+def transform_autogluon_dataset(dataset_choice, dataset, ts_amount_limit: int = None):
 
-    tsdf = TimeSeriesDataFrame(to_gluonts_univariate(dataset["train"]))
+    tsdf = TimeSeriesDataFrame(dataset)
 
     #limit number of ts so lido cluster doesnt oom
     if tsdf.index.get_level_values("item_id").nunique() > ts_amount_limit:
@@ -215,11 +214,9 @@ def load_and_transform_autogluon_dataset(dataset_choice: str, ts_amount_limit: i
     return record
 
 
-def load_and_transform_gift_eval_dataset(name: str, ts_amount_limit: int = None):
-    dataset = load_dataset(name)
-
+def transform_gift_eval_dataset(dataset_choice, dataset, ts_amount_limit: int = None):
     records = []
-    for i, time_series in enumerate(dataset.gluonts_dataset):
+    for i, time_series in enumerate(dataset):
         if i >= ts_amount_limit:
             break
         pandas_ts = to_pandas(time_series)
@@ -233,7 +230,7 @@ def load_and_transform_gift_eval_dataset(name: str, ts_amount_limit: int = None)
 
         train_part_ts = TimeSeriesDataFrame(dataframe)
         transformed_data = transform_data(train_part_ts)
-        X, y = to_x_y(name, transformed_data)
+        X, y = to_x_y(dataset_choice, transformed_data)
 
         records.append({
             "X": X,
@@ -252,14 +249,14 @@ def to_x_y(name: str, data: TimeSeriesDataFrame):
 
 def create_homgenous_ts_dataset(
     dataset_name: str,
+    dataset: Dataset,
     ts_amount_limit: int = None,
     ts_length_limit: int = None,
 ):
-
     if dataset_name in gift_eval_datasets:
-        records = load_and_transform_gift_eval_dataset(dataset_name, ts_amount_limit)
+        records = transform_gift_eval_dataset(dataset_name, dataset, ts_amount_limit)
     elif dataset_name in dataset_metadata.keys():
-        records = load_and_transform_autogluon_dataset(dataset_name, ts_amount_limit)
+        records = transform_autogluon_dataset(dataset_name, dataset, ts_amount_limit)
     else:
         raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
 
@@ -314,18 +311,35 @@ def create_homgenous_ts_dataset(
     X_out = X_out.permute(2, 1, 0)  # (L, F+1, N_ts)
     y_out = y_out.permute(2, 1, 0)  # (L, 1, N_ts)
 
-    return X_out, y_out, target_length, get_prediction_length(dataset)
+    return X_out, y_out, target_length, get_prediction_length(dataset_name)
 
-def get_prediction_length(p_dataset):
+def get_prediction_length(dataset_name: str):
     if dataset_name in gift_eval_datasets:
-        return p_dataset.prediction_length
+        dataset = load_dataset(dataset_name)
+        return dataset.prediction_length
     elif dataset_name in dataset_metadata.keys():
         return dataset_metadata[dataset_name]["prediction_length"]
     else:
         raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
 
 
+def create_train_val_split(
+        dataset_name: str,
+        max_training_ts_amount: int = None,
+        max_context_length: int = None,
+        max_validation_ts_amount: int = None):
+    dataset = Dataset(name = dataset_name)
+    X_train, y_train, target_length, prediction_length = create_homgenous_ts_dataset(dataset_name, dataset.training_dataset, ts_amount_limit=max_training_ts_amount, ts_length_limit=max_context_length)
+    X_val, y_val, _, _ = create_homgenous_ts_dataset(dataset_name, dataset.validation_dataset, ts_amount_limit=max_validation_ts_amount, ts_length_limit=max_context_length)
+    return X_train, y_train, X_val, y_val, target_length, prediction_length
+
 if __name__ == "__main__":
+    #TODO select random datasets from it when it comes to validation data
+    X_train, y_train, X_val, y_val, target_length, prediction_length = create_train_val_split("monash_fred_md", max_training_ts_amount=10, max_context_length=4096, max_validation_ts_amount=1)
+    print(X_train.shape)
+    print(X_val.shape)
+    print(prediction_length)
+    """
     dataset = Dataset("SZ_TAXI/H")
     print(len(dataset.gluonts_dataset))
 
@@ -337,3 +351,4 @@ if __name__ == "__main__":
     plt.plot(X[2, 0, :], y[2, 0, :])
     plt.plot(X[3, 0, :], y[3, 0, :])
     plt.savefig("finetune_tabpfn_ts/m4_weekly.png")
+    """

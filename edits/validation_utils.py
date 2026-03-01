@@ -45,7 +45,7 @@ def create_val_data(
         mask_indices = rng.choice(n_time_series, int(val_amount_per_ds), replace=False).tolist()
         print("Val indices", mask_indices)
         mask[mask_indices] = True
-        print("Xtrain_shape", X_train.shape)
+        print("Xtrain_shape", X_train[i].shape)
         X_t = X_train[i]
         y_t = y_train[i]
         X_train[i] = X_train[i][:, :, ~mask]
