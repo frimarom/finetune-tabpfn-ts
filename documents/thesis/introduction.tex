@@ -5,7 +5,7 @@ Since the release of ChatGPT in 2022 and the widespread media coverage of AI, ma
 Large Language Models are now known as being a gateway to machine learning and artificial intelligence.
 But LLMs almost only excel on data in textual format or pictures.
 What about tabular data?
-Wether it is patients data in healthcare, sales data in finance or every other data which can be stored in an Excel-like schema, tabular data is one of the most common data formats used in a big scale.
+Whether it is patients data in healthcare, sales data in finance or every other data which can be stored in an Excel-like schema, tabular data is one of the most common data formats used in a big scale.
 This type of data has not been in the focus by researchers for quite some time since nobody found a way to utilize deep learning for tabular data.
 \newline
 Furthermore, algorithms like gradient boost decision trees or random forest were much more accessible.
@@ -37,7 +37,7 @@ The questions we will address are:
     \item Can we continue pre-training TabPFN-TS with a given prior?
     \item Which one of the following models performs best on various high scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?
 \end{enumerate}
-Chapter 4 will focus on finetuning the model with datasets from the GIFT-EVAL benchmark as well as datasets from autogluon/chronos-datasets.
+Chapter 4 will focus on finetuning the model with datasets from the GIFT-EVAL benchmark \citep{aksu2024giftevalbenchmarkgeneraltime} as well as datasets from autogluon/chronos-datasets \citep{ansari2024chronos}.
 Most of the code used in this section was already provided by Lennart Purucker, but we had to adjust some of the code to bring it up to date and to use it with time series data.
 To examine the presumable improvements we use the GIFT-EVAL evaluation code to calculate different types of errors before and after finetuning.
 \newline
