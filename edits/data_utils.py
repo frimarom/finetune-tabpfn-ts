@@ -191,7 +191,6 @@ class ArtificalTimeSeriesDataset(Dataset):
         Maximum number of steps (splits of the data).
     """
 
-
     def __init__(
         self,
         *,

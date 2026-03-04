@@ -255,6 +255,35 @@ class Dataset:
         )
         return test_data
 
+    @cached_property
+    def is_chronos(self) -> bool:
+        return name in CHRONOS_DATASETS_METADATA.keys()
+
+    @property
+    def windowed_training_dataset(self):
+        training_part, _ = split(gluonts_dataset, offset=-(wins + 1) * pred)
+
+        _, window_template = split(training_part, offset=-wins * pred)
+
+        return window_template.generate_instances(
+            prediction_length=self.prediction_length,
+            windows=self.windows,
+            distance=self.prediction_length,
+            max_history=self._min_series_length - (ds.windows + 1) * ds.prediction_length
+        )
+
+    """
+    @property
+    def windowed_validation_dataset(self):
+        _, test_template = split(
+            self.gluonts_dataset, offset=-self.prediction_length * self.windows
+        )
+        return test_template.generate_instances(
+            prediction_length=self.prediction_length,
+            windows=self.windows,
+            distance=self.prediction_length,
+        )
+    """
 
 if __name__ == "__main__":
     dataset = Dataset("monash_covid_deaths", term=Term.SHORT)

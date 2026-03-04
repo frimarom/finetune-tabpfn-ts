@@ -218,13 +218,22 @@ def transform_autogluon_dataset(dataset_choice, dataset, ts_amount_limit: int = 
 def transform_gift_eval_dataset(dataset_choice, dataset, ts_amount_limit: int = None):
     records = []
 
-    all_items = list(dataset)
+    def get_items(dataset):
+        for item in dataset:
+            if isinstance(item, tuple):
+                input_entry, _ = item
+                yield input_entry
+            else:
+                yield item
+
+    all_items = list(get_items(dataset))
     if ts_amount_limit and len(all_items) > ts_amount_limit:
         indices = np.random.default_rng(seed=42).choice(len(all_items), size=int(ts_amount_limit), replace=False)
         all_items = [all_items[i] for i in indices]
 
     for time_series in all_items:
-        pandas_ts = to_pandas(time_series)
+        target_key = "target" if "target" in time_series else "past_target"
+        pandas_ts = to_pandas({**time_series, "target": time_series[target_key]})
 
         dataframe = pandas_ts.to_frame().reset_index()
         dataframe.columns = ["timestamp", "target"]
@@ -252,27 +261,65 @@ def to_x_y(name: str, data: TimeSeriesDataFrame):
     X = data.drop("target", axis=1)
     return X, y
 
-def create_homgenous_ts_dataset(
+def create_homogenous_ts_dataset(
     dataset_name: str,
     dataset: Dataset,
     ts_amount_limit: int = None,
     ts_length_limit: int = None,
+    windows: int = 1,
 ):
+    """
+    Parameters
+    ----------
+    windows : int
+        Number of sliding windows per time series.
+        Each window w (0-indexed) covers:
+            X[w] = padded_series[w*pred : T - (windows-1-w)*pred]
+        All windows have the same length = window_length.
+        Output shape: (window_length, F+1, N_ts * windows)
+
+    Output
+    ------
+    X_out        : (window_length, F+1, N_ts * windows)
+    y_out        : (window_length, 1,   N_ts * windows)
+    window_length: int
+    pred_length  : int
+    """
     if dataset_name in gift_eval_datasets:
         records = transform_gift_eval_dataset(dataset_name, dataset, ts_amount_limit)
     elif dataset_name in dataset_metadata.keys():
         records = transform_autogluon_dataset(dataset_name, dataset, ts_amount_limit)
     else:
-        raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
+        raise ValueError(
+            f"Dataset {dataset_name} not found in either "
+            "gift_eval_datasets or autogluon_chronos_datasets"
+        )
 
-    target_length = min(ts_length_limit, np.median([len(ts["y"]) for ts in records]).astype(np.int64))
+    pred_length = get_prediction_length(dataset_name)
 
+    # ── target length = length of ONE window ─────────────────────────────────
+    # raw series length after optional truncation, then subtract the parts that
+    # belong to the other windows so every window has the same length.
+    raw_lengths   = [len(ts["y"]) for ts in records]
+    median_length = int(np.median(raw_lengths))
+    if ts_length_limit is not None:
+        median_length = min(ts_length_limit, median_length)
+
+    # window_length: the full padded series is split into `windows` chunks of
+    # equal size. Chunk w covers [w*pred_length, median_length - (windows-1-w)*pred_length).
+    # All chunks have the same length = median_length - (windows-1)*pred_length.
+    window_length = median_length - (windows - 1) * pred_length
+    if window_length <= 0:
+        raise ValueError(
+            f"window_length={window_length} <= 0. "
+            f"Reduce `windows` or increase `ts_length_limit`."
+        )
 
     X_out = []
     y_out = []
 
     for record in records:
-        X_df = record["X"]
+        X_df     = record["X"]
         y_series = record["y"]
 
         X_np = X_df.values.astype(float)
@@ -280,43 +327,49 @@ def create_homgenous_ts_dataset(
 
         T_i, F = X_np.shape
 
-        if T_i > target_length:
-            X_np = X_np[-target_length:]
-            y_np = y_np[-target_length:]
-            padding_mask = np.ones((target_length, 1), dtype=float)
+        # ── pad / truncate to median_length ──────────────────────────────────
+        if T_i > median_length:
+            X_np = X_np[-median_length:]
+            y_np = y_np[-median_length:]
+            padding_mask = np.ones((median_length, 1), dtype=float)
 
-        elif T_i < target_length:
-            pad_len = target_length - T_i
-
-            X_pad = np.zeros((pad_len, F), dtype=float)
-            y_pad = np.zeros((pad_len, 1), dtype=float)
-            X_np = np.concatenate([X_pad, X_np], axis=0)
-            y_np = np.concatenate([y_pad, y_np], axis=0)
-
+        elif T_i < median_length:
+            pad_len  = median_length - T_i
+            X_np     = np.concatenate([np.zeros((pad_len, F), dtype=float), X_np], axis=0)
+            y_np     = np.concatenate([np.zeros((pad_len, 1), dtype=float), y_np], axis=0)
             padding_mask = np.concatenate(
                 [np.zeros((pad_len, 1), dtype=float),
-                 np.ones((T_i, 1), dtype=float)],
-                axis=0
+                 np.ones((T_i,    1), dtype=float)],
+                axis=0,
             )
 
         else:
-            padding_mask = np.ones((target_length, 1), dtype=float)
+            padding_mask = np.ones((median_length, 1), dtype=float)
 
-        X_with_padding = np.concatenate([X_np, padding_mask], axis=1)
+        X_full = np.concatenate([X_np, padding_mask], axis=1)  # (median_length, F+1)
 
-        X_tensor = torch.tensor(X_with_padding).float().transpose(0, 1)
-        y_tensor = torch.tensor(y_np).float().transpose(0, 1)
+        # ── slice into windows ────────────────────────────────────────────────
+        # window w: rows [w*pred_length : w*pred_length + window_length]
+        for w in range(windows):
+            start = w * pred_length
+            end   = start + window_length          # = median_length - (windows-1-w)*pred
 
-        X_out.append(X_tensor)
-        y_out.append(y_tensor)
+            X_win = X_full[start:end]              # (window_length, F+1)
+            y_win = y_np[start:end]                # (window_length, 1)
 
-    X_out = torch.stack(X_out, dim=0)  # (N_ts, F+1, L)
-    y_out = torch.stack(y_out, dim=0)  # (N_ts, 1, L)
+            X_tensor = torch.tensor(X_win).float().transpose(0, 1)  # (F+1, window_length)
+            y_tensor = torch.tensor(y_win).float().transpose(0, 1)  # (1,   window_length)
 
-    X_out = X_out.permute(2, 1, 0)  # (L, F+1, N_ts)
-    y_out = y_out.permute(2, 1, 0)  # (L, 1, N_ts)
+            X_out.append(X_tensor)
+            y_out.append(y_tensor)
 
-    return X_out, y_out, target_length, get_prediction_length(dataset_name)
+    X_out = torch.stack(X_out, dim=0)   # (N_ts*windows, F+1, window_length)
+    y_out = torch.stack(y_out, dim=0)   # (N_ts*windows, 1,   window_length)
+
+    X_out = X_out.permute(2, 1, 0)      # (window_length, F+1, N_ts*windows)
+    y_out = y_out.permute(2, 1, 0)      # (window_length, 1,   N_ts*windows)
+
+    return X_out, y_out, window_length, pred_length
 
 def get_prediction_length(dataset_name: str):
     if dataset_name in gift_eval_datasets:
@@ -334,16 +387,32 @@ def create_train_val_split(
         max_context_length: int = None,
         max_validation_ts_amount: int = None):
     dataset = Dataset(name = dataset_name)
-    X_train, y_train, target_length, prediction_length = create_homgenous_ts_dataset(dataset_name, dataset.training_dataset, ts_amount_limit=max_training_ts_amount, ts_length_limit=max_context_length)
-    X_val, y_val, _, _ = create_homgenous_ts_dataset(dataset_name, dataset.validation_dataset, ts_amount_limit=max_validation_ts_amount, ts_length_limit=max_context_length)
+    print(list(dataset.training_dataset))
+    #switch between if windows >1 or not for windowed or not
+
+    X_train, y_train, target_length, prediction_length = create_homogenous_ts_dataset(
+        dataset_name,
+        dataset.training_dataset,
+        ts_amount_limit=max_training_ts_amount,
+        ts_length_limit=max_context_length,
+        windows=dataset.windows)
+    X_val, y_val, _, _ = create_homogenous_ts_dataset(
+        dataset_name,
+        dataset.validation_dataset,
+        ts_amount_limit=max_validation_ts_amount,
+        ts_length_limit=max_context_length,
+        windows=1)
     return X_train, y_train, X_val, y_val, target_length, prediction_length
 
 if __name__ == "__main__":
     #TODO select random datasets from it when it comes to validation data
-    X_train, y_train, X_val, y_val, target_length, prediction_length = create_train_val_split("monash_fred_md", max_training_ts_amount=10, max_context_length=4096, max_validation_ts_amount=1)
+    X_train, y_train, X_val, y_val, target_length, prediction_length = create_train_val_split("us_births/D", max_training_ts_amount=1, max_context_length=4096, max_validation_ts_amount=1)
     print(X_train.shape)
     print(X_val.shape)
     print(prediction_length)
+
+    #dataset = Dataset(name = "hierarchical_sales/D")
+    #print(list(dataset.validation_dataset)[0])
     """
     dataset = Dataset("SZ_TAXI/H")
     print(len(dataset.gluonts_dataset))
