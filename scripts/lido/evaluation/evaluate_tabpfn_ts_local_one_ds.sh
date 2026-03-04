@@ -25,7 +25,7 @@ if [ -z "$DATASETS" ]; then
     exit 1
 fi
 
-ARGS=(python -m finetune_tabpfn_ts.task_1.evaluate_local_tabpfn \
+ARGS=(python -m finetune_tabpfn_ts.evaluation.evaluate_local_tabpfn \
   --dataset "$DATASETS" \
   --model_name tabpfn_ts_local \
   --mode local)
