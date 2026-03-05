@@ -6,43 +6,62 @@ from itertools import product
 import json
 import argparse
 
-def create_configs(base_config_path, output_dir, param_grid, base_dataset_config):
+
+def create_configs(base_config_path, output_dir, param_grid, base_dataset_configs):
     with open(base_config_path) as config_file:
         base_config = yaml.safe_load(config_file)
 
     keys, values = zip(*param_grid.items())
     combinations = [dict(zip(keys, v)) for v in product(*values)]
-    print(combinations)
     combinations = [combo for combo in combinations if combo["l2_sp_lambda"] == 0.0 or combo["weight_decay"] == 0.0]
 
-    print(len(combinations))
-    #get number of files in output dir to use as offset for naming new config files
-    print(os.listdir(output_dir))
+    print(f"{len(combinations)} combinations generated")
+
     offset = len([name for name in os.listdir(output_dir) if os.path.isfile(os.path.join(output_dir, name))])
-    print(offset)
+
+    # Erzeuge einen gemeinsamen Namen aus allen Dataset-Namen
+    combined_name = "_".join([ds["name"].replace("/", "_") for ds in base_dataset_configs["datasets"]])
 
     for i, combo in enumerate(combinations):
         config_copy = base_config.copy()
-        config_copy["finetuning"].update(base_dataset_config["finetuning"])
-        config_copy["finetuning"].update(combo)
-        config_copy["dataset"].update(base_dataset_config["dataset"])
 
-        output_path = os.path.join(output_dir, f"{base_dataset_config['dataset']['name'].replace('/', '_')}_{offset+i+1}.yml")
+        # Datasets als Liste setzen
+        config_copy["datasets"] = base_dataset_configs["datasets"]
+
+        # Finetuning-Basis übernehmen und mit Combo überschreiben
+        config_copy["finetuning"].update(base_dataset_configs["finetuning"])
+        config_copy["finetuning"].update(combo)
+
+        output_path = os.path.join(output_dir, f"{combined_name}_{offset + i + 1}.yml")
         with open(output_path, 'w') as output_file:
             yaml.dump(config_copy, output_file)
 
-def create_config_main():
-    base_config_path = "config_template.yml"  # Path to your base config file
-    dataset_name = "weatherbench_hourly_temperature"  # Directory to save generated config files
 
-    base_dataset_config = {
-        "dataset": {
-            "name": dataset_name,
-            "prediction_length": -1,
-            "windows": 1,
-            "ts_amount_limit": 5000,
-        },
-        "finetuning":{
+def create_config_main():
+    base_config_path = "config_template.yml"
+    dataset_name = "hospital"
+    output_dir = dataset_name
+
+    # Mehrere Datasets oder nur eines – einfach Liste befüllen
+    base_dataset_configs = {
+        "datasets": [
+            {
+                "name": dataset_name,
+                "prediction_length": -1,
+                "windows": 1,
+                "ts_amount_limit": 5000,
+                "max_context_length": 4096,
+            },
+            # Weiteres Dataset einfach hier hinzufügen:
+            # {
+            #     "name": "etth1",
+            #     "prediction_length": -1,
+            #     "windows": 2,
+            #     "ts_amount_limit": 1000,
+            #     "max_context_length": 2048,
+            # },
+        ],
+        "finetuning": {
             "update_every_n_steps": 2,
             "validation": {
                 "early_stopping": {
@@ -50,24 +69,22 @@ def create_config_main():
                     "max_patience": 200,
                 },
                 "validate_every_n_steps": 10,
-                "ts_val_amount": 100
+                "ts_val_amount": 20,
             },
             "checkpoint_to_save": "finetuned_model",
         }
     }
 
-    # Define the parameter grid for hyperparameter search
     param_grid = {
         "time_limit": [2400],
-        "learning_rate": [0.0005, 0.00005, 0.000005, 0.0000005],
+        "learning_rate": [0.0005, 0.00005, 0.000005],
         "batch_size": [2, 4, 8, 16, 32, 64],
-        "l2_sp_lambda": [0.0, 0.0001, 0.0015], # 0,0015 from real tabpfn paper
+        "l2_sp_lambda": [0.0, 0.0001, 0.0015],
         "weight_decay": [0.0],
     }
 
-    os.makedirs(dataset_name.replace("/", "_"), exist_ok=True)
-    create_configs(base_config_path, dataset_name.replace("/", "_"), param_grid, base_dataset_config)
-
+    os.makedirs(output_dir, exist_ok=True)
+    create_configs(base_config_path, output_dir, param_grid, base_dataset_configs)
 # wait for jobs to finish
 # last sbatch submission: sbatch --time=0:15:00 --account my-account-abc --wait --dependency afterok:12345678:12345679 /dev/stdin <<< '#!/bin/bash \n sleep 1'
 
@@ -101,17 +118,25 @@ def create_csv_from_results(pids, result_folder, output_csv):
 
     results = []
     for pid in pids:
-        # Load results from a file named after the PID
         path = f"{result_folder}/finetuning.{pid}/finetuning_report.json"
         if os.path.exists(path):
-            with open(f"{result_folder}/finetuning.{pid}/finetuning_report.json") as f:
+            with open(path) as f:
                 json_result = json.load(f)
-                result = {
-                    "PID": pid,
-                    "Dataset": json_result["dataset"]["name"],
-                    "Forecast Horizon": json_result["dataset"]["forecast_horizon"],
-                    "TS Amount": json_result["dataset"]["ts_amount"],
-                    "Windows": json_result["dataset"]["windows"],
+
+                datasets = json_result["dataset"]
+                if isinstance(datasets, dict):
+                    datasets = [datasets]
+
+                result = {"PID": pid}
+
+                # Dataset-Felder nummeriert: Dataset_1, Dataset_2, ...
+                for i, dataset in enumerate(datasets, start=1):
+                    result[f"Dataset_{i}"] = dataset["name"]
+                    result[f"Forecast Horizon_{i}"] = dataset["forecast_horizon"]
+                    result[f"TS Amount_{i}"] = dataset["ts_amount"]
+                    result[f"Windows_{i}"] = dataset["windows"]
+
+                result.update({
                     "Time Limit": json_result["hyperparameters"]["time_limit"],
                     "Learning Rate": json_result["hyperparameters"]["learning_rate"],
                     "Batch Size": json_result["hyperparameters"]["batch_size"],
@@ -126,27 +151,16 @@ def create_csv_from_results(pids, result_folder, output_csv):
                     "Early Stopping Reason": json_result["finetuning_stats"]["early_stopping_reason"],
                     "Avg Time Per Step": json_result["finetuning_stats"]["avg_time_per_step"],
                     "Avg Device Utilization": json_result["finetuning_stats"]["avg_device_utilization"],
-                }
+                })
         else:
             result = {
                 "PID": pid,
-                "Dataset": None,
-                "Forecast Horizon": None,
-                "TS Amount": None,
-                "Windows": None,
-                "Time Limit": None,
-                "Learning Rate": None,
-                "Batch Size": None,
-                "L2-SP Lambda": None,
-                "Weight Decay": None,
-                "Total Time Spent": None,
-                "Initial Validation Loss": None,
-                "Best Validation Loss": None,
-                "Last Validation Loss": None,
-                "Total Steps": None,
-                "Best Step": None,
-                "Early Stopping Reason": None,
-                "Avg Time Per Step": None,
+                "Dataset_1": None, "Forecast Horizon_1": None, "TS Amount_1": None, "Windows_1": None,
+                "Time Limit": None, "Learning Rate": None, "Batch Size": None,
+                "L2-SP Lambda": None, "Weight Decay": None, "Total Time Spent": None,
+                "Initial Validation Loss": None, "Best Validation Loss": None,
+                "Last Validation Loss": None, "Total Steps": None, "Best Step": None,
+                "Early Stopping Reason": None, "Avg Time Per Step": None,
                 "Avg Device Utilization": None,
             }
 
