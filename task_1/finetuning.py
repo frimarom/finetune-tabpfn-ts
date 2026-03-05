@@ -7,7 +7,7 @@ from finetune_tabpfn_ts.task_1.dataset_utils import create_train_val_split
 from finetune_tabpfn_ts.task_1.load_datasets import transform_data
 from finetune_tabpfn_ts.task_1.load_datasets import stack_records_along_z
 from finetune_tabpfn_ts.edits.finetune_tabpfn_main import fine_tune_tabpfn
-from finetune_tabpfn_ts.task_1.dataset_utils import create_homgenous_ts_dataset
+from finetune_tabpfn_ts.task_1.dataset_utils import create_homogenous_ts_dataset
 from finetune_tabpfn_ts.task_1.dataset_utils import DatasetAttributes
 from finetune_tabpfn_ts.task_1.dataset_utils import get_prediction_length
 import argparse
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     max_context_length:
     """
     dataset_amount = len(finetuning_config["datasets"])
-    validation_amount_per_dataset = np.floor(dataset_amount/finetuning_config["finetuning"]["validation"]["ts_val_amount"])
+    validation_amount_per_dataset = np.floor(finetuning_config["finetuning"]["validation"]["ts_val_amount"]/dataset_amount)
     for dataset_config in finetuning_config["datasets"]:
         print(dataset_config)
         train_X, train_y, X_val, y_val, ts_length, prediction_length = create_train_val_split(dataset_config["name"],
