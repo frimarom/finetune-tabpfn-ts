@@ -25,13 +25,15 @@ if [ -z "$DATASETS" ]; then
     exit 1
 fi
 
+if [ -z "$PATH_TO_MODEL_CHECKPOINT" ]; then
+    PATH_TO_MODEL_CHECKPOINT="tabpfn-v2-regressor-2noar4o2.ckpt"
+fi
+
 ARGS=(python -m finetune_tabpfn_ts.evaluation.evaluate_local_tabpfn \
   --dataset "$DATASETS" \
   --model_name tabpfn_ts_local \
-  --mode local)
-if [ -n "$PATH_TO_MODEL_CHECKPOINT" ]; then
-  ARGS+=(--path_to_model_checkpoint "$PATH_TO_MODEL_CHECKPOINT")
-fi
+  --mode local \
+  --path_to_model_checkpoint "$PATH_TO_MODEL_CHECKPOINT")
 srun -n1 -c8 "${ARGS[@]}"
 
 wait
