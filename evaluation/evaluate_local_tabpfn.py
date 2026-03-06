@@ -174,8 +174,7 @@ def append_results_to_csv(
 ):
     with open(csv_file_path, "a", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(
-            [
+        result = [
                 dataset_metadata["full_name"],
                 model_name,
                 res["MSE[mean]"][0],
@@ -192,8 +191,10 @@ def append_results_to_csv(
                 DATASET_PROPERTIES_MAP[dataset_metadata["key"]]["domain"],
                 DATASET_PROPERTIES_MAP[dataset_metadata["key"]]["num_variates"],
             ]
+        writer.writerow(
+            result
         )
-
+    print(result)
     print(f"Results for {dataset_metadata['key']} have been written to {csv_file_path}")
 
 

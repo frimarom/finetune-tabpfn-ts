@@ -16,6 +16,11 @@ finetuning:
     early_stopping:
       max_patience: 200
       min_patience: 100
-    ts_val_amount: 20
+    ts_val_amount: 100
     validate_every_n_steps: 10
   weight_decay: 0.0
+prior:
+- context_length:
+    end: null
+    start: null
+  frequency: null
