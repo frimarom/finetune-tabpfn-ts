@@ -4,7 +4,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:1
-#SBATCH --mem=90G
+#SBATCH --mem=250G
 #SBATCH --time=02:00:00
 #SBATCH --job-name=tabpfn-local-eval
 #SBATCH --output=/work/smfrromb/sbatch_log/tabpfn.%j.out
@@ -33,7 +33,8 @@ ARGS=(python -m finetune_tabpfn_ts.evaluation.evaluate_local_tabpfn \
   --dataset "$DATASETS" \
   --model_name tabpfn_ts_local \
   --mode local \
-  --path_to_model_checkpoint "$PATH_TO_MODEL_CHECKPOINT")
+  --path_to_model_checkpoint "$PATH_TO_MODEL_CHECKPOINT" \
+  --terms short)
 srun -n1 -c8 "${ARGS[@]}"
 
 wait
