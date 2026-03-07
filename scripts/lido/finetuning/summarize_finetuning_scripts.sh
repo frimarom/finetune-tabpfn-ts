@@ -9,14 +9,17 @@
 #SBATCH --output=/work/smfrromb/sbatch_log/tabpfn.%j.out
 #SBATCH --error=/work/smfrromb/sbatch_log/tabpfn.%j.err
 
-erster="$1"
+config_dir="$1"
 shift
 
 declare -a JOB_IDS=()
 
+config_name=$(echo "$config_dir" | tr '/' '_')
+
+
 for i in "$@"; do
     echo "$i"
-    JOB_ID=$(sbatch ./finetune_tabpfn_ts_with_config.sh "finetune_tabpfn_ts/finetuning_configs/$erster/${erster}_${i}.yml" | awk '{print $4}')
+    JOB_ID=$(sbatch ./finetune_tabpfn_ts_with_config.sh "finetune_tabpfn_ts/finetuning_configs/${config_dir}/${config_name}_${i}.yml" | awk '{print $4}')
     JOB_IDS+=("${JOB_ID}")
 done
 
@@ -36,7 +39,7 @@ done
 
 cd /work/smfrromb/finetune_tabpfn_ts/finetuning_configs || exit
 
-RESULT_DIR="../../finetuning_results/finetuning.${erster}.$(date '+%Y%m%d_%H%M%S')"
+RESULT_DIR="../../finetuning_results/finetuning.${config_dir}.$(date '+%Y%m%d_%H%M%S')"
 mkdir -p "${RESULT_DIR}"
 
 python -m config_util --output_dir "${RESULT_DIR}" --job_ids "${JOB_IDS[@]}"
