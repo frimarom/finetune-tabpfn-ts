@@ -531,9 +531,8 @@ def _model_forward(
     """
     # TabPFN model assumes z-normalized inputs.
     mean = y_train.mean(dim=0, keepdim=True)
-    std = batch_y_train.std(dim=0, keepdim=True)
+    std = y_train.std(dim=0, keepdim=True)
     std = torch.where(std < 0.01, torch.ones_like(std), std)
-
     y_train_normalized = (y_train - mean) / std
 
     X_all = torch.cat([X_train, X_test], dim=0)
@@ -645,7 +644,8 @@ def _fine_tune_step(
     batch_y_test = torch.movedim(batch_y_test, 0, 1).to(device)
 
     mean = batch_y_train.mean(dim=0, keepdim=True)
-    std = batch_y_train.std(dim=0, keepdim=True) + 1e-8
+    std = batch_y_train.std(dim=0, keepdim=True)
+    std = torch.where(std < 0.01, torch.ones_like(std), std)
     batch_y_test_normalized = (batch_y_test - mean) / std
 
     with autocast(device_type=device, enabled=scaler.is_enabled()):
