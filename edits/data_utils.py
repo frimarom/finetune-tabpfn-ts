@@ -68,7 +68,7 @@ class TimeSeriesDataset(Dataset):
             windows = dataset_attributes[current_ds].windows
             forecast_horizon = dataset_attributes[current_ds].forecast_horizon
             z_len = X_train[current_ds].shape[2]
-            series_length = X_train[current_ds].shape[1]
+            series_length = X_train[current_ds].shape[0]
 
             if np.all(TimeSeriesDataset.time_series_window_count == windows):
                 TimeSeriesDataset.time_series_window_count = np.zeros(z_len)
@@ -113,7 +113,7 @@ class TimeSeriesDataset(Dataset):
         windows = self.dataset_attributes[current_ds].windows
         forecast_horizon = self.dataset_attributes[current_ds].forecast_horizon
         z_len = self.X_train[current_ds].shape[2]
-        series_length = self.X_train[current_ds].shape[1]
+        series_length = self.X_train[current_ds].shape[0]
 
         if np.all(TimeSeriesDataset.time_series_window_count[:z_len] == windows):
             TimeSeriesDataset.time_series_window_count = np.zeros(z_len)
@@ -130,6 +130,11 @@ class TimeSeriesDataset(Dataset):
         end_idx = origin + forecast_horizon
 
         TimeSeriesDataset.time_series_window_count[time_series] += 1
+
+        print(f"series_length={series_length}, forecast_horizon={forecast_horizon}, "
+              f"windows={windows}, window_count={window_count}, "
+              f"context_length={context_length}, start={start_idx}, "
+              f"origin={origin}, end={end_idx}")
 
         return int(current_ds), int(time_series), int(start_idx), int(origin), int(end_idx)
 
