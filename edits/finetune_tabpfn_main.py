@@ -531,7 +531,8 @@ def _model_forward(
     """
     # TabPFN model assumes z-normalized inputs.
     mean = y_train.mean(dim=0, keepdim=True)
-    std = y_train.std(dim=0, keepdim=True) + 1e-8
+    std = batch_y_train.std(dim=0, keepdim=True)
+    std = torch.where(std < 0.01, torch.ones_like(std), std)
 
     y_train_normalized = (y_train - mean) / std
 
