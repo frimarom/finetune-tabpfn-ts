@@ -1,11 +1,35 @@
-\chapter{Finetuning TabPFNv2}
+\chapter{Finetuning TabPFN-TS}
+TabPFN-TS already showed remarkable results on the GIFT-Eval benchmark.
+But as shown in Fig 2 TODO it still especially struggles with noisy and non-periodic time series.
+\newline
+In this Section we will further investigate the potential benefits of finetuning TabPFN-TS with the time series datasets of GIFT-Eval.
+For this, we will look at two different ways of finetuning.
+The first is finetuning on one dataset.
+This will presumably enhance performance on this specific dataset and potentially other datasets that are the same. %todo
+The second method is finetuning on multiple datasets.
+As \citep{Hollmann_2025} already showed, finetuning TabPFN on multiple datasets acts just like continuing pretraining so it enhances performance on a wide range of different dataset.
+We will further investigate this by applying this method to time series data.
+
 \section{Method}
+- finetuning noch mal genauer erklären
+We will use the full finetuning methode where we update all parameters of the model.
+This method has been proved to be the best way of finetuning TabPFN since it is tolerant to full updates \citet{tanna2026exploring}.
+
+
+- besonderheiten die geändert wurden von den stand von lennart purucker
+- daten erstellung
+- validation
+- sagen welche datensets wir nehmen für finetunen -> alle außer welche mit variabler Ts länge weil da padding in spiel kommt und das erstmal nicht angeschaut wird
 - hyperparameter for every dataset
 - l2 sp norm from realtabpfn
 - context length max 4096 from gift eval config
 - validation configs
-- bisshcen an real tabpfn orientieren
+- bisschen an real tabpfn orientieren
+- nur short prediction gefinetuned wegen technical limitations
 \section{Experiments}
 \subsection{Finetuning on one Dataset}
 - auch schauen wie performance auf einem datenset aussieht nach dem auf einem anderen gefinetuned wurde
+- top 5 hp-konfigurationen mit bestem val loss werden genommen
+- graph zeigen
+-
 \subsection{Finetuning on multiple Datasets}

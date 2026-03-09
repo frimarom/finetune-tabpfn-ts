@@ -1,18 +1,143 @@
 \chapter{Background}
-\section{TabPFN}
-Researchers from the Universities of Freiburg, Tübingen and Berlin developed TabPFN: A prior fitted network which builds up on a 12 layer transformer and is able to solve tabular classification or regression tasks in a single forward pass.
+In this section
 
-Contrary to the standard supervised deep learning approach by which models are trained from scratch for every dataset, TabPFN is pretrained once by a large amount of artificial training tasks.
+\section{Time Series Forecasting}
+\subsection{Definition}
+\subsubsection{Time Series}
+A time series is a sequence of values observed over a period of time represented as $X={x_1, x_2, ..., x_n} \in \mathbb{R}^{d \times n}$ where $n$ is the amount of temporally observations and d the amount of observed values at time point $t$.
+One value $x_i$ is a vector of values observed at time $i$.
+
+Formally, a time series consists of 4 components: A trend $t_t$ which sets the base direction of a time series,
+a cyclic component $z_t$ that describes the bigger periodicities business cycles etc.,
+a season component $s_t$ explaining short-term development in the last year
+and a noise component $\epsilon_t$ which adds random fluctuations to the time series.
+All of these components can be assembled either by adding $x_t = t_t + z_t + s_t + \epsilon_t$ or multiplying $y_t = t_t \cdot z_t \cdot s_t \cdot \epsilon_t$ to create a time series.
+The multiplicative approach can also be converted to a additive approach by applying the logarithmic function to it.
+\subsubsection{Time Series Forecast}
+With transformers, a supervised time series forecast consists of a series $X_{train}$ and $y_{train}$ with $<context_length>$ amount of data and a series of data $X_{test}$ and $y_{test}$ with $<forecast_horizon>$ amount of data.
+The problem for most time series forecasting algorithms and models is that they require a significant amount of training data to fit the specific time series.
+Since available data is limited in many applications pretrained foundation models are promising.
+%- hier noch mehr über https://arxiv.org/pdf/2202.07125
+%- insights geben welche arten es gibt von forecasting modellen
+%- attention vielleicht kurz ansprechen?
+%- vielleicht so wie in computational intelligence vorgehen mit windows auch noch
+%- generell mal schauen wo noch so time series forcasting erklärt wird
+\subsection{Time Series as Tabular Data}
+Since time series data is very similar to tabular data it gives rise to the idea to apply TabPFN to time series tabular data.
+As mentioned, one of the key problems of time series forecasting it that, in contrast to tabular data, where most of the time one predicted entry is independent of another predicted entry in time series that is not the case.
+Normally $X_{train}$ and $X_{test}$ both in $\mathbb{R}^{n \times 1}$ only consist of a specific timestamp that progresses in a specified frequency for which reason most of the time this information is not used in ts-forcasting and only $y_{train}$ and $y_{test}$ is used.
+But it is impossible to do a forward pass with TabPFN with time series data in the format $D = \{(x_1, y_1),...,(x_n, y_n)\} \in \mathbb{R}^{n \times 2}$ as it would not be able to understand the temporal dependencies of the data because TabPFN treats every entry as a single point and is resistant to permutations of entries.
+To resolve this issue TabPFN-TS introduces lightweight temporal featurization.
+$X_{train}$ and $X_{test}$ are both transformed to hold a greater amount of features than just the timestamp.
+The TabPFN-TS paper uses Running Index, Calendar Features and Automatic Season Features which are used in this thesis as well.
+Other types of featurization can also be applied but need further study.
+\subsection{Benchmarks}
+\subsubsection{GIFT-Eval}
+GIFT-Eval(\textbf{G}eneral T\textbf{I}me Series \textbf{F}orecas\textbf{T}ing Model \textbf{Eval}uation) \citep{aksu2024giftevalbenchmarkgeneraltime} is a time series forecasting benchmark consisting of 23 datasets with over 144,000 time series.
+It is one of the first time series forecasting benchmarks that generalizes time series forecasting by providing a mix of datasets from different domains with varying forecast horizons, context length, frequencies and windows and univariate or multivariate data.
+Furthermore, the authors developed a way to split the time series in each dataset into train, validation and test data which we will use throughout the whole finetuning process.
+\subsection{Other Data Sources}
+\subsubsection{autogluon/chronos-datasets}
+We take additional datasets from the autogluon chronos-datasets dataset collection to have a better basis of datasets we will finetune TabPFN-TS with when we are using multiple datasets.
+
+\section{Prior-data fitted networks}
+\subsection{Definition}
+In recent years transformers in deep learning have shown great results on tasks where large amounts of data are available.
+But not in every task there is enough data to train a model.
+\newline
+Here \citet{muller2021transformers} introduce Prior fitted networks.
+A transformer based architecture that trains on artificial tasks generated from a prior.
+This generated data is set to imitate the real world tasks the model is supposed to solve later so that the model learns-to-learn on datasets generated by the prior.
+With this generation process generating large amounts of data that the model will use to train, the key finding of this paper is that this type of architecture does this by approximating the posterior predictive distribution (PPD).
+\newline
+The authors of the paper defined a prior $p(t)$ to generate artificial trainings tasks where t describes the task the model has to solve/samples data from.
+These training tasks consist of an arbitrary supervised dataset of size n $D=\{x_i, y_i\}^n_{i=1}$.
+\newline
+Using the components mentioned above and the posterior $p(t, D)$ defined by the authors via Bayes’ theorem, the posterior distribution is defined as follows
+\[
+    p(y | x, D) = \int_t p(y|x, t)p(t, D)
+\]
+\newline
+Traditionally the approximation of this distribution is done by approximating the posterior $p(t, D)$ and then derive the approximation of the PPD from it.
+A PFN approximates the PPD directly from dataset samples as followed.
+\newline
+A PFN accepts data in the following format.
+A dataset $D = \{(x_i, y_i)\}^n_{i=1}$ and a query $x$ to which the labels $y$ will be predicted in the task.
+For pretraining, Datasets are sampled by $D \sim p(D)=\int_t p(D, t)p(t)dt$ and the query x with test label y is extracted from it.
+The model $q_{\theta}$ predicts the target y, and the Negative Log-Likelihood can be used as the loss function, which is minimized using stochastic gradient descent:
+\[
+    l_{\theta} = \mathbb{E}_{D \cup {x, y} \sim p(D)}[-log_{q_{\theta}}(y|x, D)]
+\]
+\citet{muller2021transformers} showed that by minimizing the Prior-Data NLL yields an approximation of the PPD in terms of cross-entropy and KL-Divergence.
+<Vielleicht hier noch die umformung aufschreiben>
+
+When it comes to this architecture priors are indispensable.
+They provide the basis of a PFN and represent an assumption of how the data is represented in the real world.
+Where $\phi$ is said hypotheses which is sampled with $\phi \sim p(\phi)$ and normally represents either the whole algorithm that generates the data or the hyperparameters that are used to generate the data.
+\subsection{Prior Building}
+\subsubsection{TabPFN Prior}
+The prior of TabPFN is implemented with Structural Causal Model.
+An SCM is a collection of $k$ structural assignments $Z:=(z_1, ..., z_k)$ which are represented by nodes in a directed acyclic graph where $z_i = f_i(z_{PA\mathcal{G}(i)}, \epsilon)$.
+$f_i$ is a (nonlinear) deterministic function and $\epsilon_i$ is noise variable. \newline
+To generate a new artificial dataset there has to be a subset of nodes selected, from which the features and targets later will be extracted.
+Then random noise that was either sampled from a random normal distribution or a uniform distribution with varying degrees of non independence for each sample is propagated through the graph.
+At each edge of the graph the corresponding function $f_i$ will be applied and Gaussian noise will be added to the data.
+These functions can be activation functions like ReLU or sigmoid but can also be discretization methods to generate classification features.\newline
+After traversing the graph, the targets and features for one sample will be extracted at the corresponding node.
+This process will be repeated for every sample of a dataset.
+Throughout the process the extraction nodes and the function will stay the same.
+
+\subsubsection{ForecastPFN Prior}
+As mentioned above \citet{dooley2023forecastpfn} is especially relevant since they developed a prior that generates artificial time series data.
+It creates time series data from three components: periodic trends, global trends and noise.
+\newline
+Firstly, the global trend is being created via a linear and exponential component controlled by the coefficients $m_{lin}$, $c_{lin}$, $m_{exp}$ and $c_{exp}$.
+\[
+    \text{trend}(t)=(1+m_{lin} \cdot t + c_{lin})*(m_{exp} \cdot c_{exp}^t)
+\]
+All the components named above are sampled the following: $m_{lin}, m_{exp} \sim \mathcal{N}(\mu_m, \sigma_m)$; $c_{lin} \sim \mathcal{N}(0, \sigma_{lin})$; $c_{exp} \sim \mathcal{N}(0, \sigma_{exp})$
+\newline
+Next, the seasonal component is being created by the product of a week, monthly and yearly seasonal component:
+\[
+    \text{seasonal}(t) = \text{seasonal}_{week}(t) \cdot \text{seasonal}_{month}(t) \cdot \text{seasonal}_{year}(t)
+\]
+Where
+\[
+    \text{seasonal}_{\nu}(t)=1+m_{\nu} \sum^{\lfloor p_{\nu}/2 \rfloor}_{f=1} \left[c_{f, \nu} sin\left(2\pi f \frac{t}{p_\nu}\right) + d_{f, \nu}cos\left(2 \pi f \frac{t}{p_{\nu}}\right)\right]
+\]
+corresponds to the respective seasonal period $\nu \in {\text{week, month, year}}$. $p_{week} = 7$, $p_{month}=30.5$, $p_{year}=365.25$ and $c_{f, \nu}, d_{f, \nu} \sim \mathcal{N}(0, 1/f)$ which are both dependent on $f$ and $\nu$.
+\newline
+After sampling both the seasonal and global trend component only the noise component $z_t$ has to be sampled.
+\[
+    z_t = 1 + m_{noise}(z - \overline{z})
+\]
+where $z \sim \text{Weibull}(1, k)$ and $\overline{z} = (ln(2))^{1/k}$
+\newline
+After sampling all the base components the timestamp $y_t$ is composed of the product of all the components mentioned above.
+\[
+    y_t = \psi(t) \cdot z_t = \text{trend}(t) \cdot \text{seasonal}(t) \cdot z_t
+\]
+
+They multiply the noise component instead of adding it to the other component to have the scale of it be independent of the scale of the other components.
+In addition, the Weibull distribution creates the chance to parameterize between gaussian and exponential distribution both of which are common in time series.
+\newline
+There are three different observation periods(When the data is being observed): daily, monthly and yearly.
+These periods are independent of time series generation and are only important to give the model more context over different periodicities.
+
+\subsection{TabPFN}
+Researchers from the Universities of Freiburg and Charite Berlin developed TabPFN\citep{hollmann2022tabpfn}: A prior fitted network which builds up on a 12 layer transformer and is able to solve tabular classification or regression tasks in a single forward pass.
+
+Contrary to the standard supervised deep learning approach by which models are trained from scratch for every dataset, TabPFN is pretrained once on a large amount of artificially generated training tasks.
 Normally in machine learning, a training task consist of a tuple with the following scheme $(x_{train}, y_{train})$ in which $x_{train}$ represents the input data and $y_{train}$ the corresponding labels.
 But with TabPFN it is a bit different since tabular data consists of more than one tuple.
 So one datapoint which is used to train TabPFN is a set of training samples $D_{train} = {(x_1, y_1), ..., (x_n, y_n)}$.
 The key problem with this type of training is that tabular datasets of this size are extremely rare and often not accessible without breaking privacy laws.
 To obtain a sufficient amount of data to train TabPFN with, a prior is used.
 
-A prior is a generative process that (in this scenario) samples artificial tabular datasets based on different hyperparameters like sample size, amount of features etc.
-To be more precise, TabPFN uses Structural Causal Models (SCM) which are based on graphs to generate this data (more to that in the section PFNs).
-For the whole training process synthetic datasets $D := (x_i, y_i)_{i \in \{1, ..., n\}}$ are sampled and used to optimize the parameters of TabPFN.
-To obtain the best result, the prior has to cover a heterogeneous set of datasets to be able to learn a generic algorithm.
+The pre-training tasks are generated by a prior, which is a generative process that allows us to efficiently samples artificial tabular datasets of different shapes and with different characteristics.
+To be more precise, TabPFN uses Structural Causal Models (SCM) which are based on graphs to generate this data (see also section PFN).
+For the whole training process synthetic datasets $D := (x_i, y_i)_{i \in \{1, ..., n\}}$ are sampled and used to optimize the parameters of TabPFN to minimize the Negative Log-Likelihood.
+To obtain the best result, the prior has to cover a heterogeneous set of datasets to be able to generalize to real-world datasets.
 This can be achieved by sampling different characteristics of the underlying graph from the prior's distribution.
 
 TabPFNs architecture is a combination of the original transformer encoder and the original PFN architecture.
@@ -24,66 +149,34 @@ TabPFN training and inference differs fundamentally from traditional deep learni
 As previously mentioned, for TabPFN one training sample consists of a set of samples $\{x_i, y_i\}^n_{i=1}$.
 Instead of doing one forward pass for each input data point at inference time, the pretrained TabPFN model will receive $D_{train} = {(x_1, y_1), ..., (x_n, y_n)}$ for context and predicts $y_{test_pred}$ based on $X_{test}$ in one single forward pass.
 So fitting and prediction is performed in one forward pass.
-To generalize prediction over the vast amount of different kinds that tabular data can occur, TabPFN uses artificially generated training data generated from one or respectively multiple priors
-and so approximates the posterior predictive distribution
+To generalize prediction over the vast amount of different tasks, in training, TabPFN uses artificially generated training data $D_{train}$ generated from one or respectively multiple priors
+$\phi \in \Phi$ thus approximating the posterior predictive distribution
 \[
-    p(\hat{y}|x_{test}, D_{train}) \propto \\int_{\Phi} p(\hat{y}|x_{train}, \phi) p(D_{train}|\phi) p(\phi) d\phi
+    p(\hat{y}|x_{test}, D_{train}) \propto \int_{\Phi} p(\hat{y}|x_{train}, \phi) p(D_{train}|\phi) p(\phi) \space d\phi
 \]
-where $D_{train}$ is the context, $x_{test}$ are the labels and $\Phi$ is the set of priors used for pretraining.
+where $D_{train}$ is the context, $x_{test}$ is the input data and $\Phi$ is the set of priors used for pretraining.
 
-Instead of returning a single point estimation in regression, TabPFN returns a target distribution capturing the uncertainty of predictions.
-The borders of this predictive distribution are calculated by choosing the 1/5000 quantiles of the prior distribution which TabPFN was pretrained on.
-They are normalized since TabPFN was trained on z-normalized data in pretraining but will be reverted by applying the inverse of the transformation to the borders of the buckets.
-For training for regression, the whole distribution is used to minimize the mean negative log density, whereas for inference mostly the median of the probabilistic distribution is used.
+Instead of returning a single point estimate in regression, TabPFN outputs a target distribution that captures the uncertainty of the predictions.
+The boundaries of this predictive distribution are determined by selecting the 1/5000 quantiles of the prior distribution on which TabPFN was pretrained as shown in~\ref{fig:bardist_hospital}.
+These boundaries are normalized, as TabPFN was trained on z-normalized data during pretraining, but are later reverted by applying the inverse transformation to the bucket boundaries.
+During training for regression, the entire distribution is used to minimize the mean negative log density, whereas during inference the median of the predictive distribution is typically used.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pictures/bardist_hospital.png}
+    \caption{TabPFN Predictive Bar Distribution on the hospital dataset for the last predicted value. The boxes left and right in the bar distribution are cumulative densities for the given threshold.}
+    \label{fig:bardist_hospital}
+\end{figure}
 %classification point estimation?
 \newline
 
-TabPFN especially outperforms comparable models like CatBoost, Autogluon etc.\ on small to medium-sized datasets with up to 10000 samples and 500 features.
-This is likely because the prior used for pretraining created datasets for only up to this size.\newline
-Compared to gradient-boosted decision trees, a 3000x faster performance in regression and a 5140x faster performance in classification has been observed. \newline
+TabPFN especially outperforms comparable models like CatBoost, Autogluon etc.\ on small to medium-sized datasets with up to 10000 samples and 500 features \citep{hollmann2025accurate}.
+This limitation results from the fact that the prior used during pretraining generated datasets only up to this size.\newline
+Compared to gradient-boosted decision trees, a 3000x faster performance in regression and a 5140x faster performance in classification has been observed\citep{hollmann2025accurate}. \newline
 Another interesting detail researchers have discovered is that TabPFN works out-of-the-box without any necessary hyperparameter tuning especially in classification.
 But even when using hyperparameter search, TabPFN showed remarkable and efficient results: After just 300s of hyperparameter tuning TabPFN outperforms Autogluon, that also was hyperparameter tuned, but for 4 hours.
-\section{Time Series}
-\subsection{Definition}
-A time series is a sequence of values observed over a period of time.
-Most of the time they are represented in the following way $X={x_1, x_2, ..., x_n} \in \mathbb{R}^{d \times n}$ where $n$ is the amount of temporally observations and d the amount of observed values at time point $t$.
-One value $x_i$ is a vector of values observed at time $i$.
-
-Formally, a time series consists of 4 components: A trend $t_t$ which sets the base direction of a time series,
-a cyclic component $z_t$ that describes the bigger periodicities business cycles etc.,
-a season component $s_t$ explaining short-term development in the last year or so
-and a noise component $\epsilon_t$ which adds random fluctuations to the time series.
-All of these components can be assembled either by adding $y_t = t_t + z_t + s_t + \epsilon_t$ or multiplying $y_t = t_t \cdot z_t \cdot s_t \cdot \epsilon_t$ to create a time series.
-The multiplicative approach can also be converted to a additive approach by applying the logarithmic function to it.
-\subsection{Time Series Forecasting}
-When it comes to physics, finance, meteorology or anything where predicting the future is crucial, time series forecasting models are indispensable.
-A time series forecast is a forecast for the development of a system based on the current and prior development of it.
-Its job is to capture and utilize the temporal dependencies and intervariable correlations within the observations as good as possible.
-There are many different approaches used in forecasting.
-Whether it is a simple Multi-Layer-Perceptron, a Recurrent Neural Network or even Graph Neural Networks, all approaches have their benefits and also disadvantages. %vague???
-In this thesis we will focus on Transformer based time series forecasting as they have shown great modeling ability for long range dependencies and interactions in sequential data and thus are appealing to time series modeling.
-With transformers, a supervised time series forecast consists of a series $X_{train}$ and $y_{train}$ with $<context_length>$ amount of data and a series of data $X_{test}$ and $y_{test}$ with $<forecast_horizon>$ amount of data.
-The problem for most time series forecasting algorithms and models is that they require a significant amount of training data to fit the specific time series.
-But some datasets do not have this many examples leading to unsatisfying forecasting results.
-So pre-trained foundation models which perform zero shot prediction drew attention.
-%- hier noch mehr über https://arxiv.org/pdf/2202.07125
-%- insights geben welche arten es gibt von forecasting modellen
-%- attention vielleicht kurz ansprechen?
-%- vielleicht so wie in computational intelligence vorgehen mit windows auch noch
-%- generell mal schauen wo noch so time series forcasting erklärt wird
-\subsubsection{TabPFN-TS}
+\subsection{TabPFN-TS}
 \citet{hoo2025tables} introduces TabPFN-TS: A model that combines TabPFN-v2 with lightweight feature engineering to enable both point and probabilistic forecasting.
-\newline
-Since time series data is very similar to tabular data it gives rise to the idea to apply TabPFN to time series tabular data.
-As mentioned, one of the key problems of time series forecasting it that, in contrast to tabular data, where most of the time one predicted entry is independent of another predicted entry in time series that is not the case.
-Normally $X_{train}$ and $X_{test}$ both in $\mathbb{R}^{n \times 1}$ only consist of a specific timestamp that progresses in a specified frequency for which reason most of the time this information is not used in ts-forcasting and only $y_{train}$ and $y_{test}$ is used.
-But it is impossible to do a forward pass with TabPFN with time series data in the format $D = \{(x_1, y_1),...,(x_n, y_n)\} \in \mathbb{R}^{n \times 2}$ as it would not be able to understand the temporal dependencies of the data because TabPFN treats every entry as a single point and is resistant to permutations of entries.
-To resolve this issue TabPFN-TS introduces lightweight temporal featurization.
-$X_{train}$ and $X_{test}$ are both transformed to hold a greater amount of features than just the timestamp one.
-The TabPFN-TS paper only uses Running Index, Calendar Features and Automatic Season Features which are used in this thesis as well.
-Other types of featurization can also be applied but need further study
-We define $X=X_{train} \cup X_{test}$.
-\newline
+Point forecasting predicts a single value, while probabilistic forecasting returns a distribution of quantiles.
 \newline
 \noindent\textbf{Running Index}
 \newline
@@ -141,117 +234,22 @@ With help of this encoding TabPFNv2 is able to achieve state of the art in covar
 To evaluate TabPFN-TS the GIFT-EVAL benchmark has been used.
 It is a extensive benchmark to evaluate general time series forecasting models and which will also be used in this thesis to compare the finetuned and continued pretrained models to TabPFN-TS.
 
-%- How TabPFN-TS Interprets Temporal Structure maybe also
-\subsubsection{Benchmarking and dataset source}
-\textbf{GIFT-Eval}
-\newline
-GIFT-Eval(\textbf{G}eneral T\textbf{I}me Series \textbf{F}orecas\textbf{T}ing Model \textbf{Eval}uation) \citep{aksu2024giftevalbenchmarkgeneraltime} is a time series forecasting benchmark consisting of 23 datasets with over 144,000 time series.
-It is one of the first time series forecasting benchmarks that generalizes time series forecasting by providing a mix of datasets from different domains with varying forecast horizons, context length, frequencies and windows and univariate or multivariate data.
-Furthermore, the authors developed a way to split the time series in each dataset into train, validation and test data which we will use throughout the whole finetuning process.
-\newline
-\newline
-\textbf{autogluon/chronos-datasets}
-\newline
-We take additional datasets from the autogluon chronos-datasets dataset collection to have a better basis of datasets we will finetune TabPFN-TS with when we are using multiple datasets.
-
-\subsubsection{Other work}
+\subsection{Other work}
 \citet{dooley2023forecastpfn} introduces ForecastPFN that, like TabPFN, was also build as a prior fitted network but with a time series prior instead of a tabular prior.
 Contrary to TabPFN and TabPFN-TS it is not predicting the whole series $y_{test}$ at once and starting from the last point observed (the last context data point) but can predict an arbitrary single point.
 To predict a whole series of $p$ points one has to use the model $p$ times.
 But rather than this limiting the output it will be more efficient due to ForecastPFNs large training corpus of synthetically generated artificial data.\newline
 This time series prior will play an important role in this thesis as we will continue pretraining TabPFN-TS with data synthetically generated from it.
-\section{PFN: Prior data Fitted Network}
-In recent years transformers in deep learning have shown great results on tasks where large amounts of data are available.
-But not in every task there is enough data to train a model.
-\newline
-Here \citet{mullertransformers} introduce Prior fitted networks.
-A transformer based architecture that trains on artificial tasks generated from a prior.
-This generated data is set to imitate the real world tasks the model is supposed to solve later so that the model learns-to-learn on datasets generated by the prior.
-With this generation process generating large amounts of data that the model will use to train, the key finding of this paper is that this type of architecture does this by approximating the posterior predictive distribution(PPD).
-\newline
-To address the problem in a bayesian way, the authors of the paper defined a prior $p(t)$ to generate artificial trainings tasks where t describes the task the model has to solve/samples data from.
-These training tasks consist of an arbitrary supervised dataset of size n $D=\{x_i, y_i\}^n_{i=1}$.
-\newline
-With the components mentioned above and the posterior $p(t, D)$ the authors of the paper defined using Bayes' theorem, they now define the posterior distribution as following:
-\[
-    p(y | x, D) = \int_t p(y|x, t)p(t, D)
-\]
-\newline
-As previously mentioned the key finding of this paper is, that PFNs approximate this distribution.
-Traditionally this is done by approximating the posterior $p(t, D)$ and then derive the approximation of the PPD from it.
-A PFN approximates the PPD directly from dataset samples as followed.
-\newline
-Assuming a PFN accepts data in the following format.
-A dataset $D = \{(x_i, y_i)\}^n_{i=1}$ and a query $x$ to which the labels $y$ will be predicted in the task.
-Datasets are sampled by $D \sim p(D)=\int_t p(D, t)p(t)dt$ and the query x with test label y is extracted from it.
-Then the model $q_{\theta}$ predicts the label y and based on the computed Prior-Data Negative Log-Likelihood
-\[
-    l_{\theta} = \mathbb{E}_{D \cup {x, y} \sim p(D)}[-log_{q_{\theta}}(y|x, D)]
-\]
-the loss will be minimized with stochastic gradient descent.
-By derivation one can show that by minimizing the Prior-Data NLL yields an approximation of the PPD in terms of cross-entropy and KL-Divergence.
-<Vielleicht hier noch die umformung aufschreiben>
 
-When it comes to this architecture priors are indispensable.
-They provide the basis of a PFN and represent an assumption of how the data is represented in the real world.
-Where $\phi$ is said hypotheses which is sampled with $\phi \sim p(\phi)$ and normally represents either the whole algorithm that generates the data or the hyperparameters that are used to generate the data.
-\subsection{Prior Building}
-\subsubsection{TabPFN Prior}
-The prior of TabPFN is implemented with Structural Causal Model.
-An SCM is a collection of $k$ structural assignments $Z:=(z_1, ..., z_k)$ which are represented by nodes in a directed acyclic graph where $z_i = f_i(z_{PA\mathcal{G}(i)}, \epsilon)$.
-$f_i$ is a (nonlinear) deterministic function and $\epsilon_i$ is noise variable. \newline
-To generate a new artificial dataset there has to be a subset of nodes selected, from which the features and targets later will be extracted.
-Then random noise that was either sampled from a random normal distribution or a uniform distribution with varying degrees of non independence for each sample is propagated through the graph.
-At each edge of the graph the corresponding function $f_i$ will be applied and Gaussian noise will be added to the data.
-These functions can be activation functions like ReLU or sigmoid but can also be discretization methods to generate classification features.\newline
-After traversing the graph, the targets and features for one sample will be extracted at the corresponding node.
-This process will be repeated for every sample of a dataset.
-Throughout the process the extraction nodes and the function will stay the same.
-\subsubsection{ForecastPFN Prior}
-As mentioned above \citet{dooley2023forecastpfn} is especially relevant since they developed a prior that generates artificial time series data.
-It creates time series data from three components: periodic trends, global trends and noise.
-\newline
-Firstly, the global trend is being created via a linear and exponential component controlled by the coefficients $m_{lin}$, $c_{lin}$, $m_{exp}$ and $c_{exp}$.
-\[
-    \text{trend}(t)=(1+m_{lin} \cdot t + c_{lin})*(m_{exp} \cdot c_{exp}^t)
-\]
-All the components named above are sampled the following: $m_{lin}, m_{exp} \sim \mathcal{N}(\mu_m, \sigma_m)$; $c_{lin} \sim \mathcal{N}(0, \sigma_{lin})$; $c_{exp} \sim \mathcal{N}(0, \sigma_{exp})$
-\newline
-Next, the seasonal component is being created by the product of a week, monthly and yearly seasonal component:
-\[
-    \text{seasonal}(t) = \text{seasonal}_{week}(t) \cdot \text{seasonal}_{month}(t) \cdot \text{seasonal}_{year}(t)
-\]
-Where
-\[
-    \text{seasonal}_{\nu}(t)=1+m_{\nu} \sum^{\lfloor p_{\nu}/2 \rfloor}_{f=1} \left[c_{f, \nu} sin\left(2\pi f \frac{t}{p_\nu}\right) + d_{f, \nu}cos\left(2 \pi f \frac{t}{p_{\nu}}\right)\right]
-\]
-corresponds to the respective seasonal period $\nu \in {\text{week, month, year}}$. $p_{week} = 7$, $p_{month}=30.5$, $p_{year}=365.25$ and $c_{f, \nu}, d_{f, \nu} \sim \mathcal{N}(0, 1/f)$ which are both dependent on $f$ and $\nu$.
-\newline
-After sampling both the seasonal and global trend component only the noise component $z_t$ has to be sampled.
-\[
-    z_t = 1 + m_{noise}(z - \overline{z})
-\]
-where $z \sim \text{Weibull}(1, k)$ and $\overline{z} = (ln(2))^{1/k}$
-\newline
-After sampling all the base components the timestamp $y_t$ is composed of the product of all the components mentioned above.
-\[
-    y_t = \psi(t) \cdot z_t = \text{trend}(t) \cdot \text{seasonal}(t) \cdot z_t
-\]
-
-They multiply the noise component instead of adding it to the other component to have the scale of it be independent of the scale of the other components.
-In addition, the Weibull distribution creates the chance to parameterize between gaussian and exponential distribution both of which are common in time series.
-\newline
-There are three different observation periods(When the data is being observed): daily, monthly and yearly.
-These periods are independent of time series generation and are only important to give the model more context over different periodicities.
-\section{Finetuning}
-\subsection{Definition}
+\subsection{Finetuning}
+\subsubsection{Definition}
 Finetuning is a common way in deep learning to selectively enhance the performance of a foundation model.
 \newline
 Foundation models are often pretrained on large amounts of heterogeneous data to perform best on a vast amount of tasks in the specified field.
 To enhance the performance of the foundation model on one specific real world dataset the model is finetuned by training on this dataset.
 \newline
 Specifically for TabPFN which was trained on artificial data created from a prior it is crucial for finetuning to use a real world dataset.
-\subsection{Related Work}
+\subsubsection{Related Work}
 \citet{rubachev2025finetuning} lists two main ways of finetuning regimes popular with tabular foundation models.
 The first one being full finetuning, with which all parameters are updated like in the pretraining.
 The other one is parameter efficient finetuning (PEFT) which is often used for LLM adaptation since they have a significant larger amount of parameters (TabPFN ~7M vs GPT-4o ~200B).
@@ -260,10 +258,19 @@ For this reason we will also only investigate full finetuning in this thesis.\ne
 While finetuning on one dataset improves performance on this specific dataset, finetuning on many datasets at once, like \citet{Hollmann_2025} did, showed significant performance boosts in down stream tasks.
 They used the original TabPFNv2 checkpoint that was pretrained on artificial data and used a diverse amount of datasets for improvements.
 Furthermore, they called this method `continued pretraining' which is contrary to our assumption for this thesis that finetuning solely relies on training on real world datasets while continued pretraining uses artificial datasets from a prior.
-\section{Continued Pretraining}
-\subsection{Definition}
+
+\subsection{Continued Pretraining}
+\subsubsection{Definition}
 As mentioned above we define continued pretraining as the method that further trains a foundation model on a domain specific prior to lead to the potential improvement of a it.
-\subsection{Related Work}
+\subsubsection{Related Work}
 There has not been much work about continuing pretraining a model with a domain specific prior but in \citet{kolberg2025tabpfn} we saw that if we continue pre-training TabPFNv2 in a similar modality (tabular data with high feature and low sample count) the model will experience a decrease in performance on non high dimension, low sample size data.
 This leads to the assumption that there are some potential benefits in continuing pretraining that have not yet been discovered.
 \newline
+
+
+
+%- How TabPFN-TS Interprets Temporal Structure maybe also
+
+
+
+

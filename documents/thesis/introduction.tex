@@ -5,23 +5,29 @@ Since the release of ChatGPT in 2022 and the widespread media coverage of AI, ma
 Large Language Models are now known as being a gateway to machine learning and artificial intelligence.
 But LLMs almost only excel on data in textual format or pictures.
 What about tabular data?
-Whether it is patients data in healthcare, sales data in finance or every other data which can be stored in an Excel-like schema, tabular data is one of the most common data formats used in a big scale.
-This type of data has not been in the focus by researchers for quite some time since nobody found a way to utilize deep learning for tabular data.
+Whether it is patients data in healthcare, sales data in finance or every other data which can be stored in an Excel-like schema, tabular data is one of the most common data formats used in a big scale. \citep{van2024tabular}
+This type of data has been in the focus by researchers for quite some time but nobody found a way to utilize deep learning for tabular data and algorithms like gradient boost decision trees or random forest were much more accessible.
 \newline
-Furthermore, algorithms like gradient boost decision trees or random forest were much more accessible.
-But with the release of TabPFN, a transformer model pre-trained to solve artificially generated classification tasks from a synthetic prior, a new benchmark for tabular inference tasks has been set.
+But with the release of TabPFN\citep{hollmann2022tabpfn}, a transformer model pre-trained to solve artificially generated classification tasks from a synthetic prior, a new benchmark for tabular inference tasks has been set.
 In a single forward pass, TabPFN is able to solve classification, regression, and inference tasks.
 %\\
 %Early 2025 TabPFN-TS was released.
 %A method that maps time series data onto tabular data to achieve SOTA forecasting results with the already pre-trained TabPFN model.
-\\
+\newline
 There are two main ways to presumably enhance the performance of this specific model.
 One is finetuning a pre-trained model and the other is continued pre-training a pre-trained model.
 The key difference between those two is the data the model will further be trained with.
 Only by using real-world datasets for a specific domain like healthcare etc. finetuning trains a pre-trained model to enhance the accuracy of it in this domain. %TODO
 In continued pre-training one uses a specific synthetic prior to generate synthetical classification, regression, or inference tasks for the domain to further train and enhance the model.
-\\
-Although there are already some models which achieve top rank results in time series forecasting, the impact of finetuning or continued pretraining has not been studied and potential benefits remain uncovered.
+\newline
+Although there are already models which achieve top rank results in time series forecasting, the impact of finetuning or continued pretraining has not been studied and potential benefits remain uncovered.
+\newline
+When it comes to physics, finance, meteorology or any domain where predicting the future is crucial, time series forecasting models are indispensable.
+A time series forecast is a forecast for the development of a system based on the current and prior observations of it e.g., predicting the weather based on past observations and historical data from the same date in previous years.
+It utilizes the temporal dependencies and intervariable correlations within the observations.
+\newline
+There are many different approaches used in forecasting including Multi-Layer-Perceptron, a Recurrent Neural Network or even Graph Neural Networks. %vague???
+In this thesis we will focus on transformer based time series forecasting as they have shown great modeling ability for long range dependencies and interactions in sequential data and thus are appealing to time series modeling.
 
 \section{Exposé}
 TabPFNv2 can work with time-series as well, as \citet{hoo2025tables} showed, although it has not been trained with time-series data during pre-training, treating time series forecasting as a tabular regression problem.
