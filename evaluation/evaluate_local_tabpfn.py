@@ -105,7 +105,6 @@ def construct_evaluation_data(
         else:
             ds_key = dataset_name.lower()
             ds_key = pretty_names.get(ds_key, ds_key)
-            print(DATASET_PROPERTIES_MAP)
             ds_freq = DATASET_PROPERTIES_MAP[ds_key]["frequency"]
 
         # Initialize the dataset
@@ -231,6 +230,8 @@ def main(args):
         raise ValueError(
             f"Dataset storage path {args.dataset_storage_path} does not exist"
         )
+
+    print("Evaluating Checkpoint:", args.path_to_model_checkpoint)
 
     # Initialize wandb
     if args.use_wandb:
