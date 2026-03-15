@@ -29,7 +29,6 @@ class TimeSeriesDataset(Dataset):
     max_steps: int
         Maximum number of steps (splits of the data).
     """
-    time_series_window_count = []
 
 
     def __init__(
@@ -47,46 +46,10 @@ class TimeSeriesDataset(Dataset):
         self.dataset_attributes = dataset_attributes
         #next(self._splits_generator)
         self._rng = np.random.RandomState(RANDOM_SEED)
-        TimeSeriesDataset.time_series_window_count = [np.zeros(X_t.shape[2]) for X_t in X_train]
+        self.time_series_window_count = [np.zeros(X_t.shape[2]) for X_t in X_train]
         self.current_ds = 0
         self.ts_amount_for_ds = ts_amount_for_ds
         self.ts_left_for_ds = ts_amount_for_ds
-
-    @staticmethod
-    def splits_generator(
-            *,
-            X_train: torch.Tensor,
-            y_train: torch.Tensor,
-            dataset_attributes: DatasetAttributes,
-            seed: int,
-    ):
-        rng = np.random.RandomState(seed)
-        while True:
-            current_ds = yield  # <- Generator wartet hier auf current_ds
-            if current_ds is None:
-                current_ds = rng.randint(0, len(X_train))
-            windows = dataset_attributes[current_ds].windows
-            forecast_horizon = dataset_attributes[current_ds].forecast_horizon
-            z_len = X_train[current_ds].shape[2]
-            series_length = X_train[current_ds].shape[0]
-
-            if np.all(TimeSeriesDataset.time_series_window_count == windows):
-                TimeSeriesDataset.time_series_window_count = np.zeros(z_len)
-
-            time_series = rng.randint(0, z_len)
-            while TimeSeriesDataset.time_series_window_count[current_ds][time_series] >= windows:
-                time_series = rng.randint(0, z_len)
-
-            window_count = TimeSeriesDataset.time_series_window_count[current_ds][time_series]
-            context_length = (series_length - forecast_horizon) // windows
-
-            start_idx = max(0, series_length - forecast_horizon - (windows - window_count) * context_length)
-            origin = start_idx + context_length
-            end_idx = origin + forecast_horizon
-
-            TimeSeriesDataset.time_series_window_count[current_ds][time_series] += 1
-
-            yield int(current_ds), int(time_series), int(start_idx), int(origin), int(end_idx)
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -115,21 +78,21 @@ class TimeSeriesDataset(Dataset):
         z_len = self.X_train[current_ds].shape[2]
         series_length = self.X_train[current_ds].shape[0]
 
-        if np.all(TimeSeriesDataset.time_series_window_count[current_ds][:z_len] == windows):
-            TimeSeriesDataset.time_series_window_count = np.zeros(z_len)
+        if np.all(self.time_series_window_count[current_ds][:z_len] == windows):
+            self.time_series_window_count[current_ds] = np.zeros(z_len)
 
         time_series = self._rng.randint(0, z_len)
-        while TimeSeriesDataset.time_series_window_count[current_ds][time_series] >= windows:
+        while self.time_series_window_count[current_ds][time_series] >= windows:
             time_series = self._rng.randint(0, z_len)
 
-        window_count = TimeSeriesDataset.time_series_window_count[current_ds][time_series]
+        window_count = self.time_series_window_count[current_ds][time_series]
         context_length = (series_length - forecast_horizon) // windows
 
         start_idx = max(0, series_length - forecast_horizon - (windows - window_count) * context_length)
         origin = start_idx + context_length
         end_idx = origin + forecast_horizon
 
-        TimeSeriesDataset.time_series_window_count[current_ds][time_series] += 1
+        self.time_series_window_count[current_ds][time_series] += 1
 
         print(f"series_length={series_length}, forecast_horizon={forecast_horizon}, "
               f"windows={windows}, window_count={window_count}, "
@@ -165,7 +128,7 @@ class TimeSeriesDataset(Dataset):
         """
         # filter out padding filled time series
         while (s_X_train[:, 28].numpy() == 0).sum() >= s_X_train.shape[0]*0.5:
-            TimeSeriesDataset.time_series_window_count[time_series] += 1
+            self.time_series_window_count[time_series] += 1
             time_series, start_idx, train_test_bound, end_idx = self.get_splits()
             s_X_train, s_X_test, s_y_train, s_y_test = self.create_data(
                 time_series, start_idx, train_test_bound, end_idx
@@ -217,7 +180,7 @@ class ArtificalTimeSeriesDataset(Dataset):
         self.dataset_attributes = dataset_attributes
         next(self._splits_generator)
         self._rng = np.random.RandomState(RANDOM_SEED)
-        TimeSeriesDataset.time_series_window_count = np.zeros(X_train[0].shape[2])
+        self.time_series_window_count = np.zeros(X_train[0].shape[2])
         self.current_ds = 0
         self.ts_amount_for_ds = ts_amount_for_ds
         self.ts_left_for_ds = ts_amount_for_ds
