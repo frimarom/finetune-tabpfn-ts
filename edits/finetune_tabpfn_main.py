@@ -530,8 +530,13 @@ def _model_forward(
             - regression: (n_samples, batch_size)
     """
     # TabPFN model assumes z-normalized inputs.
-    mean = y_train.mean(dim=0, keepdim=True)
-    std = y_train.std(dim=0, keepdim=True)
+    mean = y_train.nanmean(dim=0, keepdim=True)
+
+    # Für std gibt es kein torch.nanstd, daher:
+    diff = y_train - mean
+    diff = torch.where(torch.isnan(diff), torch.zeros_like(diff), diff ** 2)
+    count = (~torch.isnan(y_train)).sum(dim=0, keepdim=True).float().clamp(min=1)
+    std = torch.sqrt(diff.sum(dim=0, keepdim=True) / count)
     std = torch.where(std < 0.01, torch.ones_like(std), std)
     y_train_normalized = (y_train - mean) / std
 
@@ -643,8 +648,11 @@ def _fine_tune_step(
     batch_y_train = torch.movedim(batch_y_train, 0, 1).to(device)
     batch_y_test = torch.movedim(batch_y_test, 0, 1).to(device)
 
-    mean = batch_y_train.mean(dim=0, keepdim=True)
-    std = batch_y_train.std(dim=0, keepdim=True)
+    mean = batch_y_train.nanmean(dim=0, keepdim=True)
+    diff = batch_y_train - mean
+    diff = torch.where(torch.isnan(diff), torch.zeros_like(diff), diff ** 2)
+    count = (~torch.isnan(batch_y_train)).sum(dim=0, keepdim=True).float().clamp(min=1)
+    std = torch.sqrt(diff.sum(dim=0, keepdim=True) / count)
     std = torch.where(std < 0.01, torch.ones_like(std), std)
     batch_y_test_normalized = (batch_y_test - mean) / std
 
@@ -656,10 +664,17 @@ def _fine_tune_step(
             X_test=batch_X_test,
             outer_loop_autocast=True,
         )
+        valid_mask = ~torch.isnan(batch_y_test_normalized).squeeze(-1)  # (n_steps, batch_size)
+
+        valid_logits = pred_logits[valid_mask]  # (n_valid, n_bins)
+
+        # unsqueeze wieder auf (n_valid, 1, 1) damit compute_loss target[:, :, 0] funktioniert
+        valid_targets = batch_y_test_normalized[valid_mask].unsqueeze(-1)  # (n_valid, 1, 1)
+
         task_loss = compute_loss(
             loss_fn=loss_fn,
-            logits=pred_logits,
-            target=batch_y_test_normalized
+            logits=valid_logits,
+            target=valid_targets
         )
 
         l2_sp_loss = 0.0

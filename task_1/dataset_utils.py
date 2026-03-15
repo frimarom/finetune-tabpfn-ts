@@ -242,6 +242,11 @@ def transform_gift_eval_dataset(dataset_choice, dataset, ts_amount_limit: int = 
 
         dataframe["item_id"] = time_series["item_id"]
 
+        valid_count = dataframe["target"].notna().sum()
+        if valid_count < 10:
+            print(f"Skipping {time_series.get('item_id')}: only {valid_count} valid values")
+            continue
+
         train_part_ts = TimeSeriesDataFrame(dataframe)
         transformed_data = transform_data(train_part_ts)
         X, y = to_x_y(dataset_choice, transformed_data)

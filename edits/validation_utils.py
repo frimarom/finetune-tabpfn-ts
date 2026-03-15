@@ -130,6 +130,16 @@ def validate_tabpfn_fixed_context(
                 if task_type == TaskType.REGRESSION:
                     y_pred = pred_logits.float().flatten().cpu().detach().numpy()
                     y_true = y_window_true.float().flatten().cpu().detach().numpy()
+
+                    # NaN-Maske anwenden
+                    valid_mask = ~np.isnan(y_true)
+                    y_pred = y_pred[valid_mask]
+                    y_true = y_true[valid_mask]
+
+                    # Falls komplett NaN (Edge Case)
+                    if len(y_true) == 0:
+                        continue
+
                     print("y_pred Validation", y_pred)
                     print("y_true Validation", y_true)
                 else:
@@ -142,9 +152,11 @@ def validate_tabpfn_fixed_context(
                     x_test_plot = X_window_test[:, 0, 0].detach().cpu().numpy()
                     y_test_plot = y_window_true[:, 0, 0].detach().cpu().numpy()
 
+                    valid_plot_mask = ~np.isnan(y_test_plot)
+
                     plt.plot(x_train_plot, y_train_plot, color="blue")
-                    plt.plot(x_test_plot, y_test_plot, color="green")
-                    plt.plot(x_test_plot, y_pred, color="red")
+                    plt.plot(x_test_plot[valid_plot_mask], y_test_plot[valid_plot_mask], color="green")
+                    plt.plot(x_test_plot[valid_plot_mask], y_pred, color="red")
 
                     plt.savefig(f"{plot_save_path}/validation_pred_{dataset_attributes_list[i].name.replace('/', '_')}_iter_{iteration}_{ts_idx}_windowidx_{index}.png")
                     plt.clf()
