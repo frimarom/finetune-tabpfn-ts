@@ -22,6 +22,7 @@ from tabpfn_time_series.features import (
     AutoSeasonalFeature,
 )
 
+import pandas
 import datasets
 import random
 from gluonts.dataset.util import to_pandas
@@ -205,7 +206,6 @@ def transform_autogluon_dataset(dataset_choice, dataset, ts_amount_limit: int = 
         sampled_ids = tsdf.item_ids.to_series().sample(n=ts_amount_limit, random_state=42)
         tsdf = tsdf[tsdf.index.get_level_values("item_id").isin(sampled_ids)]
 
-    print(tsdf)
     record = []
     for item_id, ts in tsdf.groupby(level="item_id"):
         time_series = ts.sort_index()
@@ -233,28 +233,34 @@ def transform_gift_eval_dataset(dataset_choice, dataset, ts_amount_limit: int = 
 
     for time_series in all_items:
         target_key = "target" if "target" in time_series else "past_target"
-        pandas_ts = to_pandas({**time_series, "target": time_series[target_key]})
+        raw_target = time_series[target_key]
 
-        dataframe = pandas_ts.to_frame().reset_index()
-        dataframe.columns = ["timestamp", "target"]
+        # Handle multivariate: shape (n_dims, T) → iterate over dims
+        if raw_target.ndim == 2:
+            dim_targets = [raw_target[i] for i in range(raw_target.shape[0])]
+        else:
+            dim_targets = [raw_target]
 
-        dataframe["timestamp"] = dataframe["timestamp"].dt.to_timestamp()
+        for dim_idx, target_1d in enumerate(dim_targets):
+            univariate_entry = {**time_series, "target": target_1d}
 
-        dataframe["item_id"] = time_series["item_id"]
+            pandas_ts = to_pandas(univariate_entry)
 
-        valid_count = dataframe["target"].notna().sum()
-        if valid_count < 10:
-            print(f"Skipping {time_series.get('item_id')}: only {valid_count} valid values")
-            continue
+            dataframe = pandas_ts.to_frame().reset_index()
+            dataframe.columns = ["timestamp", "target"]
+            dataframe["timestamp"] = dataframe["timestamp"].dt.to_timestamp()
+            dataframe["item_id"] = f"{time_series['item_id']}_dim{dim_idx}"
 
-        train_part_ts = TimeSeriesDataFrame(dataframe)
-        transformed_data = transform_data(train_part_ts)
-        X, y = to_x_y(dataset_choice, transformed_data)
+            valid_count = dataframe["target"].notna().sum()
+            if valid_count < 10:
+                print(f"Skipping {time_series.get('item_id')}_dim{dim_idx}: only {valid_count} valid values")
+                continue
 
-        records.append({
-            "X": X,
-            "y": y,
-        })
+            train_part_ts = TimeSeriesDataFrame(dataframe)
+            transformed_data = transform_data(train_part_ts)
+            X, y = to_x_y(dataset_choice, transformed_data)
+
+            records.append({"X": X, "y": y})
 
     return records
 
@@ -392,9 +398,8 @@ def create_train_val_split(
         max_context_length: int = None,
         max_validation_ts_amount: int = None):
     dataset = Dataset(name = dataset_name)
-    print(list(dataset.training_dataset))
     #switch between if windows >1 or not for windowed or not
-
+    print(dataset.training_dataset)
     X_train, y_train, target_length, prediction_length = create_homogenous_ts_dataset(
         dataset_name,
         dataset.training_dataset,
@@ -407,11 +412,15 @@ def create_train_val_split(
         ts_amount_limit=max_validation_ts_amount,
         ts_length_limit=max_context_length,
         windows=1)
+    print(X_train.shape)
+    print(X_val.shape)
+    print(prediction_length)
     return X_train, y_train, X_val, y_val, target_length, prediction_length
 
 if __name__ == "__main__":
-    #TODO select random datasets from it when it comes to validation data
-    X_train, y_train, X_val, y_val, target_length, prediction_length = create_train_val_split("us_births/D", max_training_ts_amount=1, max_context_length=4096, max_validation_ts_amount=1)
+    #TODO select random datasets from it when it comes to validation data#
+
+    X_train, y_train, X_val, y_val, target_length, prediction_length = create_train_val_split("hospital", max_training_ts_amount=10, max_context_length=4096, max_validation_ts_amount=1)
     print(X_train.shape)
     print(X_val.shape)
     print(prediction_length)
