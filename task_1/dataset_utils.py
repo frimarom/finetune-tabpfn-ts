@@ -231,11 +231,12 @@ def transform_gift_eval_dataset(dataset_choice, dataset, ts_amount_limit: int = 
         indices = np.random.default_rng(seed=42).choice(len(all_items), size=int(ts_amount_limit), replace=False)
         all_items = [all_items[i] for i in indices]
 
+    pred_length = get_prediction_length(dataset_choice)  # needed for threshold
+
     for time_series in all_items:
         target_key = "target" if "target" in time_series else "past_target"
         raw_target = time_series[target_key]
 
-        # Handle multivariate: shape (n_dims, T) → iterate over dims
         if raw_target.ndim == 2:
             dim_targets = [raw_target[i] for i in range(raw_target.shape[0])]
         else:
@@ -252,8 +253,15 @@ def transform_gift_eval_dataset(dataset_choice, dataset, ts_amount_limit: int = 
             dataframe["item_id"] = f"{time_series['item_id']}_dim{dim_idx}"
 
             valid_count = dataframe["target"].notna().sum()
-            if valid_count < 10:
+
+            min_required = max(10, pred_length + 1)
+            if valid_count < min_required:
                 print(f"Skipping {time_series.get('item_id')}_dim{dim_idx}: only {valid_count} valid values")
+                continue
+
+            tail_values = dataframe["target"].values[-pred_length:]
+            if np.all(~np.isfinite(tail_values) | (tail_values == 0)):
+                print(f"Skipping {time_series.get('item_id')}_dim{dim_idx}: forecast window is all NaN/zero")
                 continue
 
             train_part_ts = TimeSeriesDataFrame(dataframe)

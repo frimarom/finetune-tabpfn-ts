@@ -94,11 +94,6 @@ class TimeSeriesDataset(Dataset):
 
         self.time_series_window_count[current_ds][time_series] += 1
 
-        print(f"series_length={series_length}, forecast_horizon={forecast_horizon}, "
-              f"windows={windows}, window_count={window_count}, "
-              f"context_length={context_length}, start={start_idx}, "
-              f"origin={origin}, end={end_idx}")
-
         return int(current_ds), int(time_series), int(start_idx), int(origin), int(end_idx)
 
     def get_splits(self):
@@ -114,6 +109,7 @@ class TimeSeriesDataset(Dataset):
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         if self.ts_left_for_ds <= 0:
             self.current_ds = self._rng.randint(0, len(self.X_train))
+            print("current_ds", self.current_ds)
             self.ts_left_for_ds = self.ts_amount_for_ds
 
         dataset_id, time_series, start_idx, train_test_bound, end_idx = self.get_splits()
