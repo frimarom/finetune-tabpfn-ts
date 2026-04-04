@@ -439,9 +439,6 @@ def create_train_val_split(
         max_training_ts_amount: int = None,
         max_context_length: int = None,
         max_validation_ts_amount: int = None):
-    dataset = Dataset(name = dataset_name)
-    #switch between if windows >1 or not for windowed or not
-    print(dataset.training_dataset)
     X_train, y_train, target_length, prediction_length = create_homogenous_ts_dataset(
         dataset_name,
         dataset.training_dataset,
