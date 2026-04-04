@@ -135,6 +135,22 @@ dataset_metadata = {
         "prediction_length": 48,
         "frequency": "H",
     },
+    "nn5": {
+        "prediction_length": 30,
+        "frequency": "D",
+    },
+    "monash_australian_electricity": {
+        "prediction_length": 48,
+        "frequency": "30min",
+    },
+    "exchange_rate": {
+        "prediction_length": 30,
+        "frequency": "D",
+    },
+    "monash_nn5_weekly": {
+        "prediction_length": 8,
+        "frequency": "W",
+    }
 }
 
 class Term(Enum):
