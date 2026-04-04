@@ -201,17 +201,35 @@ def transform_autogluon_dataset(dataset_choice, dataset, ts_amount_limit: int = 
 
     tsdf = TimeSeriesDataFrame(dataset)
 
-    #limit number of ts so lido cluster doesnt oom
+    # limit number of ts so lido cluster doesnt oom
     if ts_amount_limit and tsdf.index.get_level_values("item_id").nunique() > ts_amount_limit:
-        sampled_ids = tsdf.item_ids.to_series().sample(n=ts_amount_limit, random_state=42)
+        sampled_ids = tsdf.item_ids.to_series().sample(n=int(ts_amount_limit), random_state=42)
         tsdf = tsdf[tsdf.index.get_level_values("item_id").isin(sampled_ids)]
+
+    pred_length = get_prediction_length(dataset_choice)  # needed for threshold
 
     record = []
     for item_id, ts in tsdf.groupby(level="item_id"):
         time_series = ts.sort_index()
+
+        # Skip if not enough valid values
+        target_col = time_series.iloc[:, 0]
+        valid_count = target_col.notna().sum()
+        min_required = max(10, pred_length + 1)
+        if valid_count < min_required:
+            print(f"Skipping {item_id}: only {valid_count} valid values")
+            continue
+
+        # Skip if forecast window is all NaN/zero
+        tail_values = target_col.values[-pred_length:]
+        if np.all(~np.isfinite(tail_values) | (tail_values == 0)):
+            print(f"Skipping {item_id}: forecast window is all NaN/zero")
+            continue
+
         transformed_time_series = transform_data(time_series)
         X, y = to_x_y(dataset_choice, transformed_time_series)
         record.append({"X": X, "y": y})
+
     return record
 
 
@@ -420,18 +438,17 @@ def create_train_val_split(
         ts_amount_limit=max_validation_ts_amount,
         ts_length_limit=max_context_length,
         windows=1)
-    print(X_train.shape)
-    print(X_val.shape)
-    print(prediction_length)
     return X_train, y_train, X_val, y_val, target_length, prediction_length
 
 if __name__ == "__main__":
     #TODO select random datasets from it when it comes to validation data#
 
-    X_train, y_train, X_val, y_val, target_length, prediction_length = create_train_val_split("hospital", max_training_ts_amount=10, max_context_length=4096, max_validation_ts_amount=1)
-    print(X_train.shape)
-    print(X_val.shape)
-    print(prediction_length)
+    X_train, y_train, X_val, y_val, target_length, prediction_length = create_train_val_split("ett1/D", max_training_ts_amount=10, max_context_length=4096, max_validation_ts_amount=1)
+    print("X_train",X_train.shape)
+    print("y_train",y_train.shape)
+    print("X_val",X_val.shape)
+    print("y_val",y_val.shape)
+    print("pred",prediction_length)
 
     #dataset = Dataset(name = "hierarchical_sales/D")
     #print(list(dataset.validation_dataset)[0])
