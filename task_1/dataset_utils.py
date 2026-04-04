@@ -16,6 +16,7 @@ import torch
 import numpy as np
 from finetune_tabpfn_ts.edits.data_utils import get_data_loader
 from finetune_tabpfn_ts.edits.feature_transformer import FeatureTransformer
+from finetune_tabpfn_ts.evaluation.dataset_definition import CHRONOS_DATASETS_METADATA
 from tabpfn_time_series.features import (
     RunningIndexFeature,
     CalendarFeature,
@@ -62,95 +63,6 @@ TFB_PRED_LENGTH_MAP = {
     "W": 13,
     "U": 8,
     "T": 8,
-}
-
-
-dataset_metadata = {
-    "weatherbench_daily": {
-        "prediction_length": 30,
-        "frequency": "D",
-    },
-    "wiki_daily_100k": {
-        "prediction_length": 30,
-        "frequency": "D",
-    },
-    "solar_1h": {
-        "prediction_length": 48,
-        "frequency": "H",
-        "target_column": "power_mw"
-    },
-    "monash_tourism_monthly": {
-        "prediction_length": 24,
-        "frequency": "M",
-    },
-    "taxi_1h": {
-        "prediction_length": 48,
-        "frequency": "H",
-    },
-    "taxi_30min": {
-        "prediction_length": 48,
-        "frequency": "30min",
-    },
-    "uber_tlc_daily": {
-        "prediction_length": 30,
-        "frequency": "D",
-    },
-    "uber_tlc_hourly": {
-        "prediction_length": 48,
-        "frequency": "H",
-    },
-    "monash_traffic": {
-        "prediction_length": 48,
-        "frequency": "H",
-    },
-    "monash_electricity_hourly": {
-        "prediction_length": 48,
-        "frequency": "H",
-    },
-    "monash_electricity_weekly": {
-        "prediction_length": 13,
-        "frequency": "W",
-    },
-    "monash_fred_md": {
-        "prediction_length": 12,
-        "frequency": "M",
-    },
-    "monash_covid_deaths": {
-        "prediction_length": 30,
-        "frequency": "D",
-    },
-    "monash_hospital": {
-        "prediction_length": 12,
-        "frequency": "M",
-    },
-    "monash_london_smart_meters": {
-        "prediction_length": 48,
-        "frequency": "30min",
-    },
-    "weatherbench_hourly_10m_v_component_of_wind": {
-        "prediction_length": 48,
-        "frequency": "H",
-    },
-    "weatherbench_hourly_temperature": {
-        "prediction_length": 48,
-        "frequency": "H",
-    },
-    "nn5": {
-        "prediction_length": 30,
-        "frequency": "D",
-    },
-    "monash_australian_electricity": {
-        "prediction_length": 48,
-        "frequency": "30min",
-    },
-    "exchange_rate": {
-        "prediction_length": 30,
-        "frequency": "D",
-    },
-    "monash_nn5_weekly": {
-        "prediction_length": 8,
-        "frequency": "W",
-    }
 }
 
 class Term(Enum):
@@ -310,7 +222,7 @@ def to_x_y(name: str, data: TimeSeriesDataFrame):
     if "target" in data.columns:
         y = data["target"]
     else:
-        y = data[dataset_metadata[name]["target_column"]]
+        y = data[CHRONOS_DATASETS_METADATA[name]["target_column"]]
     X = data.drop("target", axis=1)
     return X, y
 
@@ -340,7 +252,7 @@ def create_homogenous_ts_dataset(
     """
     if dataset_name in gift_eval_datasets:
         records = transform_gift_eval_dataset(dataset_name, dataset, ts_amount_limit)
-    elif dataset_name in dataset_metadata.keys():
+    elif dataset_name in CHRONOS_DATASETS_METADATA.keys():
         records = transform_autogluon_dataset(dataset_name, dataset, ts_amount_limit)
     else:
         raise ValueError(
@@ -428,8 +340,8 @@ def get_prediction_length(dataset_name: str):
     if dataset_name in gift_eval_datasets:
         dataset = load_dataset(dataset_name)
         return dataset.prediction_length
-    elif dataset_name in dataset_metadata.keys():
-        return dataset_metadata[dataset_name]["prediction_length"]
+    elif dataset_name in CHRONOS_DATASETS_METADATA.keys():
+        return CHRONOS_DATASETS_METADATA[dataset_name]["prediction_length"]
     else:
         raise ValueError(f"Dataset {dataset_name} not found in either gift_eval_datasets or autogluon_chronos_datasets")
 
@@ -439,6 +351,9 @@ def create_train_val_split(
         max_training_ts_amount: int = None,
         max_context_length: int = None,
         max_validation_ts_amount: int = None):
+    dataset = Dataset(name = dataset_name)
+    #switch between if windows >1 or not for windowed or not
+    print(dataset.training_dataset)
     X_train, y_train, target_length, prediction_length = create_homogenous_ts_dataset(
         dataset_name,
         dataset.training_dataset,
