@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 import random
 import time
 import warnings
-import json
 from collections.abc import Callable
-from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Union, Sequence
@@ -15,24 +14,23 @@ from typing import TYPE_CHECKING, Literal, Union, Sequence
 import numpy as np
 import pandas as pd
 import torch
-
+from finetune_tabpfn_ts.edits.data_classes import FineTuneSetup, FineTuneStepResults
+# from finetuning_scripts.training_utils.data_utils import get_data_loader
+from finetune_tabpfn_ts.edits.data_utils import get_data_loader
+from finetune_tabpfn_ts.edits.validation_utils import validate_tabpfn_fixed_context
 from finetuning_scripts.constant_utils import (
     SupportedDevice,
     SupportedValidationMetric,
     TaskType,
 )
-from finetune_tabpfn_ts.edits.data_classes import FineTuneSetup, FineTuneStepResults
 from finetuning_scripts.metric_utils.ag_metrics import get_metric
 from finetuning_scripts.training_utils.ag_early_stopping import AdaptiveES
-#from finetuning_scripts.training_utils.data_utils import get_data_loader
-from finetune_tabpfn_ts.edits.data_utils import get_data_loader
 from finetuning_scripts.training_utils.model_utils import save_model
 from finetuning_scripts.training_utils.training_loss import compute_loss, get_loss
-from finetune_tabpfn_ts.edits.validation_utils import validate_tabpfn_fixed_context
+from finetune_tabpfn_ts.prior.config_variables import Config
 from schedulefree import AdamWScheduleFree
 from tabpfn import TabPFNClassifier, TabPFNRegressor
 from tabpfn.base import load_model_criterion_config
-from tabpfn.constants import ModelPath
 from torch import autocast
 from torch.cuda.amp import GradScaler
 from torch.nn import DataParallel
@@ -73,7 +71,8 @@ def fine_tune_tabpfn(
     validation_metric: SupportedValidationMetric,
     # Input Data
     prior: bool = False,
-    dataset: list[Dataset | None],
+    context_lengths: list[int] = None,
+    frequencies: list[str] = None,
     X_train: list[np.ndarray | torch.Tensor],
     y_train: list[np.ndarray | torch.Tensor],
     categorical_features_index: list[int] | None,
@@ -148,7 +147,8 @@ def fine_tune_tabpfn(
         The passed model should not be fitted, it is used to configure the
         preprocessing pipeline.
     """
-    st_time = time.time()
+
+    Config.set_freq_variables(True)
 
     # Control logging
     logger.setLevel(logger_level)
@@ -339,6 +339,9 @@ def fine_tune_tabpfn(
 
     # Setup data loader
     data_loader = get_data_loader(
+        prior=prior,
+        context_lengths=context_lengths,
+        frequencies=frequencies,
         X_train=X_train,
         y_train=y_train,
         max_steps=fts.max_steps,
@@ -355,7 +358,7 @@ def fine_tune_tabpfn(
         initial=1,
         disable=disable_progress_bar,
     )
-
+    st_time = time.time()
     # Fine-Tuning Loop
     early_stop_no_imp = False
     early_stop_no_time = False
@@ -841,7 +844,6 @@ def _tore_down_tuning(
     if show_training_curve:
         # --- Short Plot Hack
         import matplotlib.pyplot as plt
-        import seaborn as sns
 
         train_loss_over_time = [step.training_loss for step in step_results_over_time]
         raw_train_loss_over_time = train_loss_over_time[:]
@@ -929,8 +931,6 @@ def _tore_down_tuning(
 
         plt.savefig(f"./{path_for_all}/fine_tuning_loss_plot_{task_type}_{dataset_names.replace('/', '_')}_{time_limit}s.png",
                     bbox_inches='tight')
-
-        print(finetuning_json_report)
 
         with open(f"./{path_for_all}/finetuning_report.json", 'w', encoding='utf-8') as f:
             json.dump(finetuning_json_report, f, ensure_ascii=False, indent=4, cls=NumpyEncoder)

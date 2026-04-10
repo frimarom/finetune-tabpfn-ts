@@ -14,7 +14,6 @@ from enum import Enum
 
 import torch
 import numpy as np
-from finetune_tabpfn_ts.edits.data_utils import get_data_loader
 from finetune_tabpfn_ts.edits.feature_transformer import FeatureTransformer
 from finetune_tabpfn_ts.evaluation.dataset_definition import CHRONOS_DATASETS_METADATA
 from tabpfn_time_series.features import (
