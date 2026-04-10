@@ -15,22 +15,20 @@ from finetune_tabpfn_ts.prior.series_config import ComponentScale, SeriesConfig,
 from scipy.stats import beta
 
 def __generate(
-    n = 100,
+    n=100,
     freq_index: int = None,
     start: pd.Timestamp = None,
     options: dict = {},
     random_walk: bool = False,
 ):
-    """
-    Function to construct synthetic series configs and generate
-    synthetic series
-    """
+    if n is None or int(n) <= 0:
+        raise ValueError(f"n must be > 0, got {n}")
+
     if freq_index is None:
         freq_index = np.random.choice(len(Config.frequencies))
 
     freq, timescale = Config.frequencies[freq_index]
 
-    # annual, monthly, weekly, hourly and minutely components
     a, m, w, h, minute = 0.0, 0.0, 0.0, 0.0, 0.0
     if freq == "min":
         minute = np.random.uniform(0.0, 1.0)
@@ -51,21 +49,28 @@ def __generate(
         w = np.random.uniform(0.0, 0.2)
         a = np.random.uniform(0.0, 1)
     else:
-        raise NotImplementedError
-
-    offset = to_offset(freq)
+        raise NotImplementedError(f"Unsupported frequency: {freq}")
 
     if start is None:
-        earliest_safe_start = pd.Timestamp(date.fromordinal(BASE_START))
-        latest_safe_start = pd.Timestamp.max.normalize() - (n - 1) * offset
+        last_error = None
+        for _ in range(100):
+            sampled_ord = int((BASE_END - BASE_START) * beta.rvs(5, 1) + BASE_START)
+            candidate_start = pd.Timestamp(date.fromordinal(sampled_ord))
 
-        if latest_safe_start < earliest_safe_start:
-            raise ValueError(f"No valid start date possible for freq={freq}, n={n}")
+            try:
+                test_dates = pd.date_range(start=candidate_start, periods=int(n), freq=to_offset(freq))
+                if len(test_dates) == int(n):
+                    start = candidate_start
+                    break
+            except Exception as e:
+                last_error = e
+                continue
 
-        start_ord_min = earliest_safe_start.date().toordinal()
-        start_ord_max = latest_safe_start.date().toordinal()
-        sampled_ord = np.random.randint(start_ord_min, start_ord_max + 1)
-        start = pd.Timestamp(date.fromordinal(sampled_ord))
+        if start is None:
+            raise ValueError(
+                f"Could not sample valid start date for freq={freq}, n={n}. "
+                f"Last error: {last_error}"
+            )
 
     scale_config = ComponentScale(
         1.0,
@@ -95,7 +100,7 @@ def __generate(
 
     cfg = SeriesConfig(scale_config, offset_config, noise_config)
 
-    return cfg, make_series(cfg, to_offset(freq), n, start, options, random_walk)
+    return cfg, make_series(cfg, to_offset(freq), int(n), start, options, random_walk)
 
 def generate(
     n = 100,
