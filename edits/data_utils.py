@@ -22,23 +22,30 @@ RANDOM_SEED = 4213
 # 4 monthly
 # 5 yearly
 FREQUENCY_MAP = {
-    0: "MIN",
+    0: "min",
     1: "H",
     2: "D",
     3: "W",
-    4: "M",
-    5: "A",
+    4: "MS",
+    5: "Y",
 }
 
 PRED_LENGTH_MAP = {
-    "M": 12,
-    "W": 8,
-    "A": 6,
-    "D": 30,
+    "min": 60,
     "H": 48,
-    "T": 48,
-    "S": 60,
-    "MIN": 60,
+    "D": 30,
+    "W": 8,
+    "MS": 12,
+    "Y": 6,
+}
+
+MAX_CONTEXT_BY_FREQ = {
+    0: 4096,
+    1: 4096,
+    2: 4096,
+    3: 1040,
+    4: 240,
+    5: 100,
 }
 
 class TimeSeriesDataset(Dataset):
@@ -174,8 +181,8 @@ class ArtificalTimeSeriesDataset(Dataset):
         max_steps: int,
         batch_size: int,
     ):
-        self.context_lengths = context_lengths
-        self.frequencies = frequencies
+        self.context_lengths = list(context_lengths)
+        self.frequencies = list(frequencies)
         self.current_context_length = self.context_lengths[0]
         self.current_frequency = self.frequencies[0]
         self.max_steps = max_steps
@@ -185,6 +192,21 @@ class ArtificalTimeSeriesDataset(Dataset):
 
     def __len__(self):
         return self.max_steps
+
+    def _sample_attributes(self):
+        self.current_frequency = int(self._rng.choice(self.frequencies))
+
+        valid_contexts = [
+            c for c in self.context_lengths
+            if c <= MAX_CONTEXT_BY_FREQ[self.current_frequency]
+        ]
+        if not valid_contexts:
+            raise ValueError(
+                f"No valid context lengths for frequency {self.current_frequency}. "
+                f"context_lengths={self.context_lengths}"
+            )
+
+        self.current_context_length = int(self._rng.choice(valid_contexts))
 
     def create_data(self):
         if self.current_frequency is None:
@@ -226,8 +248,7 @@ class ArtificalTimeSeriesDataset(Dataset):
 
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         if self.ts_left_for_current_attributes <= 0:
-            self.current_context_length = self._rng.choice(self.context_lengths)
-            self.current_frequency = self._rng.choice(self.frequencies)
+            self._sample_attributes()
             self.ts_left_for_current_attributes = self.batch_size
 
         s_X_train, s_X_test, s_y_train, s_y_test = self.create_data()
