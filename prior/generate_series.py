@@ -53,9 +53,19 @@ def __generate(
     else:
         raise NotImplementedError
 
+    offset = to_offset(freq)
+
     if start is None:
-        # start = pd.Timestamp(date.fromordinal(np.random.randint(BASE_START, BASE_END)))
-        start = pd.Timestamp(date.fromordinal(int((BASE_END - BASE_START)*beta.rvs(5,1)+BASE_START)))
+        earliest_safe_start = pd.Timestamp(date.fromordinal(BASE_START))
+        latest_safe_start = pd.Timestamp.max.normalize() - (n - 1) * offset
+
+        if latest_safe_start < earliest_safe_start:
+            raise ValueError(f"No valid start date possible for freq={freq}, n={n}")
+
+        start_ord_min = earliest_safe_start.date().toordinal()
+        start_ord_max = latest_safe_start.date().toordinal()
+        sampled_ord = np.random.randint(start_ord_min, start_ord_max + 1)
+        start = pd.Timestamp(date.fromordinal(sampled_ord))
 
     scale_config = ComponentScale(
         1.0,

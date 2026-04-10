@@ -39,6 +39,15 @@ PRED_LENGTH_MAP = {
     "Y": 6,
 }
 
+MIN_CONTEXT_BY_FREQ = {
+    0: 150,  # minute
+    1: 150,  # hour
+    2: 150,  # day
+    3: 64,   # week
+    4: 24,   # month
+    5: 12,   # year
+}
+
 MAX_CONTEXT_BY_FREQ = {
     0: 4096,
     1: 4096,
@@ -196,18 +205,23 @@ class ArtificalTimeSeriesDataset(Dataset):
     def _sample_attributes(self):
         self.current_frequency = int(self._rng.choice(self.frequencies))
 
+        min_len = MIN_CONTEXT_BY_FREQ[self.current_frequency]
+        max_len = MAX_CONTEXT_BY_FREQ[self.current_frequency]
+
         valid_contexts = [
             c for c in self.context_lengths
-            if c <= MAX_CONTEXT_BY_FREQ[self.current_frequency]
+            if min_len <= c <= max_len
         ]
+
         if not valid_contexts:
             raise ValueError(
                 f"No valid context lengths for frequency {self.current_frequency}. "
-                f"context_lengths={self.context_lengths}"
+                f"Allowed range: [{min_len}, {max_len}], "
+                f"provided context_lengths range: "
+                f"[{min(self.context_lengths)}, {max(self.context_lengths)}]"
             )
 
         self.current_context_length = int(self._rng.choice(valid_contexts))
-
     def create_data(self):
         if self.current_frequency is None:
             raise ValueError(f"current_frequency is None. frequencies={self.frequencies}")
