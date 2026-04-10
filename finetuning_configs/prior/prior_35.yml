@@ -82,7 +82,7 @@ finetuning:
 prior:
   context_length:
     end: 4096
-    start: 0
+    start: 30
     step: 10
   frequencies:
   - 1
