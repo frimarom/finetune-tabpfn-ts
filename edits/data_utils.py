@@ -88,33 +88,29 @@ class TimeSeriesDataset(Dataset):
         self.y_train = y_train
         self.max_steps = max_steps
         self.dataset_attributes = dataset_attributes
-        #next(self._splits_generator)
         self._rng = np.random.RandomState(RANDOM_SEED)
         self.time_series_window_count = [np.zeros(X_t.shape[2]) for X_t in X_train]
-        self.current_ds = 0
+        self.current_ds = self._sample_dataset_id()
         self.ts_amount_for_ds = ts_amount_for_ds
         self.ts_left_for_ds = ts_amount_for_ds
 
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state["_splits_generator"]
-        return state
-
-    def __setstate__(self, state):
-        seed = RANDOM_SEED
-        self.__dict__.update(state)
-        self._splits_generator = self.splits_generator(
-            X_train=self.X_train,
-            y_train=self.y_train,
-            dataset_attributes=self.dataset_attributes,
-            seed=seed,
+        ts_amounts = np.array(
+            [max(1, int(attr.ts_amount)) for attr in self.dataset_attributes],
+            dtype=float,
         )
-        next(self._splits_generator)
+
+        self.dataset_sampling_weights = np.sqrt(ts_amounts)
+        self.dataset_sampling_probs = (
+                self.dataset_sampling_weights / self.dataset_sampling_weights.sum()
+        )
 
     def __len__(self):
         return self.max_steps # amount of batches. Each batch contains batch_size amount of splits returned by get_item.
 
-    # splits_generator komplett ersetzen:
+    def _sample_dataset_id(self) -> int:
+        return int(self._rng.choice(len(self.X_train), p=self.dataset_sampling_probs))
+
+        # splits_generator komplett ersetzen:
     def _get_next_split(self):
         current_ds = self.current_ds
         windows = self.dataset_attributes[current_ds].windows
@@ -152,7 +148,7 @@ class TimeSeriesDataset(Dataset):
 
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         if self.ts_left_for_ds <= 0:
-            self.current_ds = self._rng.randint(0, len(self.X_train))
+            self.current_ds = self._sample_dataset_id()
             self.ts_left_for_ds = self.ts_amount_for_ds
 
         dataset_id, time_series, start_idx, train_test_bound, end_idx = self.get_splits()
@@ -161,18 +157,6 @@ class TimeSeriesDataset(Dataset):
         )
 
         self.ts_left_for_ds -= 1
-
-
-        #TODO overwork this part
-        """
-        # filter out padding filled time series
-        while (s_X_train[:, 28].numpy() == 0).sum() >= s_X_train.shape[0]*0.5:
-            self.time_series_window_count[time_series] += 1
-            time_series, start_idx, train_test_bound, end_idx = self.get_splits()
-            s_X_train, s_X_test, s_y_train, s_y_test = self.create_data(
-                time_series, start_idx, train_test_bound, end_idx
-            )
-        """
 
         return dict(
             X_train=s_X_train,
