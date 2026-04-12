@@ -34,7 +34,34 @@ def ensure_correct_config(config: dict):
     if config["l2_sp_lambda"] != 0.0 and config["weight_decay"] != 0.0:
         raise ValueError("Both l2_sp_lambda and weight_decay cannot be non-zero at the same time.")
 
+def parse_prior_context_lengths(prior_cfg: dict) -> list[int] | None:
+    if not prior_cfg.get("enabled", False):
+        return None
 
+    if "context_lengths" in prior_cfg and prior_cfg["context_lengths"] is not None:
+        values = [int(v) for v in prior_cfg["context_lengths"]]
+        if len(values) == 0:
+            raise ValueError("prior.context_lengths must not be empty.")
+        return sorted(set(values))
+
+    if "context_length" in prior_cfg and prior_cfg["context_length"] is not None:
+        cl_cfg = prior_cfg["context_length"]
+        start = cl_cfg["start"]
+        end = cl_cfg["end"]
+        step = cl_cfg["step"]
+
+        if start is None or end is None or step is None:
+            return None
+
+        values = list(range(int(start), int(end) + 1, int(step)))
+        if len(values) == 0:
+            raise ValueError("Generated prior context_lengths are empty.")
+        return values
+
+    raise ValueError(
+        "Prior is enabled, but neither `context_lengths` nor "
+        "`context_length: {start,end,step}` was provided."
+    )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -104,9 +131,9 @@ if __name__ == "__main__":
     if args.path_to_save_all is not None and not os.path.exists(args.path_to_save_all):
         os.makedirs(args.path_to_save_all)
 
-    prior = finetuning_config["prior"]["context_length"]["start"] is not None
+    prior = finetuning_config["prior"].get("enabled", False)
     if prior:
-        context_lengths = list(range(finetuning_config["prior"]["context_length"]["start"], finetuning_config["prior"]["context_length"]["end"]+1, finetuning_config["prior"]["context_length"]["step"]))
+        context_lengths = parse_prior_context_lengths(finetuning_config["prior"])
         frequencies = finetuning_config["prior"]["frequencies"]
     else:
         context_lengths = None

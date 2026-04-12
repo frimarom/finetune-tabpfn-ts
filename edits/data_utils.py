@@ -173,15 +173,26 @@ class ArtificalTimeSeriesDataset(Dataset):
         frequencies: list[int],
         max_steps: int,
         batch_size: int,
+        pool_size: int = 128,
+        block_size: int | None = None,
     ):
         self.context_lengths = list(context_lengths)
         self.frequencies = list(frequencies)
-        self.current_context_length = self.context_lengths[0]
-        self.current_frequency = self.frequencies[0]
         self.max_steps = max_steps
         self.batch_size = batch_size
-        self.ts_left_for_current_attributes = batch_size
+        self.pool_size = max(pool_size, batch_size)
+        self.block_size = block_size if block_size is not None else batch_size
+
         self._rng = np.random.RandomState(RANDOM_SEED)
+
+        self.current_context_length = None
+        self.current_frequency = None
+
+        self._sample_pool: list[dict[str, torch.Tensor]] = []
+        self._remaining_in_block = 0
+
+        self._sample_attributes()
+        self._refill_pool()
 
     def __len__(self):
         return self.max_steps
@@ -206,13 +217,13 @@ class ArtificalTimeSeriesDataset(Dataset):
             )
 
         self.current_context_length = int(self._rng.choice(valid_contexts))
-    def create_data(self):
+        self._remaining_in_block = self.block_size
+
+    def _create_single_sample(self) -> dict[str, torch.Tensor]:
         if self.current_frequency is None:
             raise ValueError(f"current_frequency is None. frequencies={self.frequencies}")
         if self.current_context_length is None:
             raise ValueError(f"current_context_length is None. context_lengths={self.context_lengths}")
-
-        print("frequency:", self.current_frequency, "context_length:", self.current_context_length)
 
         cfg, sample = generate(
             self.current_context_length,
@@ -232,32 +243,52 @@ class ArtificalTimeSeriesDataset(Dataset):
         transformed_data = transform_data(train_part_ts)
         X, y = to_x_y("prior", transformed_data)
 
-        X_np = X.values.astype(float)
-        y_np = y.values.astype(float).reshape(-1, 1)
+        X_np = X.values.astype(np.float32, copy=False)
+        y_np = y.values.astype(np.float32, copy=False).reshape(-1, 1)
 
-        border = len(X) - PRED_LENGTH_MAP[FREQUENCY_MAP[self.current_frequency]]
+        pred_len = PRED_LENGTH_MAP[FREQUENCY_MAP[self.current_frequency]]
+        border = len(X_np) - pred_len
 
-        sample_X_train = torch.tensor(X_np[:border]).float()
-        sample_y_train = torch.tensor(y_np[:border]).float()
-        sample_X_test = torch.tensor(X_np[border:]).float()
-        sample_y_test = torch.tensor(y_np[border:]).float()
+        if border <= 0:
+            raise ValueError(
+                f"Generated series too short: len(X)={len(X_np)}, pred_len={pred_len}, "
+                f"context_length={self.current_context_length}, freq={self.current_frequency}"
+            )
 
-        return sample_X_train, sample_X_test, sample_y_train, sample_y_test
+        sample_X_train = torch.from_numpy(X_np[:border]).float()
+        sample_y_train = torch.from_numpy(y_np[:border]).float()
+        sample_X_test = torch.from_numpy(X_np[border:]).float()
+        sample_y_test = torch.from_numpy(y_np[border:]).float()
+
+        return {
+            "X_train": sample_X_train,
+            "X_test": sample_X_test,
+            "y_train": sample_y_train,
+            "y_test": sample_y_test,
+        }
+
+    def _refill_pool(self):
+        while len(self._sample_pool) < self.pool_size:
+            if self._remaining_in_block <= 0:
+                self._sample_attributes()
+
+            try:
+                sample = self._create_single_sample()
+                self._sample_pool.append(sample)
+                self._remaining_in_block -= 1
+            except Exception:
+                self._sample_attributes()
 
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
-        if self.ts_left_for_current_attributes <= 0:
-            self._sample_attributes()
-            self.ts_left_for_current_attributes = self.batch_size
+        if len(self._sample_pool) == 0:
+            self._refill_pool()
 
-        s_X_train, s_X_test, s_y_train, s_y_test = self.create_data()
-        self.ts_left_for_current_attributes -= 1
+        sample = self._sample_pool.pop()
 
-        return dict(
-            X_train=s_X_train,
-            X_test=s_X_test,
-            y_train=s_y_train,
-            y_test=s_y_test,
-        )
+        if len(self._sample_pool) < max(self.batch_size, self.pool_size // 4):
+            self._refill_pool()
+
+        return sample
 
 
 def get_data_loader(
@@ -316,6 +347,8 @@ def get_data_loader(
             frequencies=frequencies,
             max_steps=max_steps * batch_size,
             batch_size=batch_size,
+            pool_size=max(128, batch_size * 8),
+            block_size=batch_size,
         )
 
     return DataLoader(
