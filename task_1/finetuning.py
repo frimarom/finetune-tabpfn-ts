@@ -10,6 +10,7 @@ import torch.cuda
 import os
 from gift_eval.data import Dataset
 import yaml
+from toolz import frequencies
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +104,14 @@ if __name__ == "__main__":
     if args.path_to_save_all is not None and not os.path.exists(args.path_to_save_all):
         os.makedirs(args.path_to_save_all)
 
+    prior = finetuning_config["prior"]["context_length"]["start"] is not None
+    if prior:
+        context_lengths = list(range(finetuning_config["prior"]["context_length"]["start"], finetuning_config["prior"]["context_length"]["end"]+1, finetuning_config["prior"]["context_length"]["step"]))
+        frequencies = finetuning_config["prior"]["frequencies"]
+    else:
+        context_lengths = None
+        frequencies = None
+
     fine_tune_tabpfn(
         path_to_base_model="./tabpfn-v2-regressor-2noar4o2.ckpt",
         save_path_to_fine_tuned_model=f"./{args.path_to_save_all}/{finetuning_config['finetuning']['checkpoint_to_save']}.ckpt",
@@ -119,9 +128,9 @@ if __name__ == "__main__":
                            },
         validation_metric="mean_absolute_error",
         dataset_attributes = dataset_attributes_list,
-        prior=finetuning_config["prior"]["context_length"]["start"] is not None,
-        context_lengths = list(range(finetuning_config["prior"]["context_length"]["start"], finetuning_config["prior"]["context_length"]["end"]+1, finetuning_config["prior"]["context_length"]["step"])),
-        frequencies = finetuning_config["prior"]["frequencies"],
+        prior=prior,
+        context_lengths = context_lengths,
+        frequencies = frequencies,
         X_train=train_X_list,
         y_train=train_y_list,
         categorical_features_index=None,
