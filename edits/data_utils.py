@@ -90,7 +90,6 @@ class TimeSeriesDataset(Dataset):
         self.dataset_attributes = dataset_attributes
         self._rng = np.random.RandomState(RANDOM_SEED)
         self.time_series_window_count = [np.zeros(X_t.shape[2]) for X_t in X_train]
-        self.current_ds = self._sample_dataset_id()
         self.ts_amount_for_ds = ts_amount_for_ds
         self.ts_left_for_ds = ts_amount_for_ds
 
@@ -103,6 +102,7 @@ class TimeSeriesDataset(Dataset):
         self.dataset_sampling_probs = (
                 self.dataset_sampling_weights / self.dataset_sampling_weights.sum()
         )
+        self.current_ds = self._sample_dataset_id()
 
     def __len__(self):
         return self.max_steps # amount of batches. Each batch contains batch_size amount of splits returned by get_item.
