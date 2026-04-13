@@ -173,26 +173,17 @@ class ArtificalTimeSeriesDataset(Dataset):
         frequencies: list[int],
         max_steps: int,
         batch_size: int,
-        pool_size: int = 128,
-        block_size: int | None = None,
     ):
         self.context_lengths = list(context_lengths)
         self.frequencies = list(frequencies)
         self.max_steps = max_steps
         self.batch_size = batch_size
-        self.pool_size = max(pool_size, batch_size)
-        self.block_size = block_size if block_size is not None else batch_size
 
         self._rng = np.random.RandomState(RANDOM_SEED)
 
         self.current_context_length = None
         self.current_frequency = None
-
-        self._sample_pool: list[dict[str, torch.Tensor]] = []
-        self._remaining_in_block = 0
-
-        self._sample_attributes()
-        self._refill_pool()
+        self.ts_left_for_current_attributes = 0
 
     def __len__(self):
         return self.max_steps
@@ -217,7 +208,6 @@ class ArtificalTimeSeriesDataset(Dataset):
             )
 
         self.current_context_length = int(self._rng.choice(valid_contexts))
-        self._remaining_in_block = self.block_size
 
     def _create_single_sample(self) -> dict[str, torch.Tensor]:
         if self.current_frequency is None:
@@ -255,39 +245,20 @@ class ArtificalTimeSeriesDataset(Dataset):
                 f"context_length={self.current_context_length}, freq={self.current_frequency}"
             )
 
-        sample_X_train = torch.from_numpy(X_np[:border]).float()
-        sample_y_train = torch.from_numpy(y_np[:border]).float()
-        sample_X_test = torch.from_numpy(X_np[border:]).float()
-        sample_y_test = torch.from_numpy(y_np[border:]).float()
-
         return {
-            "X_train": sample_X_train,
-            "X_test": sample_X_test,
-            "y_train": sample_y_train,
-            "y_test": sample_y_test,
+            "X_train": torch.from_numpy(X_np[:border]).float(),
+            "X_test": torch.from_numpy(X_np[border:]).float(),
+            "y_train": torch.from_numpy(y_np[:border]).float(),
+            "y_test": torch.from_numpy(y_np[border:]).float(),
         }
 
-    def _refill_pool(self):
-        while len(self._sample_pool) < self.pool_size:
-            if self._remaining_in_block <= 0:
-                self._sample_attributes()
-
-            try:
-                sample = self._create_single_sample()
-                self._sample_pool.append(sample)
-                self._remaining_in_block -= 1
-            except Exception:
-                self._sample_attributes()
-
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
-        if len(self._sample_pool) == 0:
-            self._refill_pool()
+        if self.ts_left_for_current_attributes <= 0:
+            self._sample_attributes()
+            self.ts_left_for_current_attributes = self.batch_size
 
-        sample = self._sample_pool.pop()
-
-        if len(self._sample_pool) < max(self.batch_size, self.pool_size // 4):
-            self._refill_pool()
-
+        sample = self._create_single_sample()
+        self.ts_left_for_current_attributes -= 1
         return sample
 
 
@@ -347,8 +318,6 @@ def get_data_loader(
             frequencies=frequencies,
             max_steps=max_steps * batch_size,
             batch_size=batch_size,
-            pool_size=max(128, batch_size * 8),
-            block_size=batch_size,
         )
 
     return DataLoader(
