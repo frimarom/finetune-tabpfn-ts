@@ -21,7 +21,7 @@ fi
 JOB_IDS=()
 
 for pid in "${PIDS[@]}"; do
-    CHECKPOINT_DIR="finetuning_results/finetuning.${pid}"
+    CHECKPOINT_DIR="../../../../finetuning_results/finetuning.${pid}"
 
     if [ ! -d "$CHECKPOINT_DIR" ]; then
         echo "Skipping pid=$pid: directory not found ($CHECKPOINT_DIR)"
