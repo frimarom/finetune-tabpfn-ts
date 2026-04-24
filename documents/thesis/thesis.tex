@@ -6,6 +6,11 @@
 % Für Grafiken per latex-code bspw. TikZ und pgfplots:
 \usepackage{tikz}
 \usepackage{pgfplots}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{acro}
+\usepackage{subcaption}
 % Pseudocode bspw. eines der folgenden Pakete, nach Wahl
 %\usepackage[plain,chapter]{algorithm}
 %\usepackage{algorithmic}
@@ -24,18 +29,20 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Literaturmanagement
 \usepackage[authoryear]{natbib}
+\usepackage{wasysym}
+\usepackage{hyperref}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% METADATEN
 \subject{Bachelor Thesis}
-\title{Finetuning and Continued Pretraining on TabPFN with time series data}
+\title{Finetuning and Continued Pretraining on TabPFN with Time Series Data}
 \author{Friedrich Maria Romberg}
 \date{\today} % Abgabedatum eintragen
 \newcommand{\matrikelnummer}{253034}
 \newcommand{\erstgutachterIn}{Prof.{} Dr.{} Katharina Eggensperger}
 \newcommand{\zweitgutachterIn}{JProf.{} Dr.{} Matthias Feurer}
 \newcommand{\arbeitsgruppe}{
-Technische Universität Dortmund \\
-Fakultät für Informatik\\
-Lamarr Institut \\
+Technical University Dortmund \\
+Department of Computer Science\\
+Lamarr Institute \\
 \href{https://lamarr.cs.tu-dortmund.de/}{https://lamarr.cs.tu-dortmund.de/}% URL, aber als Text
 }
 %\newcommand{\kooperation}{ % OPTIONAL, einfach weglassen
@@ -48,6 +55,8 @@ Lamarr Institut \\
 \maketitle
 %%%% Inhaltsverzeichnis
 \tableofcontents
+
+\input{acronyms.tex}
 
 \mainmatter
 
@@ -62,7 +71,7 @@ Lamarr Institut \\
 
 \input{conclusion.tex}
 
-\input{additional_information.tex}
+\input{appendix.tex}
 
 \backmatter
 % Literaturverzeichnis
@@ -82,22 +91,6 @@ Lamarr Institut \\
 %%%%% Optionaler Anhang
 \appendix
 %\input{anhang.tex}
-
-\chapter*{Verwendete Hilfsmittel}
-
-Folgende Hilfsmittel wurden beim Erstellen der Arbeit eingesetzt:\todo{ggf. entfernen}
-
-\begin{itemize}
-\item Texteditor, Rechtschreibprüfung, Grammatikprüfung im üblichen Umfang müssen nicht erwähnt werden.
-\item Entwicklungsumgebung, Versionskontrollsystem etc.{} müssen im Normalfall ebenfalls nicht erwähnt werden.
-\item Programmiersprachen, -Versionen, etc.{} sofern nicht vorne bereits erwähnt können Sie hier natürlich aufzählen, aber es ist viel eleganter wenn Sie den verwendeten Quellcode mit abgeben, inkl.{} README um ihre Ergebnisse zu reproduzieren.
-\item ChatGPT möglichst nur nach Absprache einsetzen, den Umfang der Verwendung hier dokumentieren (siehe Eidesstattliche Versicherung!).
-\item Im Zweifelsfalle die Betreuer*innen fragen!
-\item Wenn die Liste leer ist, können Sie sie natürlich auch weglassen.
-\end{itemize}
-%bspw. \include{anhang.tex}
-
-% Eidesstattliche Versicherung
 \cleardoublepage
 \IfFileExists{Eidesstattliche_Versicherung.pdf}{\bgroup\pagestyle{empty}\includepdf{Eidesstattliche_Versicherung.pdf}\egroup}{
 \chapter*{Eidesstattliche Versicherung}

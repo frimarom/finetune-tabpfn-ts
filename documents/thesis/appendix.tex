@@ -1,1 +1,102 @@
 \chapter{Appendix}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pictures/splits_us_births_M_idx0.png}
+    \caption{The three splits GIFT Eval provides to train and validate on a dataset while shadowing the test data for later benchmark evaluation.}
+    \label{fig:gift_eval_split_us_births_m}
+\end{figure}
+- Tabelle mit allen Forecast Horizons und predictions lengths
+
+\begin{table}[ht]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Dataset & Context & Series & C1 & C2 & C3 & C4 & C5 & Mean $\Delta$ (\%) & Min & Max & Improved \\
+\midrule
+LOOP\_SEATTLE/D & 365 & 323 & -2.34 & -2.35 & -2.39 & -0.02 & -2.22 & -1.87 & -2.39 & -0.02 & True \\
+M\_DENSE/D & 730 & 30 & 12.91 & 20.64 & 15.81 & 32.22 & 16.82 & 19.68 & 12.91 & 32.22 & False \\
+M\_DENSE/H & 17520 & 30 & -1.80 & 1.56 & -2.07 & -3.05 & -6.37 & -2.35 & -6.37 & 1.56 & True \\
+SZ\_TAXI/15T & 2976 & 156 & -1.81 & -1.83 & -1.78 & -1.85 & -1.75 & -1.80 & -1.85 & -1.75 & True \\
+SZ\_TAXI/H & 744 & 156 & -2.20 & -2.26 & -2.26 & -1.68 & -1.26 & -1.93 & -2.26 & -1.26 & True \\
+bitbrains\_rnd/H & 720 & 500 & -1.26 & -2.00 & -0.10 & -2.64 & -4.84 & -2.17 & -4.84 & -0.10 & True \\
+bizitobs\_application & 8834 & 1 & 30.56 & 41.21 & 25.14 & 23.93 & 38.38 & 31.84 & 23.93 & 41.21 & False \\
+bizitobs\_service & 8835 & 21 & 11.35 & -0.95 & 2.42 & 14.22 & 0.39 & 5.48 & -0.95 & 14.22 & False \\
+covid\_deaths & 212 & 266 & -12.04 & -11.24 & -9.59 & -5.16 & 8.93 & -5.82 & -12.04 & 8.93 & True \\
+electricity/D & 1461 & 370 & -1.73 & 4.16 & -0.78 & -3.01 & -3.19 & -0.91 & -3.19 & 4.16 & True \\
+electricity/W & 208 & 370 & 0.67 & 6.46 & 24.55 & 12.74 & -0.32 & 8.82 & -0.32 & 24.55 & False \\
+ett1/15T & 69680 & 1 & 9.59 & 0.59 & 0.30 & 0.24 & 0.33 & 2.21 & 0.24 & 9.59 & False \\
+ett1/D & 725 & 1 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & False \\
+ett1/H & 17420 & 1 & -3.19 & -2.37 & -4.32 & -2.68 & 2.21 & -2.07 & -4.32 & 2.21 & True \\
+ett1/W & 103 & 1 & 1.83 & -5.12 & 1.39 & -9.28 & 5.12 & -1.21 & -9.28 & 5.12 & True \\
+ett2/15T & 69680 & 1 & -6.24 & -2.65 & -4.48 & -0.10 & 6.09 & -1.48 & -6.24 & 6.09 & True \\
+ett2/D & 725 & 1 & -5.99 & -21.12 & -13.92 & -34.08 & -12.36 & -17.49 & -34.08 & -5.99 & True \\
+ett2/H & 17420 & 1 & -6.68 & -2.50 & -9.41 & -9.10 & -6.23 & -6.78 & -9.41 & -2.50 & True \\
+ett2/W & 103 & 1 & 46.42 & 134.09 & 22.27 & 74.30 & 35.36 & 62.49 & 22.27 & 134.09 & False \\
+hierarchical\_sales/D & 1825 & 118 & -0.60 & -0.60 & -0.60 & -2.39 & -2.24 & -1.29 & -2.39 & -0.60 & True \\
+hierarchical\_sales/W & 260 & 118 & 1.07 & 4.49 & 4.44 & 4.39 & 1.68 & 3.22 & 1.07 & 4.49 & False \\
+hospital & 84 & 767 & 2.71 & -0.48 & 1.98 & 0.89 & 0.66 & 1.15 & -0.48 & 2.71 & False \\
+jena\_weather/10T & 52704 & 1 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & False \\
+jena\_weather/D & 366 & 1 & 21.54 & 4.78 & 4.63 & 3.76 & -0.17 & 6.91 & -0.17 & 21.54 & False \\
+jena\_weather/H & 8784 & 1 & 5.22 & 3.20 & 1.30 & -0.54 & -1.45 & 1.54 & -1.45 & 5.22 & False \\
+saugeenday/D & 23741 & 1 & -3.81 & -3.79 & -3.35 & -1.03 & -2.87 & -2.97 & -3.81 & -1.03 & True \\
+saugeenday/M & 780 & 1 & 4.60 & 8.45 & 6.76 & 11.79 & 7.85 & 7.89 & 4.60 & 11.79 & False \\
+saugeenday/W & 3391 & 1 & 7.98 & -2.58 & -1.07 & 11.83 & 9.89 & 5.21 & -2.58 & 11.83 & False \\
+solar/D & 365 & 137 & 10.13 & 9.08 & 25.76 & 13.26 & 9.75 & 13.60 & 9.08 & 25.76 & False \\
+solar/W & 52 & 137 & 99.83 & 108.15 & 109.70 & 157.05 & 178.98 & 130.74 & 99.83 & 178.98 & False \\
+us\_births/D & 7305 & 1 & 54.45 & 17.03 & 17.05 & 17.03 & 10.24 & 23.16 & 10.24 & 54.45 & False \\
+us\_births/M & 240 & 1 & 8.58 & 6.39 & 6.58 & 7.08 & 6.44 & 7.02 & 6.39 & 8.58 & False \\
+us\_births/W & 1043 & 1 & 14.04 & -0.90 & 17.79 & 2.29 & -4.66 & 5.71 & -4.66 & 17.79 & False \\
+\bottomrule
+\end{tabular}
+}
+\caption{Vollständige Ergebnisse des Fine-Tunings über alle Datensätze und Checkpoints. Negative Werte entsprechen einer Verbesserung der Modellperformance.}
+\label{tab:eval_score_single_finetune}
+\end{table}
+
+
+
+\begin{table}[htbp]
+    \centering
+    \caption{Mean Delta (\%) per Dataset}
+    \label{tab:main_results}
+    \begin{tabular}{lrrrrr}
+        \toprule
+        Dataset & Single & Multi Short & Multi Medium & Multi Big & Prior \\
+        \midrule
+        bitbrains\_rnd/H & -2.17 & -- & -1.70 & -- & \textbf{-2.89} \\
+        bizitobs\_application & \textbf{31.84} & -- & -- & -- & 69.52 \\
+        bizitobs\_service & \textbf{5.48} & -- & -- & -- & 35.28 \\
+        covid\_deaths & \textbf{-5.82} & 26.75 & 15.58 & 48.80 & 14.92 \\
+        electricity/D & \textbf{-0.91} & -- & -- & -0.68 & 4.33 \\
+        electricity/W & 8.82 & 4.16 & -- & -- & \textbf{3.60} \\
+        ett1/15T & 2.21 & -- & -- & \textbf{-5.80} & 1.03 \\
+        ett1/D & \textbf{0.00} & -- & 2.21 & -- & 1.34 \\
+        ett1/H & -2.07 & -- & -- & \textbf{-2.58} & 5.37 \\
+        ett1/W & -1.21 & \textbf{-9.47} & -- & -- & 5.64 \\
+        ett2/15T & \textbf{-1.48} & -- & -- & -0.30 & 6.27 \\
+        ett2/D & -17.49 & -- & \textbf{-31.26} & -- & -19.23 \\
+        ett2/H & \textbf{-6.78} & -- & -- & -0.90 & 3.89 \\
+        ett2/W & \textbf{62.49} & 73.16 & -- & -- & 109.70 \\
+        hierarchical\_sales/D & \textbf{-1.29} & -- & -- & -1.01 & -0.00 \\
+        hierarchical\_sales/W & 3.22 & -- & \textbf{-0.30} & -- & 1.93 \\
+        hospital/M & \textbf{1.15} & 2.68 & -- & -- & 16.43 \\
+        jena\_weather/10T & \textbf{0.00} & -- & -- & -- & 21.76 \\
+        jena\_weather/D & 6.91 & -- & 0.71 & -- & \textbf{-5.06} \\
+        jena\_weather/H & \textbf{1.54} & -- & -- & -- & 13.99 \\
+        loop\_seattle/D & -1.87 & 4.28 & -1.54 & \textbf{-2.27} & -0.53 \\
+        m\_dense/D & 19.68 & -- & \textbf{2.22} & -- & 14.91 \\
+        m\_dense/H & \textbf{-2.35} & 15.98 & -- & 0.28 & 5.71 \\
+        saugeenday/D & \textbf{-2.97} & -- & -- & -1.00 & -2.23 \\
+        saugeenday/M & \textbf{7.89} & -- & -0.45 & -- & \textbf{-0.81} \\
+        saugeenday/W & \textbf{5.21} & -- & -- & -- & \textbf{-1.23} \\
+        solar/D & 13.60 & -- & \textbf{0.07} & -- & 16.30 \\
+        solar/W & 130.74 & \textbf{9.98} & -- & -- & 34.04 \\
+        sz\_taxi/15T & \textbf{-1.80} & -- & -0.22 & 0.05 & 1.08 \\
+        sz\_taxi/H & \textbf{-1.93} & -- & -1.04 & -- & 1.59 \\
+        us\_births/D & \textbf{23.16} & -- & -- & 23.53 & 25.17 \\
+        us\_births/M & 7.02 & -- & \textbf{-0.44} & -- & 40.20 \\
+        us\_births/W & 5.71 & -- & \textbf{1.49} & -- & 19.10 \\
+        \bottomrule
+    \end{tabular}
+\end{table}

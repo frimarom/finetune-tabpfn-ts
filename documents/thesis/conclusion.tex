@@ -1,3 +1,191 @@
 \chapter{Conclusion}
+\label{chap:conclusion}
+This thesis focused on evaluating three methods to potentially enhance TabPFN’s performance on time series data.
+While \citep{hoo2025tables} already demonstrated promising results on time series forecasting, we aimed to further improve this performance.
+We first tried to finetune TabPFN on one dataset from the GIFT-Eval benchmark \citet{aksu2024giftevalbenchmarkgeneraltime} individually, and after that, looked if it improved performance or not.
+\newline
+Our second approach started by splitting the datasets into three categories by their number of observations per time series: Small, Medium, and Big.
+Then, selecting a few to train TabPFN with and a few to evaluate the trained checkpoint on.
+\newline
+Our final method consists of a prior provided by \citep{dooley2023forecastpfn}.
+We continued pretraining TabPFN with artificial time series data to presumably improve its performance on such data.
+Based on these results, we will now finally compare these outcomes to determine which scenario and which methods are to be preferred.
 \section{Key Findings}
+\iffalse
+In this section, we summarize the key findings of our experiments on finetuning and continued pretraining of TabPFN for time series forecasting.
+While the results show that performance improvements are achievable, they also reveal important dependencies on data attributes, training strategies, and model configurations.
+
+% Finetuning funktioniert – aber nur unter Bedingungen
+As the results of finetuning on one dataset show, it does work.
+But it is highly dependent on the dataset structure, as well as the context length and the amount of time series.
+This
+\fi
+% Multi-Finetuning: Trade-off zwischen Generalisierung und Qualität
+% Continued Pretraining: funktioniert, aber nicht general
+% Validation Loss ist kein verlässlicher Indikator
+% Dataset-Struktur ist entscheidend
+% Data Scarcity: großer Vorteil von Multi & Prior
+
+% Single finetunen wenn man genau weiß welche Daten da sind und man viele Daten hat
+% Multi-Finetuning gut wenn man die grobe Struktur kennt und außerdem schon viele Trainingsdaten hat
+% prior gut für wenn man keine Real-Life-Trainingsdaten hat und generalisieren will
+In this section, we summarize the key findings of our experiments on finetuning and continued pretraining of TabPFN for time series forecasting.
+While the results show that performance improvements are achievable, they also reveal important dependencies on data attributes, training strategies, and model configurations.
+
+As the results of finetuning on a single dataset show, TabPFN can successfully be adapted to time series data.
+However, its effectiveness is highly dependent on the structure of the dataset, in particular, the number of time series, the available context length, and the overall amount of observations.
+Datasets with many time series and sufficient context length consistently benefit from finetuning, whereas datasets with only a few series or limited structure often show little to no improvement or even performance degradation.
+
+Across all experiments, the validation loss proved to be an unreliable indicator for evaluation performance.
+In many cases, checkpoints with lower validation loss did not correspond to better results in terms of MASE, indicating both a mismatch between training and evaluation metrics and a tendency to overfit the validation data.
+
+The structure of the dataset itself holds a crucial role.
+Time series with clear patterns, such as periodicity or consistent trends, are easier for TabPFN to learn, whereas noisy or intermittent datasets remain challenging for all methods.
+This highlights that not all datasets are equally suitable for finetuning and that the underlying data distribution strongly influences the outcome.
+
+When extending finetuning to several datasets, a trade-off between generalization and performance becomes clear.
+Finetuning on small-context datasets leads to a deterioration in performance, likely due to insufficient information per sample.
+In contrast, datasets with medium context lengths provide the best balance, letting the model to generalize while still capturing meaningful structures.
+Larger context datasets also yield improvements, but not as consistently as the medium category.
+
+Continued pretraining with artificially generated time series shows that improvements are possible, but not equally across datasets.
+The results are highly heterogeneous and strongly depend on the chosen prior and training configuration.
+In particular, shorter training durations and specific hyperparameter choices tend to perform better, suggesting that prolonged training can harm performance rather than improve it.
+
+Finally, an important observation is the benefit of multi-dataset finetuning and prior-based training under scenarios with limited data.
+While single-dataset finetuning performs best when sufficient and well-structured data is available, multi-dataset approaches and prior-based methods achieve better performance in data-scarce settings by enabling greater generalization.
+
+Our final question in the expose was "Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?"
+Overall, the experiments show that no single training strategy dominates in all scenarios.
+Instead, the choice between single finetuning, multi-dataset finetuning, and continued pretraining should be based on the availability, structure, and quality of the underlying data.
+
+
+
+% Hier noch Balkendiagramm für alle Datasets oder ein paar mit 3 Balken pro Datenset 1 für jede Methode
+% einmal mit Average von den 5 immer
+% und einmal mit Checkpoint vom besten Prior Training und bestem Checkpoint bei Multi
+
+% Tabellen mit Zeilen Datenset und Spalten MASE von Single Multi und Prior
+
+
+% prior mit Trade-off ganz gut
+% Single finetuning auch für selektive am besten aber halt auch nur für das Datenset
+
+% Multi auch nicht schlecht
+% prior schneller weil keine hp Search gemacht werden muss
+
+% tabpfn tut sich schwer auf Daten die keine klare Periodicitäten haben
+
+% Vorteil den halt continued Pretraining und Multi-Finetuning mit sich mitbringt ist dass auf kleinen Datensets auch gut performed werden kann
+
+\section{Limitations}
+This work is subject to several limitations that should be considered when interpreting the results.
+
+A major limitation is related to the datasets used in this thesis.
+The selected datasets do not cover all possible types of time series and therefore only provide a limited perspective.
+As a result, the findings mainly show whether finetuning works for these selected datasets, but do not fully generalize to all possible real-life scenarios.
+In addition, some datasets may inherently be less suitable for finetuning, for example, due to noisy, irregular, or difficult-to-model distributions.
+This makes it harder for TabPFN to learn relevant patterns and limits the achievable improvements.
+
+Another limitation concerns reproducibility.
+The original evaluation scores from prior work could not be fully reproduced, which makes a direct comparison to reported results difficult.
+Instead, comparisons in this thesis are based on internally consistent baseline results, which still allow for relative evaluation but limit comparability to external benchmarks.
+
+Furthermore, the experiments were conducted under computing limitations.
+Finetuning runs were limited to a maximum runtime of 2400 seconds, and continued pretraining was also restricted by a fixed time limit.
+This likely prevented some runs from fully converging and may have impacted the final performance.
+
+Finally, it should be noted that a newer version of TabPFN (TabPFN 2.5) \citep{grinsztajn2025tabpfn} was released after we already decided to use the \textit{tabpfn-v2-regressor-2noar4o2} checkpoint, as it was also done in \citet{hoo2025tables}.
+The experiments presented here are based on this checkpoint, and it is possible that some of the observed limitations or behaviors have already been improved in the newer model.
+
+In general, these limitations show that while the results present useful insights, they should be interpreted with caution and seen as an initial study rather than a definitive evaluation.
+
+
+
+% Dataset-Limitierungen
+% Datasets don't fit for every situation, so it's hard to generalize since finetuning could work better with a better dataset
+% Manche Datensets sind vielleicht einfach nicht gut zum Finetunen bzw. man kann tabpfn darauf nicht gut finetunen, weil die Verteilung einfach nicht gut zu approximieren ist
+% Datasets only show a limited perspective und zeigen keine Generalisierung sondern nur ob finetuning mit diesen funktioniert oder nicht
+
+% Reproduzierbarkeit
+% Originalevaluationwerte konnten nicht alle reproduziert werden
+% Deswegen ist eine direkte Vergleichbarkeit mit den Werten online nicht möglich nur mit den Werten die wir hier als Basewerte haben
+
+% tabpfn 2.5 wurde währenddessen released was die was alle Ergebnisse die wir hier haben nochmal verbessert
+
+% computing constraints von 2400 sek
+% und time limit von continued pretraining
+
+% Computing Constraints
+
+% Generalisierbarkeit
+\iffalse
+- Die Forecast Windows sind manchmal nicht ganz passend für die Periodicitäten. Siehe us\_births
+-
+-
+- Wir konnten nicht die original mase scores alle reproduzen
+- time limit of continued pretraining
+- prior vor allen Dingen gut bei data shortage
+- ansonsten sprechen für Spezifizierung und viel Daten viel für Single und sonst für Multi
+
+- Short ist gar nicht so gut
+\fi
+
 \section{Outlook}
+While this thesis provided insight into the way different methods of finetuning TabPFN with time-series data work, the results are limited by a maximum work time of 4 months.
+To further understand this subject, we would have expanded our evaluation methods.
+
+A first step would be to improve the evaluation procedure.
+Even though the validation and evaluation setups are already quite similar, the results showed that validation accuracy does not always reflect the actual evaluation performance well.
+Adjusting the validation metric or making the validation process more robust could help select better checkpoints.
+
+Another important aspect is the dataset selection for multi-dataset finetuning.
+In this work, we only tested a limited number of dataset combinations.
+Running more experiments with different dataset selections could help to better understand how individual datasets influence the overall performance and which combinations work best.
+
+Hyperparameters were also not explored in detail.
+A more systematic search could help to find configurations that work reliably for each method and lower the need for trying many different runs.
+
+Combining the different approaches could also be interesting.
+For example, continued pretraining with a prior could be combined with multi-dataset finetuning to benefit from both generalization and adaptation to real data.
+
+Another point that was not covered in this thesis is the impact of newer model versions.
+During the work on this thesis, a new version of TabPFN (TabPFN 2.5) was released.
+Evaluating the methods with this updated model could lead to different or improved results.
+
+Finally, the prior used for continued pretraining could be improved.
+The current prior does not capture all characteristics of real-world time series, which likely limits its effectiveness.
+More realistic priors could help to make continued pretraining more useful.
+
+Overall, further work is needed to better understand when and how these methods work best and how they can be combined effectively.
+
+
+
+% Validation Metric bzw Evaluation Metric anpassen -> geht jetzt schlecht weil viel Zeit verloren
+% Obwohl Validation und Evaluation schon durch die Aufteilung von Gift Eval sehr close sind muss die irgendwie besser laufen
+
+% Dataset-Selektion für Multi anpassen
+% Das hat uns jetzt nur einen Einblick gegeben
+% durch mehrere verschiedene Läufe könnte man den Einfluss von einzelnen Datensets in der Auswahl auf die Performance herausfinden
+
+% Hyperparameter wurden noch gar nicht angeschaut
+% Hier könnte man eine geeignete Hyperparameter-Kombination raussuchen die für eine Fine-Tuning-Methode am besten klappt um so Runs zu sparen
+
+% Kombination von Methoden
+% Prior + Multi
+
+%Wie verhält sich das neue TabPFN-Modell (TabPFN 2.5) gegenüber finetuning mit den Methoden?
+% tabpfn 2.5 ist ja erst rausgekommen als die Thesis schon geschrieben wurde
+
+% einen besseren Prior entwickeln
+
+
+
+% Dataset-Selektion anschauen
+% Mehr runs generell für alles mache insbesondere beim Multi um eine bessere Datenbasis zu haben
+
+% Hyperparameter besser anschauen
+
+% Kombination der Methoden
+% Einfluss neuer Modelle
+% Bessere Priors entwickeln
