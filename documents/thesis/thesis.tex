@@ -10,7 +10,13 @@
 \usepackage{graphicx}
 \usepackage{amssymb}
 \usepackage{acro}
+\usepackage{multirow}
 \usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{pdflscape} % falls querformat
+\usepackage{pdfpages}
+\usepackage[table]{xcolor}
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
 % Pseudocode bspw. eines der folgenden Pakete, nach Wahl
 %\usepackage[plain,chapter]{algorithm}
 %\usepackage{algorithmic}
@@ -33,7 +39,7 @@
 \usepackage{hyperref}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% METADATEN
 \subject{Bachelor Thesis}
-\title{Finetuning and Continued Pretraining on TabPFN with Time Series Data}
+\title{Continued Pretraining on TabPFN with Time Series Data}
 \author{Friedrich Maria Romberg}
 \date{\today} % Abgabedatum eintragen
 \newcommand{\matrikelnummer}{253034}
@@ -92,14 +98,6 @@ Lamarr Institute \\
 \appendix
 %\input{anhang.tex}
 \cleardoublepage
-\IfFileExists{Eidesstattliche_Versicherung.pdf}{\bgroup\pagestyle{empty}\includepdf{Eidesstattliche_Versicherung.pdf}\egroup}{
-\chapter*{Eidesstattliche Versicherung}
-Laden Sie die aktuelle Erklärung vom Dezernat 4.3
-herunter, und unterzeichnen Sie diese.
-
-\url{https://www.tu-dortmund.de/eidesstattliche-versicherung}
-
-Sie können die Datei dann hier per \texttt{\textbackslash{}includepdf\{Eidesstattliche\_Versicherung.pdf\}} einbinden (siehe source).
-}
+\includepdf[angle=180]{eidesstattliche_versicherung.pdf}
 
 \end{document}

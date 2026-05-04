@@ -1,102 +1,520 @@
 \chapter{Appendix}
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{pictures/splits_us_births_M_idx0.png}
     \caption{The three splits GIFT Eval provides to train and validate on a dataset while shadowing the test data for later benchmark evaluation.}
     \label{fig:gift_eval_split_us_births_m}
 \end{figure}
-- Tabelle mit allen Forecast Horizons und predictions lengths
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lrrrrrr}
+        \toprule
+        Dataset & context & Single & Multi Short & Multi Medium & Multi Large & Prior \\
+        \midrule
+        bitbrains\_rnd/H & medium & -2.17 & -- & -1.70 & -- & \cellcolor{yellow}\textbf{-2.89} \\
+        bizitobs\_application & large & \cellcolor{yellow} 31.84 & -- & -- & -- & 69.52 \\
+        bizitobs\_service & large & \cellcolor{yellow} 5.48 & -- & -- & -- & 35.28 \\
+        covid\_deaths & short & \cellcolor{yellow}\textbf{-5.82} & 26.75 & 15.58 & 48.80 & 14.92 \\
+        electricity/D & large & \cellcolor{yellow}\textbf{-0.91} & -- & -- & -0.68 & 4.33 \\
+        electricity/W & short & 8.82 & 4.16 & -- & -- &\cellcolor{yellow} 3.60 \\
+        ett1/15T & large & 2.21 & -- & -- & \cellcolor{yellow}\textbf{-5.80} & 1.03 \\
+        ett1/D & medium & \cellcolor{yellow}0.00 & -- & 2.21 & -- & 1.34 \\
+        ett1/H & large & -2.07 & -- & -- & \cellcolor{yellow}\textbf{-2.58} & 5.37 \\
+        ett1/W & short & -1.21 & \cellcolor{yellow}\textbf{-9.47} & -- & -- & 5.64 \\
+        ett2/15T & large & \cellcolor{yellow}\textbf{-1.48} & -- & -- & -0.30 & 6.27 \\
+        ett2/D & medium & -17.49 & -- & \cellcolor{yellow}\textbf{-31.26} & -- & -19.23 \\
+        ett2/H & large & \cellcolor{yellow}\textbf{-6.78} & -- & -- & -0.90 & 3.89 \\
+        ett2/W & short & \cellcolor{yellow}62.49 & 73.16 & -- & -- & 109.70 \\
+        hierarchical\_sales/D & large & \cellcolor{yellow}\textbf{-1.29} & -- & -- & -1.01 & -0.00 \\
+        hierarchical\_sales/W & medium & 3.22 & -- & \cellcolor{yellow}\textbf{-0.30} & -- & 1.93 \\
+        hospital/M & short & \cellcolor{yellow}1.15 & 2.68 & -- & -- & 16.43 \\
+        jena\_weather/10T & large & \cellcolor{yellow}0.00 & -- & -- & -- & 21.76 \\
+        jena\_weather/D & medium & 6.91 & -- & 0.71 & -- & \cellcolor{yellow}\textbf{-5.06} \\
+        jena\_weather/H & large & \cellcolor{yellow}1.54 & -- & -- & -- & 13.99 \\
+        loop\_seattle/D & medium & -1.87 & 4.28 & -1.54 & \cellcolor{yellow}\textbf{-2.27} & -0.53 \\
+        m\_dense/D & medium & 19.68 & -- & \cellcolor{yellow}2.22 & -- & 14.91 \\
+        m\_dense/H & large & \cellcolor{yellow}\textbf{-2.35} & 15.98 & -- & 0.28 & 5.71 \\
+        saugeenday/D & large & \cellcolor{yellow}\textbf{-2.97} & -- & -- & -1.00 & -2.23 \\
+        saugeenday/M & medium & 7.89 & -- & -0.45 & -- & \cellcolor{yellow}\textbf{-0.81} \\
+        saugeenday/W & large & 5.21 & -- & -- & -- & \cellcolor{yellow}\textbf{-1.23} \\
+        solar/D & medium & 13.60 & -- & \cellcolor{yellow}0.07 & -- & 16.30 \\
+        solar/W & short & 130.74 & \cellcolor{yellow}9.98 & -- & -- & 34.04 \\
+        sz\_taxi/15T & large & \cellcolor{yellow}\textbf{-1.80} & -- & -0.22 & 0.05 & 1.08 \\
+        sz\_taxi/H & medium & \cellcolor{yellow}\textbf{-1.93} & -- & -1.04 & -- & 1.59 \\
+        us\_births/D & large & \cellcolor{yellow}23.16 & -- & -- & 23.53 & 25.17 \\
+        us\_births/M & short & 7.02 & -- & \cellcolor{yellow}\textbf{-0.44} & -- & 40.20 \\
+        us\_births/W & large & 5.71 & -- & \cellcolor{yellow}\textbf{1.49} & -- & 19.10 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Mean Delta (\%) per Dataset for every method. Note that not all datasets have been evaluated due to computational limitations. The values correspond to the percentage difference of the trained checkpoint to the original checkpoint. If a checkpoint resulted in an improvement (negative value), it is shown in bold when it also corresponds to the smallest value. Every smallest evaluation value per row is also marked yellow regardless if it is negative. }
+    \label{tab:main_results_all_methods}
+\end{table}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l l r r r r r l}
+\hline
+dataset & context & ckpt1 & ckpt2 & ckpt3 & ckpt4 & ckpt5 & mean \\
+\hline
+loop\_seattle/D       & medium & -2.34 & -2.35 & \cellcolor{yellow}\textbf{-2.39} & -0.02 & -2.22 & -1.87 \\
+m\_dense/D            & medium & \cellcolor{yellow}12.91 & 20.64 & 15.81 & 32.22 & 16.82 & 19.68 \\
+m\_dense/H            & large  & -1.80 & 1.56 & -2.07 & -3.05 & \cellcolor{yellow}\textbf{-6.37} & -2.35 \\
+sz\_taxi/15T          & large  & -1.81 & -1.83 & -1.78 & \cellcolor{yellow}\textbf{-1.85} & -1.75 & -1.80 \\
+sz\_taxi/H            & medium & -2.20 & \cellcolor{yellow}\textbf{-2.26} & -2.26 & -1.68 & -1.26 & -1.93 \\
+bitbrains\_rnd/H      & medium & -1.26 & -2.00 & -0.10 & -2.64 & \cellcolor{yellow}\textbf{-4.84} & -2.17 \\
+bizitobs\_application & large  & 30.56 & 41.21 & 25.14 & \cellcolor{yellow}23.93 & 38.38 & 31.84 \\
+bizitobs\_service     & large  & 11.35 & \cellcolor{yellow}\textbf{-0.95} & 2.42 & 14.22 & 0.39 & 5.48 \\
+covid\_deaths         & short  & \cellcolor{yellow}\textbf{-12.04} & -11.24 & -9.59 & -5.16 & 8.93 & -5.82 \\
+electricity/D         & large  & -1.73 & 4.16 & -0.78 & -3.01 & \cellcolor{yellow}\textbf{-3.19} & -0.91 \\
+electricity/W         & short  & 0.67 & 6.46 & 24.55 & 12.74 & \cellcolor{yellow}\textbf{-0.32} & 8.82 \\
+ett1/15T              & large  & 9.59 & 0.59 & 0.30 & \cellcolor{yellow}0.24 & 0.33 & 2.21 \\
+ett1/D                & medium & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+ett1/H                & large  & -3.19 & -2.37 & \cellcolor{yellow}\textbf{-4.32} & -2.68 & 2.21 & -2.07 \\
+ett1/W                & short  & 1.83 & -5.12 & 1.39 & \cellcolor{yellow}\textbf{-9.28} & 5.12 & -1.21 \\
+ett2/15T              & large  & \cellcolor{yellow}\textbf{-6.24} & -2.65 & -4.48 & -0.10 & 6.09 & -1.48 \\
+ett2/D                & medium & -5.99 & -21.12 & -13.92 & \cellcolor{yellow}\textbf{-34.08} & -12.36 & -17.49 \\
+ett2/H                & large  & -6.68 & -2.50 & \cellcolor{yellow}\textbf{-9.41} & -9.10 & -6.23 & -6.78 \\
+ett2/W                & short  & 46.42 & 134.09 & \cellcolor{yellow}22.27 & 74.30 & 35.36 & 62.49 \\
+hierarchical\_sales/D & large  & -0.60 & -0.60 & -0.60 & \cellcolor{yellow}\textbf{-2.39} & -2.24 & -1.29 \\
+hierarchical\_sales/W & medium & \cellcolor{yellow}1.07 & 4.49 & 4.44 & 4.39 & 1.68 & 3.22 \\
+hospital              & short  & 2.71 & \cellcolor{yellow}\textbf{-0.48} & 1.98 & 0.89 & 0.66 & 1.15 \\
+jena\_weather/10T     & large  & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+jena\_weather/D       & medium & 21.54 & 4.78 & 4.63 & 3.76 & \cellcolor{yellow}\textbf{-0.17} & 6.91 \\
+jena\_weather/H       & large  & 5.22 & 3.20 & 1.30 & -0.54 & \cellcolor{yellow}\textbf{-1.45} & 1.54 \\
+saugeenday/D          & large  & \cellcolor{yellow}\textbf{-3.81} & -3.79 & -3.35 & -1.03 & -2.87 & -2.97 \\
+saugeenday/M          & medium & \cellcolor{yellow}4.60 & 8.45 & 6.76 & 11.79 & 7.85 & 7.89 \\
+saugeenday/W          & large  & 7.98 & \cellcolor{yellow}\textbf{-2.58} & -1.07 & 11.83 & 9.89 & 5.21 \\
+solar/D               & medium & 10.13 & \cellcolor{yellow}9.08 & 25.76 & 13.26 & 9.75 & 13.60 \\
+solar/W               & short  & \cellcolor{yellow}99.83 & 108.15 & 109.70 & 157.05 & 178.98 & 130.74 \\
+us\_births/D          & large  & 54.45 & 17.03 & 17.05 & 17.03 & \cellcolor{yellow}10.24 & 23.16 \\
+us\_births/M          & short  & 8.58 & \cellcolor{yellow}6.39 & 6.58 & 7.08 & 6.44 & 7.02 \\
+us\_births/W          & large  & 14.04 & -0.90 & 17.79 & 2.29 & \cellcolor{yellow}\textbf{-4.66} & 5.71 \\
+\hline
+\end{tabular}
+}
+\caption{Single-dataset finetuning evaluation results. The values correspond to the percentage difference of the trained checkpoint to the original checkpoint. If a checkpoint resulted in an improvement (negative value), it is shown in bold when it also corresponds to the smallest value. Every smallest evaluation value per row is also marked yellow regardless if it is negative. }
+\label{tab:single_finetune_wide}
+\end{table}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l l r r r r r r}
+\hline
+dataset & context & ckpt1 & ckpt2 & ckpt3 & ckpt4 & ckpt5 & mean \\
+\hline
+ett2/D & medium & \cellcolor{yellow}\textbf{-28.62} & -25.36 & -8.40 & -8.00 & -25.77 & -19.23 \\
+jena\_weather/D & medium & 1.17 & 1.61 & -8.62 & \cellcolor{yellow}\textbf{-10.91} & -8.56 & -5.06 \\
+bitbrains\_rnd/H & medium & 0.06 & -3.66 & -3.24 & \cellcolor{yellow}\textbf{-4.16} & -3.42 & -2.89 \\
+saugeen/D & large & 6.07 & -6.76 & \cellcolor{yellow}\textbf{-11.99} & -2.34 & 3.89 & -2.23 \\
+saugeen/W & large & \cellcolor{yellow}\textbf{-2.57} & -2.48 & -1.98 & -0.14 & 1.04 & -1.23 \\
+saugeen/M & medium & -3.23 & 2.47 & -3.42 & \cellcolor{yellow}\textbf{-3.49} & 3.64 & -0.81 \\
+loop\_seattle/D & medium & 0.63 & \cellcolor{yellow}\textbf{-1.91} & 0.57 & -0.61 & -1.32 & -0.53 \\
+hierarchical\_sales/D & large & 0.06 & -0.59 & 0.96 & 1.45 & \cellcolor{yellow}\textbf{-1.89} & -0.00 \\
+ett1/15T & large & \cellcolor{yellow}\textbf{-5.47} & -2.81 & 7.79 & 2.52 & 3.10 & 1.03 \\
+sz\_taxi/15T & large & 0.38 & \cellcolor{yellow}\textbf{-0.27} & 1.20 & 2.54 & 1.54 & 1.08 \\
+ett1/D & medium & \cellcolor{yellow}\textbf{-6.59} & -3.74 & 1.75 & 12.76 & 2.52 & 1.34 \\
+sz\_taxi/H & medium & 1.07 & \cellcolor{yellow}\textbf{-0.43} & 1.65 & 4.39 & 1.26 & 1.59 \\
+hierarchical\_sales/W & medium & 1.49 & \cellcolor{yellow}\textbf{-0.22} & 2.60 & 3.17 & 2.60 & 1.93 \\
+electricity/W & short & 3.87 & \cellcolor{yellow}0.17 & 5.80 & 4.42 & 3.72 & 3.60 \\
+ett2/H & large & \cellcolor{yellow}\textbf{-3.16} & -1.64 & 3.19 & 14.19 & 6.89 & 3.89 \\
+electricity/D & large & 5.20 & 3.33 & 6.51 & 4.40 & \cellcolor{yellow}2.24 & 4.33 \\
+ett1/H & large & 2.22 & \cellcolor{yellow}0.76 & 8.92 & 7.37 & 7.59 & 5.37 \\
+ett1/W & short & \cellcolor{yellow}\textbf{-0.70} & 2.66 & 14.77 & 3.00 & 8.44 & 5.64 \\
+m\_dense/H & large & 6.00 & \cellcolor{yellow}\textbf{-0.16} & 4.66 & 13.62 & 4.44 & 5.71 \\
+ett2/15T & large & \cellcolor{yellow}\textbf{-2.84} & 1.24 & 5.13 & 11.16 & 16.65 & 6.27 \\
+jena\_weather/H & large & 13.09 & \cellcolor{yellow}10.88 & 14.26 & 19.84 & 11.87 & 13.99 \\
+m\_dense/D & medium & \cellcolor{yellow}\textbf{-0.30} & 5.52 & 30.72 & 28.28 & 10.36 & 14.91 \\
+covid\_deaths/D & short & -2.22 & \cellcolor{yellow}\textbf{-3.88} & 15.13 & 52.65 & 12.91 & 14.92 \\
+solar/D & medium & \cellcolor{yellow}3.47 & 15.46 & 26.73 & 17.15 & 18.71 & 16.30 \\
+hospital/M & short & 24.67 & \cellcolor{yellow}9.63 & 17.93 & 13.54 & 16.37 & 16.43 \\
+us\_births/W & large & \cellcolor{yellow}\textbf{-2.84} & 8.50 & 20.97 & 45.79 & 23.08 & 19.10 \\
+jena\_weather/10T & large & 17.87 & \cellcolor{yellow}12.03 & 32.11 & 25.61 & 21.20 & 21.76 \\
+us\_births/D & large & \cellcolor{yellow}15.89 & 29.01 & 30.14 & 29.18 & 21.63 & 25.17 \\
+solar/W & short & 52.53 & 43.66 & 28.16 & \cellcolor{yellow}13.75 & 32.08 & 34.04 \\
+bizitobs\_service/10S & large & \cellcolor{yellow}13.23 & 21.16 & 45.24 & 74.04 & 22.73 & 35.28 \\
+us\_births/M & short & \cellcolor{yellow}\textbf{-4.53} & 23.64 & 57.47 & 98.88 & 25.54 & 40.20 \\
+bizitobs\_application/10S & large & \cellcolor{yellow}23.62 & 38.85 & 70.11 & 149.45 & 65.59 & 69.52 \\
+ett2/W & short & 116.79 & 102.43 & 138.85 & \cellcolor{yellow}82.85 & 107.60 & 109.70 \\
+\hline
+\end{tabular}
+}
+\caption{Results of the five checkpoints of continued pretraining. The values correspond to the percentage difference of the trained checkpoint to the original checkpoint. If a checkpoint resulted in an improvement (negative value), it is shown in bold when it also corresponds to the smallest value. Every smallest evaluation value per row is also marked yellow regardless if it is negative. }
+\label{tab:prior_results}
+\end{table}
+
+\begin{table}[p]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{0.9}
+
+\begin{adjustbox}{max width=\textwidth,max totalheight=\textheight}
+\begin{tabular}{cccccccccc}
+\hline
+LR & BS & $\lambda_{L2SP}$ & Best Val & Last Val & Steps & Best Step & Total Time (s) & Time/Step (s) & Dev Util(\%)\\
+\hline
+5e-4 &2&0      &0.2521&0.2948&450&249&160.9&0.357&16.3\\
+5e-4 &2&1e-4   &0.2574&0.2576&260&59 &101.1&0.389&16.2\\
+5e-4 &2&1.5e-3 &0.2601&0.2759&210&0  &88.0 &0.419&16.5\\
+5e-4 &4&0      &0.2300&0.2638&510&309&176.4&0.346&22.3\\
+5e-4 &4&1e-4   &0.2345&0.2799&250&49 &95.3 &0.381&22.1\\
+5e-4 &4&1.5e-3 &0.2427&0.2539&350&149&127.4&0.364&21.9\\
+5e-4 &8&0      &0.2420&0.2505&550&349&193.8&0.352&34.8\\
+5e-4 &8&1e-4   &0.2417&0.2705&290&89 &112.5&0.388&34.4\\
+5e-4 &8&1.5e-3 &0.2290&0.2486&290&79 &112.0&0.386&35.3\\
+5e-4 &16&0     &0.2384&0.2521&240&39 &97.6 &0.407&57.2\\
+5e-4 &16&1e-4  &0.2444&0.2799&310&109&122.9&0.396&56.5\\
+5e-4 &16&1.5e-3&0.2326&0.2928&250&49 &102.3&0.409&56.6\\
+5e-4 &32&0     &0.2391&0.2553&590&389&247.4&0.419&76.4\\
+5e-4 &32&1e-4  &0.2402&0.4182&260&49 &120.5&0.464&76.1\\
+5e-4 &32&1.5e-3&0.2373&0.3089&240&39 &112.2&0.468&75.4\\
+5e-4 &64&0     &0.2345&0.2593&370&169&216.5&0.585&85.5\\
+5e-4 &64&1e-4  &0.2392&0.2661&340&139&198.1&0.583&86.7\\
+5e-4 &64&1.5e-3&0.2320&0.2523&350&149&204.4&0.584&86.0\\
+
+5e-5 &2&0      &0.2395&0.2436&270&69 &103.0&0.382&16.1\\
+5e-5 &2&1e-4   &0.2397&0.2424&270&69 &101.4&0.375&16.5\\
+5e-5 &2&1.5e-3 &0.2398&0.2403&280&69 &105.4&0.376&16.4\\
+5e-5 &4&0      &0.2459&0.2482&230&29 &89.9 &0.391&22.0\\
+5e-5 &4&1e-4   &0.2459&0.2484&230&29 &89.7 &0.390&21.7\\
+5e-5 &4&1.5e-3 &0.2459&0.2473&230&29 &91.1 &0.396&21.5\\
+5e-5 &8&0      &0.2455&0.2601&300&99 &116.5&0.388&33.5\\
+5e-5 &8&1e-4   &0.2461&0.2557&290&89 &118.1&0.407&34.6\\
+5e-5 &8&1.5e-3 &0.2466&0.2523&280&79 &111.8&0.399&33.4\\
+5e-5 &16&0     &0.2397&0.2543&260&59 &106.9&0.411&55.6\\
+5e-5 &16&1e-4  &0.2382&0.2602&330&119&130.8&0.396&55.9\\
+5e-5 &16&1.5e-3&0.2393&0.2569&270&59 &107.8&0.399&57.0\\
+5e-5 &32&0     &0.2389&0.2632&280&79 &125.4&0.448&76.3\\
+5e-5 &32&1e-4  &0.2394&0.2640&290&79 &133.1&0.459&76.2\\
+5e-5 &32&1.5e-3&0.2404&0.2663&280&79 &130.4&0.466&75.6\\
+5e-5 &64&0     &0.2353&0.2516&250&49 &150.3&0.601&84.9\\
+5e-5 &64&1e-4  &0.2358&0.2482&250&49 &150.4&0.602&84.9\\
+5e-5 &64&1.5e-3&0.2355&0.2545&260&59 &156.8&0.603&85.5\\
+
+5e-6 &2&0      &0.2381&0.2388&1700&1409&555.2&0.327&16.4\\
+5e-6 &2&1e-4   &0.2385&0.2393&1700&1409&572.8&0.337&15.6\\
+5e-6 &2&1.5e-3 &0.2378&0.2383&1690&1399&561.3&0.332&15.9\\
+5e-6 &4&0      &0.2419&0.2426&650&449&226.1&0.348&22.2\\
+5e-6 &4&1e-4   &0.2421&0.2426&680&479&244.1&0.359&21.8\\
+5e-6 &4&1.5e-3 &0.2419&0.2427&750&549&258.3&0.344&22.3\\
+5e-6 &8&0      &0.2415&0.2429&960&759&327.8&0.341&35.4\\
+5e-6 &8&1e-4   &0.2416&0.2424&920&719&312.6&0.340&35.7\\
+5e-6 &8&1.5e-3 &0.2402&0.2423&980&779&337.5&0.344&35.4\\
+5e-6 &16&0     &0.2417&0.2429&740&539&271.3&0.367&56.0\\
+5e-6 &16&1e-4  &0.2416&0.2427&700&499&259.0&0.370&55.5\\
+5e-6 &16&1.5e-3&0.2418&0.2431&740&539&272.5&0.368&55.8\\
+5e-6 &32&0     &0.2422&0.2430&540&329&237.5&0.440&75.1\\
+5e-6 &32&1e-4  &0.2424&0.2434&580&379&242.9&0.419&76.0\\
+5e-6 &32&1.5e-3&0.2425&0.2440&620&409&256.9&0.414&75.5\\
+5e-6 &64&0     &0.2416&0.2423&520&319&299.6&0.576&86.4\\
+5e-6 &64&1e-4  &0.2418&0.2420&510&309&296.5&0.581&85.9\\
+5e-6 &64&1.5e-3&0.2416&0.2423&650&449&375.0&0.577&85.5\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Full Training Summary with Hyperparameters of Multi Finetuning with datasets with small context length. The Validation loss is MSE. All configurations stopped due to no improvement (AdaptiveES)}
+\end{table}
+
+
+\begin{table}[p]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{0.9}
+
+\begin{adjustbox}{max width=\textwidth,max totalheight=\textheight}
+\begin{tabular}{cccccccccc}
+\hline
+LR & BS & $\lambda_{L2SP}$ & Best Val & Last Val & Steps & Best Step & Total Time (s) & Time/Step (s) & Util(\%)\\
+\hline
+5e-4&2&0&0.3679&0.3819&250&49&105.3&0.421&54.7\\
+5e-4&2&1e-4&0.3474&0.3568&360&159&135.8&0.377&54.0\\
+5e-4&2&1.5e-3&0.3514&0.4970&630&429&220.9&0.351&54.6\\
+5e-4&4&0&0.3398&0.3562&570&369&221.9&0.389&77.2\\
+5e-4&4&1e-4&0.3445&0.3464&420&219&165.6&0.394&77.0\\
+5e-4&4&1.5e-3&0.3466&0.3544&590&389&235.6&0.399&77.0\\
+5e-4&8&0&0.3399&0.3498&370&159&185.9&0.502&89.1\\
+5e-4&8&1e-4&0.3496&0.3558&430&229&213.9&0.497&89.0\\
+5e-4&8&1.5e-3&0.3408&0.3514&470&269&232.1&0.494&88.6\\
+5e-4&16&0&0.3497&0.3604&290&89&210.1&0.724&96.1\\
+5e-4&16&1e-4&0.3521&0.3584&350&149&251.5&0.719&96.4\\
+5e-4&16&1.5e-3&0.3360&0.3412&490&289&343.3&0.701&96.8\\
+5e-4&32&0&0.3418&0.3454&440&239&498.1&1.132&98.9\\
+5e-4&32&1e-4&0.3358&0.3632&500&299&564.7&1.129&98.7\\
+5e-4&32&1.5e-3&0.3368&0.3407&320&109&365.0&1.141&98.7\\
+5e-4&64&0&0.3388&0.3521&430&229&827.8&1.925&99.8\\
+5e-4&64&1e-4&0.3464&0.3526&300&99&581.4&1.938&99.7\\
+5e-4&64&1.5e-3&0.3423&0.3563&320&109&618.8&1.934&99.7\\
+
+5e-5&2&0&0.3461&0.3476&240&39&93.8&0.391&54.8\\
+5e-5&2&1e-4&0.3462&0.3463&240&39&95.1&0.396&53.7\\
+5e-5&2&1.5e-3&0.3462&0.3486&240&39&93.6&0.390&56.0\\
+5e-5&4&0&0.3385&0.3474&520&309&203.0&0.390&77.0\\
+5e-5&4&1e-4&0.3375&0.3460&580&379&230.4&0.397&77.0\\
+5e-5&4&1.5e-3&0.3370&0.3439&550&339&217.8&0.396&75.8\\
+5e-5&8&0&0.3382&0.3682&540&329&265.7&0.492&88.9\\
+5e-5&8&1e-4&0.3352&0.3511&520&309&267.6&0.515&88.6\\
+5e-5&8&1.5e-3&0.3367&0.3415&600&399&291.6&0.486&88.4\\
+5e-5&16&0&0.3425&0.3457&350&139&252.4&0.721&96.5\\
+5e-5&16&1e-4&0.3421&0.3506&360&149&259.2&0.720&96.4\\
+5e-5&16&1.5e-3&0.3426&0.3472&350&139&252.9&0.722&96.5\\
+5e-5&32&0&0.3327&0.3361&470&259&531.1&1.130&98.8\\
+5e-5&32&1e-4&0.3330&0.3409&450&249&513.8&1.142&98.8\\
+5e-5&32&1.5e-3&0.3364&0.3454&380&169&432.6&1.139&98.7\\
+5e-5&64&0&0.3444&0.3583&320&109&619.6&1.936&99.7\\
+5e-5&64&1e-4&0.3407&0.3537&300&99&579.7&1.932&99.7\\
+5e-5&64&1.5e-3&0.3447&0.3551&320&109&614.3&1.920&99.7\\
+
+5e-6&2&0&0.3454&0.3458&1480&1219&500.3&0.338&54.1\\
+5e-6&2&1e-4&0.3444&0.3445&1560&1289&523.5&0.336&54.2\\
+5e-6&2&1.5e-3&0.3440&0.3442&1060&849&358.3&0.338&54.1\\
+5e-6&4&0&0.3453&0.3467&850&649&326.9&0.385&76.2\\
+5e-6&4&1e-4&0.3451&0.3459&790&589&299.9&0.380&76.3\\
+5e-6&4&1.5e-3&0.3450&0.3459&780&579&291.0&0.373&77.5\\
+5e-6&8&0&0.3449&0.3451&650&449&316.8&0.487&88.3\\
+5e-6&8&1e-4&0.3386&0.3395&3050&2639&1415.8&0.464&88.9\\
+5e-6&8&1.5e-3&0.3450&0.3456&650&449&318.9&0.491&88.7\\
+5e-6&16&0&0.3425&0.3432&1400&1159&957.6&0.684&96.7\\
+5e-6&16&1e-4&0.3431&0.3435&1510&1249&1026.2&0.680&96.8\\
+5e-6&16&1.5e-3&0.3426&0.3432&1810&1499&1233.2&0.681&97.0\\
+5e-6&32&0&0.3444&0.3449&1240&1019&1357.8&1.095&98.8\\
+5e-6&32&1e-4&0.3406&0.3413&1310&1079&1436.1&1.096&98.8\\
+5e-6&32&1.5e-3&0.3422&0.3428&1190&979&1302.2&1.094&98.8\\
+5e-6&64&0&0.3443&0.3448&990&789&1902.4&1.922&99.9\\
+5e-6&64&1e-4&0.3437&0.3441&1240&1019&2373.6&1.914&99.9\\
+5e-6&64&1.5e-3&0.3435&0.3438&1254&1179&2408.3&1.921&99.9\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Full Training Summary with Hyperparameters of Multi Finetuning with datasets with medium context length. The Validation loss is MSE. All configurations stopped due to no improvement (AdaptiveES)}
+\end{table}
+
+
+\begin{table}[p]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{0.9}
+\begin{adjustbox}{max width=\textwidth,max totalheight=\textheight}
+\begin{tabular}{cccccccccc}
+\hline
+LR & BS & $\lambda_{L2SP}$ & Best Val & Last Val & Steps & Best Step & Total Time (s) & Time/Step (s) & Util(\%)\\
+\hline
+5e-4&2&0&0.2377&0.2909&250&49&247.2&0.989&94.8\\
+5e-4&2&1e-4&0.2347&0.3003&350&139&337.3&0.964&94.1\\
+5e-4&2&1.5e-3&0.2520&0.3217&220&19&219.8&0.999&94.4\\
+5e-4&4&0&0.2331&0.2359&240&39&302.1&1.259&96.9\\
+5e-4&4&1e-4&0.2366&0.2710&260&59&325.6&1.252&96.7\\
+5e-4&4&1.5e-3&0.2294&0.2459&440&239&530.2&1.205&97.3\\
+5e-4&8&0&0.2369&0.2468&250&49&457.6&1.830&99.8\\
+5e-4&8&1e-4&0.2384&0.2405&350&149&633.2&1.809&99.8\\
+5e-4&8&1.5e-3&0.2371&0.2493&250&49&458.1&1.833&99.7\\
+5e-4&16&0&0.2315&0.2383&230&29&677.2&2.944&99.7\\
+5e-4&16&1e-4&0.2317&0.2401&240&39&708.4&2.952&99.7\\
+5e-4&16&1.5e-3&0.2314&0.2382&230&29&677.1&2.944&99.7\\
+5e-4&32&0&0.2334&0.2460&280&79&1536.2&5.487&99.7\\
+5e-4&32&1e-4&0.2347&0.2484&360&159&1931.0&5.364&99.8\\
+5e-4&32&1.5e-3&0.2312&0.2410&290&89&1599.3&5.515&99.8\\
+
+5e-5&2&0&0.2385&0.2455&360&159&344.9&0.958&94.1\\
+5e-5&2&1e-4&0.2342&0.2547&370&169&354.7&0.959&94.1\\
+5e-5&2&1.5e-3&0.2376&0.2534&370&169&354.4&0.958&94.3\\
+5e-5&4&0&0.2627&0.2631&260&59&320.0&1.231&97.1\\
+5e-5&4&1e-4&0.2344&0.2431&930&729&1113.1&1.197&97.2\\
+5e-5&4&1.5e-3&0.2588&0.2669&260&59&319.9&1.230&97.0\\
+5e-5&8&0&0.2424&0.2438&720&519&1291.1&1.793&99.9\\
+5e-5&8&1e-4&0.2424&0.2453&730&529&1308.4&1.792&99.9\\
+5e-5&8&1.5e-3&0.2571&0.2615&240&29&438.1&1.826&99.7\\
+5e-5&16&0&0.2423&0.2515&440&239&1257.9&2.859&99.8\\
+5e-5&16&1e-4&0.2472&0.2616&450&249&1284.7&2.855&99.9\\
+5e-5&16&1.5e-3&0.2398&0.2500&440&239&1259.1&2.862&99.9\\
+5e-5&32&0&0.2380&0.2426&250&39&1402.2&5.609&99.7\\
+5e-5&32&1e-4&0.2376&0.2543&250&39&1402.2&5.609&99.7\\
+5e-5&32&1.5e-3&0.2384&0.2569&250&39&1402.5&5.610&99.7\\
+
+5e-6&2&0&0.2698&0.2707&420&209&400.2&0.953&94.1\\
+5e-6&2&1e-4&0.2416&0.2416&2640&2639&2420.2&0.917&93.3\\
+5e-6&2&1.5e-3&0.2608&0.2625&700&499&653.8&0.934&93.9\\
+5e-6&4&0&0.2430&0.2447&1670&1379&2004.2&1.200&97.4\\
+5e-6&4&1e-4&0.2426&0.2435&1610&1329&1935.6&1.202&97.2\\
+5e-6&4&1.5e-3&0.2390&0.2395&1620&1339&1942.5&1.199&97.2\\
+5e-6&8&0&0.2390&0.2391&1358&1289&2413.6&1.777&99.9\\
+5e-6&8&1e-4&0.2421&0.2423&1352&1289&2413.3&1.785&100.0\\
+5e-6&8&1.5e-3&0.2417&0.2422&1352&1229&2414.0&1.785&99.9\\
+5e-6&16&0&0.2435&0.2437&837&769&2413.0&2.883&99.9\\
+5e-6&16&1e-4&0.2433&0.2434&835&789&2412.1&2.889&99.9\\
+5e-6&16&1.5e-3&0.2442&0.2443&835&769&2412.2&2.889&99.9\\
+5e-6&32&0&0.2500&0.2500&442&439&2411.7&5.456&99.9\\
+5e-6&32&1e-4&0.2505&0.2505&442&439&2411.6&5.456&99.9\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Full Training Summary with Hyperparameters of Multi Finetuning with datasets with large context length. The Validation loss is MSE. All configurations stopped due to no improvement (AdaptiveES)}
+\end{table}
+
+
+\begin{table}[p]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{0.9}
+\begin{adjustbox}{max width=\textwidth,max totalheight=\textheight}
+\begin{tabular}{ccccccccccc}
+\hline
+LR & BS & $\lambda_{L2SP}$ & Best Val & Last Val & Steps & Best Step & Total Time (s) & Time/Step (s) & Util(\%) & Stop\\
+\hline
+5e-4&2&0&0.3150&0.3161&280&79&2140.1&7.643&13.6&AES\\
+5e-4&2&1e-4&0.2812&0.2905&427&289&3603.7&8.440&14.5&TIME\\
+5e-4&2&1.5e-3&0.2861&0.5537&400&189&3336.0&8.340&14.2&AES\\
+5e-4&4&0&0.2912&0.2912&250&249&3669.1&14.676&20.0&TIME\\
+5e-4&4&1e-4&0.3340&0.3746&250&219&3619.1&14.477&19.4&TIME\\
+5e-4&4&1.5e-3&0.3624&0.5556&210&0&3088.4&14.707&20.0&AES\\
+5e-4&8&0&0.2762&0.2899&114&89&3585.3&31.450&33.9&TIME\\
+5e-4&8&1e-4&0.2636&0.3315&115&79&3578.1&31.114&35.3&TIME\\
+5e-4&8&1.5e-3&0.2920&0.2983&120&79&3582.8&29.857&34.3&TIME\\
+
+5e-5&2&0&0.3359&0.3810&260&49&1997.0&7.681&11.9&AES\\
+5e-5&2&1e-4&0.3360&0.4132&260&49&1969.8&7.576&12.1&AES\\
+5e-5&2&1.5e-3&0.3362&0.3986&260&49&1956.4&7.525&11.9&AES\\
+5e-5&4&0&0.3513&0.4710&230&19&3335.9&14.504&20.7&AES\\
+5e-5&4&1e-4&0.3514&0.4405&230&19&3342.1&14.531&18.9&AES\\
+5e-5&4&1.5e-3&0.3508&0.4516&230&19&3349.2&14.562&18.5&AES\\
+5e-5&8&0&0.3624&0.3901&122&0&3586.2&29.395&33.4&TIME\\
+5e-5&8&1e-4&0.3624&0.3970&122&0&3587.1&29.402&33.4&TIME\\
+5e-5&8&1.5e-3&0.3624&0.3924&115&0&3576.5&31.100&34.7&TIME\\
+
+5e-6&2&0&0.3584&0.3740&280&79&2160.3&7.715&12.6&AES\\
+5e-6&2&1e-4&0.3588&0.3731&270&69&2044.7&7.573&11.7&AES\\
+5e-6&2&1.5e-3&0.3591&0.3728&270&69&2072.6&7.676&12.4&AES\\
+5e-6&4&0&0.3603&0.3863&250&59&3603.8&14.415&20.5&TIME\\
+5e-6&4&1e-4&0.3601&0.3870&253&59&3597.4&14.219&18.9&TIME\\
+5e-6&4&1.5e-3&0.3607&0.3866&250&59&3626.9&14.508&19.5&TIME\\
+5e-6&8&0&0.3623&0.3759&113&9&3584.5&31.722&35.2&TIME\\
+5e-6&8&1e-4&0.3624&0.3771&120&0&3582.8&29.857&36.4&TIME\\
+5e-6&8&1.5e-3&0.3624&0.3755&118&0&3579.6&30.335&32.3&TIME\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Full Training Summary with Hyperparameters of continued pretraining with a prior.The Validation loss is MSE. Stop is either AES(Adaptive Early Stopping due to no improvement) or TIME(Early Stopping due to no time)}
+\end{table}
+
+
+\begin{table}[p]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{0.9}
+\begin{adjustbox}{max width=\textwidth,max totalheight=\textheight}
+\begin{tabular}{ccccccccccc}
+\hline
+Training Time & LR & BS & $\lambda_{L2SP}$ & Best Val & Last Val & Steps & Best Step & Time(s) & Step(s) & Stop\\
+\hline
+2400&5e-5&64&1e-4&4.880&6.531&290&89&637.8&2.199&AES\\
+2400&5e-5&64&0&4.975&6.752&340&139&747.9&2.200&AES\\
+2400&5e-5&64&1.5e-3&5.034&17.256&320&119&703.4&2.198&AES\\
+2400&5e-5&4&1.5e-3&5.545&12.344&470&269&83.2&0.177&AES\\
+2400&5e-5&16&1e-4&5.623&7.840&340&139&199.7&0.587&AES\\
+2400&5e-6&2&0&5.773&7.019&1310&1079&160.9&0.123&AES\\
+2400&5e-6&2&1e-4&5.783&6.914&1260&1039&226.3&0.180&AES\\
+2400&5e-6&2&1.5e-3&5.854&6.291&970&769&117.8&0.121&AES\\
+2400&5e-5&8&0&5.950&7.973&290&89&92.9&0.320&AES\\
+2400&5e-5&16&0&6.188&6.509&310&99&182.3&0.588&AES\\
+2400&5e-5&8&1e-4&6.204&8.242&280&79&89.7&0.320&AES\\
+2400&5e-5&16&1.5e-3&6.346&7.781&280&79&164.9&0.589&AES\\
+2400&5e-5&8&1.5e-3&6.363&9.484&280&79&89.7&0.320&AES\\
+2400&5e-5&4&1e-4&6.390&11.787&520&319&92.2&0.177&AES\\
+2400&5e-5&32&1.5e-3&6.458&9.662&320&119&361.7&1.130&AES\\
+2400&5e-4&4&0&6.539&19.384&230&19&40.9&0.178&AES\\
+2400&5e-5&4&0&6.591&6.815&500&299&88.8&0.178&AES\\
+2400&5e-4&4&1e-4&6.592&13.566&220&19&39.2&0.178&AES\\
+2400&5e-5&32&1e-4&6.677&10.903&300&99&343.8&1.146&AES\\
+2400&5e-5&32&0&6.695&10.327&300&99&341.9&1.140&AES\\
+2400&5e-4&16&0&6.701&12.747&230&19&135.0&0.587&AES\\
+2400&5e-6&4&1e-4&6.891&7.946&900&699&160.7&0.179&AES\\
+2400&5e-6&4&1.5e-3&7.021&7.207&1030&829&182.0&0.177&AES\\
+2400&5e-4&4&1.5e-3&7.153&14.022&230&19&45.4&0.197&AES\\
+2400&5e-4&16&1e-4&7.330&18.761&230&19&134.5&0.585&AES\\
+2400&5e-4&16&1.5e-3&7.417&14.445&230&19&134.3&0.584&AES\\
+2400&5e-4&64&0&7.580&11.426&240&39&525.9&2.191&AES\\
+2400&5e-6&4&0&7.661&7.951&630&419&112.5&0.179&AES\\
+2400&5e-4&32&0&7.721&15.597&230&29&259.6&1.129&AES\\
+2400&5e-4&2&1.5e-3&7.777&12.150&220&19&26.8&0.122&AES\\
+2400&5e-4&8&1.5e-3&8.017&19.736&230&29&73.4&0.319&AES\\
+2400&5e-4&64&1.5e-3&8.193&16.824&240&39&526.0&2.192&AES\\
+2400&5e-6&8&1e-4&8.318&9.299&350&139&112.5&0.321&AES\\
+2400&5e-4&64&1e-4&8.333&15.093&240&39&525.6&2.190&AES\\
+2400&5e-6&64&1.5e-3&8.333&9.070&340&129&753.6&2.216&AES\\
+2400&5e-6&16&1e-4&8.341&8.874&350&139&206.0&0.588&AES\\
+2400&5e-6&16&0&8.342&9.026&360&149&211.9&0.589&AES\\
+2400&5e-6&32&0&8.347&9.165&360&149&406.6&1.130&AES\\
+2400&5e-6&32&1e-4&8.349&8.847&340&129&384.8&1.132&AES\\
+2400&5e-6&16&1.5e-3&8.370&8.992&350&139&205.8&0.588&AES\\
+2400&5e-6&8&1.5e-3&8.378&9.451&350&139&112.0&0.320&AES\\
+2400&5e-6&8&0&8.383&8.892&350&139&112.3&0.321&AES\\
+2400&5e-6&64&0&8.403&8.776&370&159&814.1&2.200&AES\\
+2400&5e-6&32&1.5e-3&8.415&8.818&360&149&407.3&1.131&AES\\
+2400&5e-6&64&1e-4&8.430&8.796&340&129&747.9&2.200&AES\\
+2400&5e-4&8&0&8.485&17.605&230&29&73.5&0.320&AES\\
+2400&5e-5&2&1e-4&8.719&10.930&290&89&35.1&0.121&AES\\
+2400&5e-4&2&1e-4&8.817&16.913&250&49&30.1&0.120&AES\\
+2400&5e-4&32&1.5e-3&8.933&16.303&240&39&271.1&1.129&AES\\
+2400&5e-4&2&0&9.034&14.317&240&29&30.1&0.125&AES\\
+2400&5e-5&2&1.5e-3&9.038&12.253&240&29&29.3&0.122&AES\\
+2400&5e-5&2&0&9.108&15.946&240&29&29.2&0.122&AES\\
+2400&5e-4&32&1e-4&9.187&9.722&240&39&270.8&1.128&AES\\
+2400&5e-4&8&1e-4&10.094&16.348&210&0&71.3&0.340&AES\\
+\hline
+\end{tabular}
+\end{adjustbox}
+\caption{Full Training Summary with Hyperparameters of finetuning with the dataset \textit{saugeenday/M}. The Validation loss is MSE. Stop is either AES(Adaptive Early Stopping due to no improvement) or TIME(Early Stopping due to no time).
+As one can see in the first checkpoints the validation loss got halved.}
+\label{tab:finetuning_saugeenday}
+\end{table}
 
 \begin{table}[ht]
 \centering
 \resizebox{\textwidth}{!}{
-\begin{tabular}{lrrrrrrrrrrr}
-\toprule
-Dataset & Context & Series & C1 & C2 & C3 & C4 & C5 & Mean $\Delta$ (\%) & Min & Max & Improved \\
-\midrule
-LOOP\_SEATTLE/D & 365 & 323 & -2.34 & -2.35 & -2.39 & -0.02 & -2.22 & -1.87 & -2.39 & -0.02 & True \\
-M\_DENSE/D & 730 & 30 & 12.91 & 20.64 & 15.81 & 32.22 & 16.82 & 19.68 & 12.91 & 32.22 & False \\
-M\_DENSE/H & 17520 & 30 & -1.80 & 1.56 & -2.07 & -3.05 & -6.37 & -2.35 & -6.37 & 1.56 & True \\
-SZ\_TAXI/15T & 2976 & 156 & -1.81 & -1.83 & -1.78 & -1.85 & -1.75 & -1.80 & -1.85 & -1.75 & True \\
-SZ\_TAXI/H & 744 & 156 & -2.20 & -2.26 & -2.26 & -1.68 & -1.26 & -1.93 & -2.26 & -1.26 & True \\
-bitbrains\_rnd/H & 720 & 500 & -1.26 & -2.00 & -0.10 & -2.64 & -4.84 & -2.17 & -4.84 & -0.10 & True \\
-bizitobs\_application & 8834 & 1 & 30.56 & 41.21 & 25.14 & 23.93 & 38.38 & 31.84 & 23.93 & 41.21 & False \\
-bizitobs\_service & 8835 & 21 & 11.35 & -0.95 & 2.42 & 14.22 & 0.39 & 5.48 & -0.95 & 14.22 & False \\
-covid\_deaths & 212 & 266 & -12.04 & -11.24 & -9.59 & -5.16 & 8.93 & -5.82 & -12.04 & 8.93 & True \\
-electricity/D & 1461 & 370 & -1.73 & 4.16 & -0.78 & -3.01 & -3.19 & -0.91 & -3.19 & 4.16 & True \\
-electricity/W & 208 & 370 & 0.67 & 6.46 & 24.55 & 12.74 & -0.32 & 8.82 & -0.32 & 24.55 & False \\
-ett1/15T & 69680 & 1 & 9.59 & 0.59 & 0.30 & 0.24 & 0.33 & 2.21 & 0.24 & 9.59 & False \\
-ett1/D & 725 & 1 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & False \\
-ett1/H & 17420 & 1 & -3.19 & -2.37 & -4.32 & -2.68 & 2.21 & -2.07 & -4.32 & 2.21 & True \\
-ett1/W & 103 & 1 & 1.83 & -5.12 & 1.39 & -9.28 & 5.12 & -1.21 & -9.28 & 5.12 & True \\
-ett2/15T & 69680 & 1 & -6.24 & -2.65 & -4.48 & -0.10 & 6.09 & -1.48 & -6.24 & 6.09 & True \\
-ett2/D & 725 & 1 & -5.99 & -21.12 & -13.92 & -34.08 & -12.36 & -17.49 & -34.08 & -5.99 & True \\
-ett2/H & 17420 & 1 & -6.68 & -2.50 & -9.41 & -9.10 & -6.23 & -6.78 & -9.41 & -2.50 & True \\
-ett2/W & 103 & 1 & 46.42 & 134.09 & 22.27 & 74.30 & 35.36 & 62.49 & 22.27 & 134.09 & False \\
-hierarchical\_sales/D & 1825 & 118 & -0.60 & -0.60 & -0.60 & -2.39 & -2.24 & -1.29 & -2.39 & -0.60 & True \\
-hierarchical\_sales/W & 260 & 118 & 1.07 & 4.49 & 4.44 & 4.39 & 1.68 & 3.22 & 1.07 & 4.49 & False \\
-hospital & 84 & 767 & 2.71 & -0.48 & 1.98 & 0.89 & 0.66 & 1.15 & -0.48 & 2.71 & False \\
-jena\_weather/10T & 52704 & 1 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & False \\
-jena\_weather/D & 366 & 1 & 21.54 & 4.78 & 4.63 & 3.76 & -0.17 & 6.91 & -0.17 & 21.54 & False \\
-jena\_weather/H & 8784 & 1 & 5.22 & 3.20 & 1.30 & -0.54 & -1.45 & 1.54 & -1.45 & 5.22 & False \\
-saugeenday/D & 23741 & 1 & -3.81 & -3.79 & -3.35 & -1.03 & -2.87 & -2.97 & -3.81 & -1.03 & True \\
-saugeenday/M & 780 & 1 & 4.60 & 8.45 & 6.76 & 11.79 & 7.85 & 7.89 & 4.60 & 11.79 & False \\
-saugeenday/W & 3391 & 1 & 7.98 & -2.58 & -1.07 & 11.83 & 9.89 & 5.21 & -2.58 & 11.83 & False \\
-solar/D & 365 & 137 & 10.13 & 9.08 & 25.76 & 13.26 & 9.75 & 13.60 & 9.08 & 25.76 & False \\
-solar/W & 52 & 137 & 99.83 & 108.15 & 109.70 & 157.05 & 178.98 & 130.74 & 99.83 & 178.98 & False \\
-us\_births/D & 7305 & 1 & 54.45 & 17.03 & 17.05 & 17.03 & 10.24 & 23.16 & 10.24 & 54.45 & False \\
-us\_births/M & 240 & 1 & 8.58 & 6.39 & 6.58 & 7.08 & 6.44 & 7.02 & 6.39 & 8.58 & False \\
-us\_births/W & 1043 & 1 & 14.04 & -0.90 & 17.79 & 2.29 & -4.66 & 5.71 & -4.66 & 17.79 & False \\
-\bottomrule
+\begin{tabular}{lccccccc}
+\hline
+Dataset & Init & Top1 & Top2 & Top3 & Top4 & Top5 & Improved \\
+\hline
+LOOP\_SEATTLE/D & 2.1067 & 1.8357 & 1.8365 & 1.8380 & 1.8408 & 1.8545 & \checked \\
+M\_DENSE/D & 62.2018 & 32.2229 & 33.4755 & 33.6022 & 33.8160 & 33.8955 & \checked \\
+M\_DENSE/H & 53.7112 & 48.5981 & 48.6580 & 49.2215 & 49.2456 & 49.2632 & \checked \\
+SZ\_TAXI/15T & 3.4646 & 2.6535 & 2.6578 & 2.6583 & 2.6608 & 2.6616 & \checked \\
+SZ\_TAXI/H & 2.6741 & 1.6264 & 1.6267 & 1.6286 & 1.6300 & 1.6313 & \checked \\
+bitbrains\_rnd/H & 331.6732 & 243.1790 & 253.9926 & 257.1786 & 260.0302 & 260.0836 & \checked \\
+bizitobs\_application & 171.7878 & 136.4603 & 138.9375 & 139.1268 & 140.0248 & 140.0264 & \checked \\
+bizitobs\_service & 11.0922 & 8.1799 & 8.2012 & 8.3733 & 8.3920 & 8.3929 & \checked \\
+covid\_deaths & 178.2231 & 43.4932 & 57.5072 & 69.2966 & 76.3714 & 80.8615 & \checked \\
+electricity/D & 8143.3284 & 4663.7802 & 4897.8761 & 4938.7988 & 4962.5853 & 4972.1315 & \checked \\
+electricity/W & 37909.6100 & 23137.6337 & 26910.8935 & 28123.1600 & 28192.3381 & 28461.9311 & \checked \\
+ett1/15T & 1.8213 & 0.7830 & 0.8830 & 0.8909 & 0.8936 & 1.0474 & \checked \\
+ett1/H & 5.0076 & 4.3681 & 4.4628 & 4.5477 & 4.5563 & 4.5735 & \checked \\
+ett1/W & 714.6294 & 586.7639 & 594.4901 & 598.2616 & 603.5634 & 604.8288 & \checked \\
+ett2/15T & 1.6503 & 1.2236 & 1.2444 & 1.2582 & 1.3181 & 1.3262 & \checked \\
+ett2/D & 377.1880 & 210.5727 & 212.8607 & 215.5097 & 222.2871 & 223.7722 & \checked \\
+ett2/H & 8.6447 & 6.3857 & 6.4470 & 6.6148 & 6.6826 & 6.7344 & \checked \\
+ett2/W & 3425.1396 & 1746.7007 & 1854.8766 & 1859.8198 & 1920.2853 & 1942.5913 & \checked \\
+hierarchical\_sales/D & 3.3435 & 2.3282 & 2.3283 & 2.3283 & 2.3510 & 2.3729 & \checked \\
+hierarchical\_sales/W & 16.0359 & 12.1681 & 12.2311 & 12.2390 & 12.2415 & 12.2699 & \checked \\
+hospital & 25.1528 & 21.4277 & 21.4341 & 21.4378 & 21.4849 & 21.6461 & \checked \\
+jena\_weather/D & 15.7750 & 14.2979 & 14.4190 & 14.5636 & 14.6373 & 14.6624 & \checked \\
+jena\_weather/H & 10.0475 & 8.3280 & 8.3369 & 8.3374 & 8.4431 & 8.4962 & \checked \\
+saugeenday/D & 35.1190 & 19.4356 & 19.6001 & 19.9059 & 19.9064 & 20.1086 & \checked \\
+saugeenday/M & 10.0940 & 4.8800 & 4.9749 & 5.0343 & 5.5449 & 5.6232 & \checked \\
+saugeenday/W & 14.6168 & 7.9996 & 8.7652 & 9.0129 & 9.0158 & 9.1162 & \checked \\
+solar/10T & 0.1936 & 0.1424 & 0.1430 & 0.1440 & 0.1446 & 0.1462 & \checked \\
+solar/D & 280.4928 & 271.6465 & 273.4877 & 274.3295 & 274.7801 & 276.3410 & \checked \\
+solar/H & 5.7497 & 4.9662 & 5.3616 & 5.3716 & 5.4338 & 5.4355 & \checked \\
+solar/W & 1065.2286 & 763.8301 & 768.0633 & 779.4532 & 784.3801 & 786.1813 & \checked \\
+us\_births/D & 198.2072 & 143.4686 & 147.9305 & 147.9341 & 147.9618 & 153.4041 & \checked \\
+us\_births/M & 2994.2004 & 2504.4661 & 2549.3750 & 2565.1199 & 2575.4297 & 2579.8672 & \checked \\
+us\_births/W & 1637.3311 & 476.5293 & 652.7627 & 706.2305 & 718.0947 & 727.9688 & \checked \\
+\hline
+ett1/D & 134.3790 & 134.3790 & 134.3790 & 134.3790 & 134.3790 & 134.3790 & $\times$ \\
+jena\_weather/10T & 12.7298 & 12.7298 & 12.7298 & 12.7298 & 12.7298 & 12.7298 & $\times$ \\
+\hline
 \end{tabular}
 }
-\caption{Vollständige Ergebnisse des Fine-Tunings über alle Datensätze und Checkpoints. Negative Werte entsprechen einer Verbesserung der Modellperformance.}
-\label{tab:eval_score_single_finetune}
-\end{table}
-
-
-
-\begin{table}[htbp]
-    \centering
-    \caption{Mean Delta (\%) per Dataset}
-    \label{tab:main_results}
-    \begin{tabular}{lrrrrr}
-        \toprule
-        Dataset & Single & Multi Short & Multi Medium & Multi Big & Prior \\
-        \midrule
-        bitbrains\_rnd/H & -2.17 & -- & -1.70 & -- & \textbf{-2.89} \\
-        bizitobs\_application & \textbf{31.84} & -- & -- & -- & 69.52 \\
-        bizitobs\_service & \textbf{5.48} & -- & -- & -- & 35.28 \\
-        covid\_deaths & \textbf{-5.82} & 26.75 & 15.58 & 48.80 & 14.92 \\
-        electricity/D & \textbf{-0.91} & -- & -- & -0.68 & 4.33 \\
-        electricity/W & 8.82 & 4.16 & -- & -- & \textbf{3.60} \\
-        ett1/15T & 2.21 & -- & -- & \textbf{-5.80} & 1.03 \\
-        ett1/D & \textbf{0.00} & -- & 2.21 & -- & 1.34 \\
-        ett1/H & -2.07 & -- & -- & \textbf{-2.58} & 5.37 \\
-        ett1/W & -1.21 & \textbf{-9.47} & -- & -- & 5.64 \\
-        ett2/15T & \textbf{-1.48} & -- & -- & -0.30 & 6.27 \\
-        ett2/D & -17.49 & -- & \textbf{-31.26} & -- & -19.23 \\
-        ett2/H & \textbf{-6.78} & -- & -- & -0.90 & 3.89 \\
-        ett2/W & \textbf{62.49} & 73.16 & -- & -- & 109.70 \\
-        hierarchical\_sales/D & \textbf{-1.29} & -- & -- & -1.01 & -0.00 \\
-        hierarchical\_sales/W & 3.22 & -- & \textbf{-0.30} & -- & 1.93 \\
-        hospital/M & \textbf{1.15} & 2.68 & -- & -- & 16.43 \\
-        jena\_weather/10T & \textbf{0.00} & -- & -- & -- & 21.76 \\
-        jena\_weather/D & 6.91 & -- & 0.71 & -- & \textbf{-5.06} \\
-        jena\_weather/H & \textbf{1.54} & -- & -- & -- & 13.99 \\
-        loop\_seattle/D & -1.87 & 4.28 & -1.54 & \textbf{-2.27} & -0.53 \\
-        m\_dense/D & 19.68 & -- & \textbf{2.22} & -- & 14.91 \\
-        m\_dense/H & \textbf{-2.35} & 15.98 & -- & 0.28 & 5.71 \\
-        saugeenday/D & \textbf{-2.97} & -- & -- & -1.00 & -2.23 \\
-        saugeenday/M & \textbf{7.89} & -- & -0.45 & -- & \textbf{-0.81} \\
-        saugeenday/W & \textbf{5.21} & -- & -- & -- & \textbf{-1.23} \\
-        solar/D & 13.60 & -- & \textbf{0.07} & -- & 16.30 \\
-        solar/W & 130.74 & \textbf{9.98} & -- & -- & 34.04 \\
-        sz\_taxi/15T & \textbf{-1.80} & -- & -0.22 & 0.05 & 1.08 \\
-        sz\_taxi/H & \textbf{-1.93} & -- & -1.04 & -- & 1.59 \\
-        us\_births/D & \textbf{23.16} & -- & -- & 23.53 & 25.17 \\
-        us\_births/M & 7.02 & -- & \textbf{-0.44} & -- & 40.20 \\
-        us\_births/W & 5.71 & -- & \textbf{1.49} & -- & 19.10 \\
-        \bottomrule
-    \end{tabular}
+\caption{Validation Loss Comparison of finetuning on a single dataset(sorted by improvement). The whole training summary for all 54 configurations for each dataset can be viewed under \url{https://github.com/frimarom/finetune-tabpfn-ts}.}
+\label{tab:single_finetuning_summary_val}
 \end{table}

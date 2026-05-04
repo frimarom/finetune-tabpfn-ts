@@ -1,0 +1,15 @@
+# Spätere sachen zum aufschreiben
+- SZ_TAXI/H sind alle konfigurationen gut weil es sehr periodisch ist
+- hospital ist mehr noisy aber auch da sind viele konfigurationen sehr ähnlich/gut
+- für später vielleicht noch learning rate warmup anschauen wie sich das verändetr
+- bei multi finetuning lr warmup vielleicht gar nicht schlecht -> als konfiguration mit aufschreiben
+- auf sehr noisy datensets nicht so gut Daily Freuqency-> sehr noisy zum teil siehe us_births für daten die eher perioden auf längere sicht angzeigen
+- viele kleine Batch sizes in top 4-5 Weil am anfang sehr stark runter 
+- hyperparameter heatmap
+- us_births sehr wahrscheinlich nicht so gut weil sehr wenig zeitreihen -> wenn bei saugeenday auch nicht gut geht klares indiz
+- hospital vielleicht auch nur schlecht weil sehr kleine context length
+- datensets mit nur einer time series finetunen zum teil sehr lange aber haben keine guten results
+- hierarchical_sales/W vielleicht nicht so gut weil bisschen noisy, bisschen zu wenige time series und kleiner context
+- saugeenday/D gut weil viel context
+- Pattern: Bei saugeenday war D so gut weil die best steps sehr weit am anfang waren. Bei M und W waren die eher zum ende
+- über 1 millionen obs gehen nicht

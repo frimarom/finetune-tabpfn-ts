@@ -67,9 +67,10 @@
     \setmathfont{Fira Sans Italic}[range={it/{latin,Latin,greek,Greek}}, Script=Latin, script-features={}, sscript-features={}]
   \fi
 \else % Default: Fira nur für Titelseite, sonst Linux Libertine + Inconsolata
-  \usepackage[medium,lining,scaled=.9]{FiraSans} % Für Titelseite
+  \usepackage[medium,lining,scaled=.9]{FiraSans} % Nur für Titelseite
   \usepackage{libertine}
-  \usepackage[libertine]{newtxmath}
+  \renewcommand{\sfdefault}{\rmdefault}
+  \addtokomafont{disposition}{\rmfamily}
   \ifpdftex
     \usepackage[narrow]{inconsolata}
   \else % LuaLaTeX / XeLaTeX version
@@ -143,7 +144,7 @@
 \vfill
 \bgroup
 \raggedright
-Begutachtung: \\
+Assessment: \\
 \erstgutachterIn{} \\
 \zweitgutachterIn{}
 \egroup

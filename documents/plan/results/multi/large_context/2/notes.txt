@@ -1,0 +1,12 @@
+M_DENSE/H 4096 * 90
+hierachical_sales/D 1825*826
+SZ_TAXI/15T 2976*1092
+electricity/D 1461 * 1850
+monash_australian_electricity 4096 * 5
+exchange_rate 4096 * 8
+
+saugeenday/D 4096
+us_births/D 4096
+
+best ids:
+39676088 39676097 39676094 39676092 39676093

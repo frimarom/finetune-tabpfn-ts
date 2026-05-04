@@ -1,0 +1,17 @@
+<dataset_name> <context_length> * <time_series_amount>
+
+solar/D 365 * 274
+us_births/M 240 * 2
+SZ_TAXI/H 744 * 312
+M_DENSE/D 730 * 90
+ett1/D 725 * 21
+ett2/D 725 * 21
+monash_fred_md 728 * 107
+nn5 791 * 111
+taxi_1h 734 * 2428
+
+loop_seattle/D 365 * 323
+saugeenday/M 780 * 1
+
+best ids:
+39638148 39638149 39638143 39638131 39638129

@@ -1,14 +1,15 @@
 \chapter{Conclusion}
 \label{chap:conclusion}
 This thesis focused on evaluating three methods to potentially enhance TabPFN’s performance on time series data.
-While \citep{hoo2025tables} already demonstrated promising results on time series forecasting, we aimed to further improve this performance.
-We first tried to finetune TabPFN on one dataset from the GIFT-Eval benchmark \citet{aksu2024giftevalbenchmarkgeneraltime} individually, and after that, looked if it improved performance or not.
+While \citet{hoo2025tables} already demonstrated promising results on time series forecasting, we aimed to further improve this performance.
+We first tried to finetune TabPFN on one dataset from the GIFT-Eval benchmark of \citet{aksu2024giftevalbenchmarkgeneraltime} individually, and after that, evaluated the performance impact.
 \newline
-Our second approach started by splitting the datasets into three categories by their number of observations per time series: Small, Medium, and Big.
-Then, selecting a few to train TabPFN with and a few to evaluate the trained checkpoint on.
+In our second approach, we split the datasets into three categories based on their number of observations per time series: Small, Medium, and Large.
+Then, selecting a few to train TabPFN with and a few to evaluate the trained model on.
 \newline
-Our final method consists of a prior provided by \citep{dooley2023forecastpfn}.
+Our final method consists of a prior provided by \citet{dooley2023forecastpfn}\footnote{The code of the prior is available at \url{https://github.com/abacusai/forecastpfn}}.
 We continued pretraining TabPFN with artificial time series data to presumably improve its performance on such data.
+\newline
 Based on these results, we will now finally compare these outcomes to determine which scenario and which methods are to be preferred.
 \section{Key Findings}
 \iffalse
@@ -32,12 +33,12 @@ This
 In this section, we summarize the key findings of our experiments on finetuning and continued pretraining of TabPFN for time series forecasting.
 While the results show that performance improvements are achievable, they also reveal important dependencies on data attributes, training strategies, and model configurations.
 
-As the results of finetuning on a single dataset show, TabPFN can successfully be adapted to time series data.
-However, its effectiveness is highly dependent on the structure of the dataset, in particular, the number of time series, the available context length, and the overall amount of observations.
-Datasets with many time series and sufficient context length consistently benefit from finetuning, whereas datasets with only a few series or limited structure often show little to no improvement or even performance degradation.
+As the results of finetuning on a single dataset show, TabPFN can be successfully adapted to time series data. However, its effectiveness is highly dependent on the structure of the dataset, in particular, the number of time series, the available context length, and the overall amount of observations.
+Datasets with many time series and sufficient context length consistently benefit from fine-tuning, whereas datasets with only a few series or limited structure often show little to no improvement, or even performance degradation, indicating potential overfitting on these datasets.
 
 Across all experiments, the validation loss proved to be an unreliable indicator for evaluation performance.
 In many cases, checkpoints with lower validation loss did not correspond to better results in terms of MASE, indicating both a mismatch between training and evaluation metrics and a tendency to overfit the validation data.
+In this context, overfitting to the validation data means that the model adapts too closely to the specific validation samples, reducing its ability to generalize to unseen test data.
 
 The structure of the dataset itself holds a crucial role.
 Time series with clear patterns, such as periodicity or consistent trends, are easier for TabPFN to learn, whereas noisy or intermittent datasets remain challenging for all methods.
@@ -45,7 +46,7 @@ This highlights that not all datasets are equally suitable for finetuning and th
 
 When extending finetuning to several datasets, a trade-off between generalization and performance becomes clear.
 Finetuning on small-context datasets leads to a deterioration in performance, likely due to insufficient information per sample.
-In contrast, datasets with medium context lengths provide the best balance, letting the model to generalize while still capturing meaningful structures.
+In contrast, datasets with medium context lengths provide the best balance, letting the model generalize while still capturing meaningful structures.
 Larger context datasets also yield improvements, but not as consistently as the medium category.
 
 Continued pretraining with artificially generated time series shows that improvements are possible, but not equally across datasets.
@@ -56,7 +57,7 @@ Finally, an important observation is the benefit of multi-dataset finetuning and
 While single-dataset finetuning performs best when sufficient and well-structured data is available, multi-dataset approaches and prior-based methods achieve better performance in data-scarce settings by enabling greater generalization.
 
 Our final question in the expose was "Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?"
-Overall, the experiments show that no single training strategy dominates in all scenarios.
+Overall, the experiments and our complete evaluation in Table~\ref{tab:main_results_all_methods} in the appendix show that no single training strategy dominates in all scenarios.
 Instead, the choice between single finetuning, multi-dataset finetuning, and continued pretraining should be based on the availability, structure, and quality of the underlying data.
 
 
@@ -83,19 +84,24 @@ This work is subject to several limitations that should be considered when inter
 
 A major limitation is related to the datasets used in this thesis.
 The selected datasets do not cover all possible types of time series and therefore only provide a limited perspective.
-As a result, the findings mainly show whether finetuning works for these selected datasets, but do not fully generalize to all possible real-life scenarios.
+%As a result, the findings mainly show whether finetuning works for these selected datasets, but do not fully generalize to all possible real-life scenarios.
+In particular, datasets with high irregularity or non-stationary behavior are underrepresented, meaning that the observed benefits of finetuning may not transfer to domains such as financial time series or event-driven data.
 In addition, some datasets may inherently be less suitable for finetuning, for example, due to noisy, irregular, or difficult-to-model distributions.
 This makes it harder for TabPFN to learn relevant patterns and limits the achievable improvements.
 
 Another limitation concerns reproducibility.
 The original evaluation scores from prior work could not be fully reproduced, which makes a direct comparison to reported results difficult.
+This may be due to missing implementation details, differences in preprocessing, or stochastic training effects, which were not fully controllable in our setup.
 Instead, comparisons in this thesis are based on internally consistent baseline results, which still allow for relative evaluation but limit comparability to external benchmarks.
+
+A key limitation of the experimental setup is the mismatch between the validation objective (MSE) and the evaluation metric (MASE).
+As observed in the results, this leads to weak alignment between checkpoint selection and final benchmark performance.
 
 Furthermore, the experiments were conducted under computing limitations.
 Finetuning runs were limited to a maximum runtime of 2400 seconds, and continued pretraining was also restricted by a fixed time limit.
 This likely prevented some runs from fully converging and may have impacted the final performance.
 
-Finally, it should be noted that a newer version of TabPFN (TabPFN 2.5) \citep{grinsztajn2025tabpfn} was released after we already decided to use the \textit{tabpfn-v2-regressor-2noar4o2} checkpoint, as it was also done in \citet{hoo2025tables}.
+Finally, it should be noted that a newer version of TabPFN (TabPFN 2.5) was released by \citet{grinsztajn2025tabpfn} after we had already decided to use the \textit{tabpfn-v2-regressor-2noar4o2} checkpoint, as it was also done in \citet{hoo2025tables}.
 The experiments presented here are based on this checkpoint, and it is possible that some of the observed limitations or behaviors have already been improved in the newer model.
 
 In general, these limitations show that while the results present useful insights, they should be interpreted with caution and seen as an initial study rather than a definitive evaluation.
@@ -132,30 +138,36 @@ In general, these limitations show that while the results present useful insight
 \fi
 
 \section{Outlook}
-While this thesis provided insight into the way different methods of finetuning TabPFN with time-series data work, the results are limited by a maximum work time of 4 months.
-To further understand this subject, we would have expanded our evaluation methods.
+While this thesis provides insight into different methods for fine-tuning TabPFN on time series data, further exploration of this topic would benefit from more extensive evaluation methods.
 
-A first step would be to improve the evaluation procedure.
+Improving the evaluation procedure could yield better results.
 Even though the validation and evaluation setups are already quite similar, the results showed that validation accuracy does not always reflect the actual evaluation performance well.
-Adjusting the validation metric or making the validation process more robust could help select better checkpoints.
+Adjusting the validation metric or making the validation process more robust could help select better configurations.
 
 Another important aspect is the dataset selection for multi-dataset finetuning.
 In this work, we only tested a limited number of dataset combinations.
-Running more experiments with different dataset selections could help to better understand how individual datasets influence the overall performance and which combinations work best.
+In particular, systematically varying the proportion of small- and large-context datasets, as well as other characteristics such as noise levels, could help identify whether negative transfer occurs when mixing heterogeneous dataset types.
 
-Hyperparameters were also not explored in detail.
-A more systematic search could help to find configurations that work reliably for each method and lower the need for trying many different runs.
+A systematic hyperparameter search was not conducted and may reveal more robust configurations.
+Conducting such a search could help identify configurations that perform reliably across methods and reduce the need for extensive trial runs.
 
 Combining the different approaches could also be interesting.
 For example, continued pretraining with a prior could be combined with multi-dataset finetuning to benefit from both generalization and adaptation to real data.
 
-Another point that was not covered in this thesis is the impact of newer model versions.
-During the work on this thesis, a new version of TabPFN (TabPFN 2.5) was released.
-Evaluating the methods with this updated model could lead to different or improved results.
+An aspect not investigated in this work is the impact of newer model versions.
+During the work on this thesis, a new version of TabPFN (TabPFN 2.5) was released by \citet{grinsztajn2025tabpfn}.
+Evaluating the methods with this updated model could lead to different and perhaps improved results.
 
-Finally, the prior used for continued pretraining could be improved.
-The current prior does not capture all characteristics of real-world time series, which likely limits its effectiveness.
-More realistic priors could help to make continued pretraining more useful.
+Another important aspect is the sensitivity of prior-based continued pretraining to hyperparameter choices, as even small changes in configuration can lead to significantly different outcomes, making it difficult to identify robust settings.
+Furthermore, the prior used for continued pretraining could be improved, as it may not fully capture the diversity and structural properties of real-world time series.
+More expressive synthetic data generation methods, such as time series data generation via generative models explored by \citet{lawrence2021dgp}, could help enrich the prior and improve TabPFN-TS performance.
+At the same time, scaling to large real-world datasets remains an important direction, as demonstrated by \textit{TimeBench} introduced in \citet{liu2025sundial}, which comprises over a trillion observations.
+Combining improved synthetic priors with large-scale real-world data, therefore, represents a promising direction for continued pretraining.
+%Finally, the prior used for continued pretraining could be improved.
+%The current prior does not capture all characteristics of real-world time series, which likely limits its effectiveness.
+%Other time series generating algorithms like https://arxiv.org/pdf/2104.08043 could help improve TabPFN-TS performance by continuing pretraining with artifial data.
+%While artificial time series data is one way of pretraining large models, big datasets are the other side.
+%https://arxiv.org/pdf/2502.00816v2 introduced TimeBench: a dataset collection that comprises over a trillion observation points in total from various sources.
 
 Overall, further work is needed to better understand when and how these methods work best and how they can be combined effectively.
 

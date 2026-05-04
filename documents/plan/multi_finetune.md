@@ -1,0 +1,2 @@
+- saugeenday/M wurd besser obwohl auf single finetune schlecht
+- saugeenday/M wurde auf SZ_TAXI/H checkpoint schlechter

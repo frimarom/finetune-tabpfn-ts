@@ -2,7 +2,7 @@
 #SBATCH --partition=ext_vwl_norm
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=28
 #SBATCH --gres=gpu:1
 #SBATCH --mem=90G
 #SBATCH --time=02:00:00

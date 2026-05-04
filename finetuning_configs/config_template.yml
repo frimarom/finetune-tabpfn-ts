@@ -9,6 +9,14 @@ datasets:
     windows:
     ts_amount_limit:
     max_context_length:
+prior:
+  context_length:
+      start:
+      end:
+      step:
+  frequencies:
+  context_lengths:
+  enabled:
 finetuning:
   time_limit:
   batch_size:

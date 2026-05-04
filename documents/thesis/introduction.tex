@@ -2,33 +2,34 @@
 \label{chap:intro}
 \section{Motivation}
 \label{sec:motivation}
-Since the release of ChatGPT in 2022 and the surge of interest in artificial intelligence, machine learning, and deep learning have become more accessible to the public \citep{mckinsey2025stateofai}.
+Since the release of ChatGPT in 2022 and the surge of interest in artificial intelligence, machine learning and deep learning have become more accessible to the public \citep{singla2025stateai}.
 Large Language Models are now known as being a gateway to machine learning and artificial intelligence.
-But as the name suggests, LLMs excel almost exclusively on data in textual format.
+But as the name suggests, LLMs primarily excel on textual data.
 However, what about tabular data?
 Whether it is patient data in healthcare, sales data in finance, or any other data stored in an Excel-like schema, tabular data is one of the most common data formats used at scale \citep{van2024tabular}.
-This type of data has been studied by researchers for a considerable amount of time, but nobody has found a way to utilize deep learning for tabular data yet. Algorithms like gradient boost decision trees or random forest performed more efficiently and were used more commonly in this domain.
+This kind of data has received significant attention over the years, and traditional machine learning approaches like gradient boosting decision trees and random forests have frequently shown better performance than deep learning models when working with tabular data.
 \newline
-But with the release of TabPFN by \citet{hollmann2022tabpfn}, a transformer model pre-trained to solve artificially generated classification tasks from a synthetic prior, a new benchmark for tabular inference tasks has been set.
-In a single forward pass, TabPFN can solve classification, regression, and inference tasks on tabular data with state-of-the-art results.
+But with the release of TabPFN, a transformer model pre-trained to solve artificially generated classification tasks from a synthetic prior, \citet{hollmann2022tabpfn} set a new performance standard for tabular inference tasks.
+TabPFN achieves state-of-the-art performance on tabular classification, regression, and inference tasks.
+Notably, it requires only a single forward pass.
 %\\
 %Early 2025 TabPFN-TS was released.
 %A method that maps time series data onto tabular data to achieve SOTA forecasting results with the already pre-trained TabPFN model.
-\newline
+
 There are two main ways to presumably enhance the performance of this specific model.
 One is finetuning a pre-trained model, and the other is continued pre-training of a pre-trained model.
 The key difference between those two lies in the data the model is trained on.
 By only using real-world datasets from a specific domain, like healthcare or finance, with finetuning, one trains a pre-trained model to enhance its accuracy in this domain.
 In continued pre-training, a specific synthetic prior is used to generate synthetic classification, regression, or inference tasks for the domain to further train and enhance the model.
-\newline
-When it comes to physics, finance, meteorology or any domain where predicting the future is crucial, time series forecasting models are indispensable.
+
+When it comes to physics, finance, meteorology, or any domain where predicting the future is crucial, time series forecasting models are indispensable.
 A time series forecast is a forecast for the development of a system based on the current and prior observations of it, e.g., predicting the weather based on past observations and historical data from the same date in previous years.
-It utilizes the temporal dependencies and intervariable correlations within the observations.
+It utilizes the temporal dependencies and intervariable correlations within the observations \citep{wang2024deep}.
 \newline
-There are many different approaches used in forecasting, including Multi-Layer Perceptron, Recurrent Neural Networks, and Graph Neural Networks.
+There are many different approaches used in forecasting, including Multi-Layer Perceptron, Recurrent Neural Networks, and Graph Neural Networks \citep{wang2024deep}.
 In this thesis, we will focus on transformer-based time series forecasting, as they have shown great modeling ability for long-range dependencies and interactions in sequential data and thus are appealing to time series modeling.
 \newline
-Although TabPFN for time series already achieves top rank results in time series forecasting, the impact of finetuning or continued pretraining has not been studied, and potential benefits remain uncovered.
+Although TabPFN for time series (TabPFN-TS) already achieves top rank results in time series forecasting, the effect of finetuning and continued pretraining on TabPFN with time series data remains largely unexplored.
 \section{Exposé}
 \label{sec:expose}
 As \citet{hoo2025tables} showed, TabPFN can work with time series as well, although it has not been trained with time series data during pre-training, treating time series forecasting as a tabular regression problem.
@@ -38,15 +39,25 @@ We will address the concept of the aforementioned methods and examine whether th
 \newline
 The questions we will address are:
 \begin{enumerate}
-    \item Can we improve performance of TabPFN-TS by finetuning on downstream tasks? (See \autoref{subsec:singlefinetuning})
+    \item Can we improve the performance of TabPFN-TS by finetuning on downstream tasks? (See \autoref{subsec:singlefinetuning})
     \item Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN \citep{Hollmann_2025}? (See \autoref{subsec:multifinetuning})
     \item Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)? (See \autoref{chap:continuedpretraining})
     \item Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS? (See \autoref{chap:conclusion})
 \end{enumerate}
-Throughout the thesis we will use datasets, its splits and an evaluation pipeline of the GIFT-EVAL benchmark as well as datasets from the autogluon/chronos-datasets repository \citep{aksu2024giftevalbenchmarkgeneraltime,ansari2024chronos} .
-We base our implementation on the repository by Lennart Purucker (\url{https://github.com/LennartPurucker/finetune_tabpfn_v2}), which we adapted to time series data.
-To examine the presumable improvements, we use the GIFT-EVAL evaluation code to calculate different types of errors before and after finetuning.
+Preliminary findings suggest that finetuning performance depends strongly on dataset characteristics, while continued pretraining does not yield the expected improvements (see Chapters \ref{chap:finetuning} and \ref{chap:continuedpretraining}).
 \newline
-For continued pretraining we use the prior and its implementation from \citet{dooley2023forecastpfn} instead of real world data.
+The main contributions of this thesis are:
+\begin{enumerate}
+    \item We introduce a time series prior for continued pre-training of TabPFN-TS, enabling the investigation of whether synthetic time series priors can improve forecasting performance.
+    \item We provide, to the best of our knowledge, the first study exploring finetuning of TabPFN for time series forecasting.
+    \item We conduct a large-scale empirical comparison of finetuning and continued pre-training for TabPFN-TS across multiple benchmark datasets.
+\end{enumerate}
+Throughout the thesis, we will use datasets, their splits, and an evaluation pipeline of the GIFT-EVAL benchmark as well as datasets from the autogluon/chronos-datasets repository \citep{aksu2024giftevalbenchmarkgeneraltime,ansari2024chronos} .
+We base our implementation on the repository by Lennart Purucker \footnote{\url{https://github.com/LennartPurucker/finetune_tabpfn_v2}}, which we adapted to time series data.
+To examine the potential improvements, we use the GIFT-EVAL evaluation code to calculate different types of errors before and after finetuning.
+\newline
+For continued pretraining, we use the prior and its implementation from \citet{dooley2023forecastpfn} instead of real-world data.
+
+We gratefully acknowledge the computing time provided on the Linux HPC cluster at Technical University Dortmund (LiDO3), partially funded in the course of the Large-Scale Equipment Initiative by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) as project 271512359.
 
 We release our code under \url{https://github.com/frimarom/finetune-tabpfn-ts}.

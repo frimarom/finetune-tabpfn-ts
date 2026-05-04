@@ -1,0 +1,7 @@
+finetuning category, training_datasets,value, evaluation_dataset,config_numbers,best_finetuning_id, evaluation_id
+small_context_length,"hospital,car_parts,monash_nn5_weekly,covid_deaths,electricity/W,ett1/W,ett2/W",0-250, solar/W,1-54,39638962;39638957;39638971;39638965;39638958,NULL
+medium_context_length,"solar/D,us_births/M,SZ_TAXI/H,M_DENSE/D,ett1/D,ett2/D,monash_fred_md,nn5,taxi_1h",250-1000,"LOOP_SEATTLE/D, saugeenday/M",1-54,39638148;39638149;39638143;39638131;39638129,NULL
+big_context_length,"M_DENSE/H,hierarchical_sales/D,SZ_TAXI/15T,electricity/D,monash_australian_electricity,exchange_rate",1000-4096,"saugeenday/D,us_births/D",1-54,39639136;39639134;39639130;39639142;39639138,NULL
+,NULL,,NULL,NULL,NULL,NULL
+small_context_length/39720853,"hospital,car_parts,monash_nn5_weekly,solar/W,electricity/W,ett1/W,ett2/W",0-250, covid_deaths,55-108,,NULL
+big_context_length_test,,,,,39676088;39676097;39676094;39676092;39676093,

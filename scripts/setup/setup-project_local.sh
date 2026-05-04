@@ -3,7 +3,7 @@
 
 pip3 install --upgrade pip setuptools wheel
 
-if [ ! -d "..external/finetune_tabpfn_v2" ]; then
+if [ ! -d "../external/finetune_tabpfn_v2" ]; then
   cd ../external/finetune_tabpfn_v2 || exit
   pip3 install -e .
   cd ../../ || exit

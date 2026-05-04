@@ -1,0 +1,8 @@
+dataset, frequency, series_amount, windows, eval_score_metric, pre_eval_score, post_eval_score_1, post_eval_score_2, post_eval_score_3, post_eval_score_4, post_eval_score_5,
+hospital, M, 767, 1, MASE,0.7641135406495067,"","","","",""
+SZ_TAXI, 15T, , ,,,"",""
+SZ_TAXI, H, , ,,,""
+covid_deaths,,,,,,"",,,,,
+us_births,D,1,,,,"",,,,,
+us_births,W,1,,,,"",,,,,
+us_births,M,1,,,,,,,,,

@@ -30,37 +30,71 @@ def create_configs(base_config_path, output_dir, param_grid, base_dataset_config
 
         # Finetuning-Basis übernehmen und mit Combo überschreiben
         config_copy["finetuning"].update(base_dataset_configs["finetuning"])
+        config_copy["prior"].update(base_dataset_configs["prior"])
         config_copy["finetuning"].update(combo)
 
-        output_path = os.path.join(output_dir, f"{combined_name}_{offset + i + 1}.yml")
+        output_path = os.path.join(output_dir, f"{output_dir.replace('/','_')}_{offset + i + 1}.yml")
         with open(output_path, 'w') as output_file:
             yaml.dump(config_copy, output_file)
 
 
 def create_config_main():
     base_config_path = "config_template.yml"
-    dataset_name = "hospital"
+    dataset_name = ("multi/short_context")
     output_dir = dataset_name
-
     # Mehrere Datasets oder nur eines – einfach Liste befüllen
     base_dataset_configs = {
         "datasets": [
-            {
-                "name": dataset_name,
-                "prediction_length": -1,
-                "windows": 1,
-                "ts_amount_limit": 5000,
-                "max_context_length": 4096,
-            },
-            # Weiteres Dataset einfach hier hinzufügen:
-            # {
-            #     "name": "etth1",
-            #     "prediction_length": -1,
-            #     "windows": 2,
-            #     "ts_amount_limit": 1000,
-            #     "max_context_length": 2048,
-            # },
-        ],
+    {
+        "name": "hospital",
+        "prediction_length": -1,
+        "windows": 1,
+        "ts_amount_limit": 5000,
+        "max_context_length": 4096
+    },
+    {
+        "name": "car_parts_with_missing",
+        "prediction_length": -1,
+        "windows": 1,
+        "ts_amount_limit": 5000,
+        "max_context_length": 4096
+    },
+    {
+        "name": "monash_nn5_weekly",
+        "prediction_length": -1,
+        "windows": 1,
+        "ts_amount_limit": 5000,
+        "max_context_length": 4096
+    },
+    {
+        "name": "solar/W",
+        "prediction_length": -1,
+        "windows": 1,
+        "ts_amount_limit": 5000,
+        "max_context_length": 4096
+    },
+    {
+        "name": "electricity/W",
+        "prediction_length": -1,
+        "windows": 1,
+        "ts_amount_limit": 5000,
+        "max_context_length": 4096
+    },
+    {
+        "name": "ett1/W",
+        "prediction_length": -1,
+        "windows": 1,
+        "ts_amount_limit": 5000,
+        "max_context_length": 4096
+    },
+    {
+        "name": "ett2/W",
+        "prediction_length": -1,
+        "windows": 1,
+        "ts_amount_limit": 5000,
+        "max_context_length": 4096
+    },
+],
         "finetuning": {
             "update_every_n_steps": 2,
             "validation": {
@@ -69,9 +103,25 @@ def create_config_main():
                     "max_patience": 200,
                 },
                 "validate_every_n_steps": 10,
-                "ts_val_amount": 20,
+                "ts_val_amount": 100,
             },
             "checkpoint_to_save": "finetuned_model",
+        },
+        "prior": {
+            "enabled": False,
+            "context_lengths":[],
+            "context_length": {
+                "start": None,
+                "end": None,
+                "step": None,
+            },
+            "frequencies":[
+                1,
+                2,
+                3,
+                4,
+                5,
+            ]
         }
     }
 
@@ -171,6 +221,8 @@ def create_csv_from_results(pids, result_folder, output_csv):
 
 
 if __name__ == "__main__":
+    create_config_main()
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_dir", type=str, default="finetuning_graphs",
                         help="Path to a directory to save the output files")
@@ -181,3 +233,4 @@ if __name__ == "__main__":
     print("test", args.job_ids, args.output_dir)
 
     create_csv_from_results(args.job_ids, result_folder="../../finetuning_results", output_csv=f"{args.output_dir}/finetuning_summary.csv")
+    """

@@ -5,13 +5,14 @@ Instead of using real-world data, as in the methods of the previous chapter, we 
 \section{Experimental Setup}
 The experimental setup is similar to the one we used to finetune TabPFN with real-world datasets, as we mostly use the same code.
 The key differences for the current procedure are in data loading, validation, and hyperparameters.
+The evaluation procedure is the same as in \autoref{chap:finetuning}.
 \subsubsection{Data loading}
 As mentioned above, instead of taking data from real-world datasets as we did in the methods before, we now sample artificial time series.
-This is done with the code provided by \citep{dooley2023forecastpfn} that generates these time series based on a given context length(that represents the length of the time series) and frequency (that later determines the prediction length of the time series).
-This was further explained in %TODO hier ref zu background
+This is done with the code provided by \citet{dooley2023forecastpfn} that generates these time series based on a given context length representing the length of the time series and frequency later determining the prediction length of the time series.
+This was further explained in \autoref{chap:background}.
 To train TabPFN with a broad mass of artificial time series data, we also have to sample from a wide range of context lengths as well as frequencies.
-For this, we firstly specify a set of context lengths and frequencies that the prior will use to generate data from.
-After that, in every epoch, the dataloader samples a context length as well as a frequency and generates enough time series with these parameters to create a batch.
+For this, we first specify a set of context lengths and frequencies that the Prior will use to generate data from.
+In each epoch, a context length and a frequency are sampled, and a sufficient number of time series is generated to form a batch.
 
 The context lengths we will be using are
 \[32,\space 64,\space 96,\space 128,\space 192,\space 256,\space 384,\space 512,\space 768,\space 1024,\space 2048,\space 4096\]
@@ -19,12 +20,11 @@ And the frequencies we will sample from are
 \[hourly, daily, weekly, monthly, yearly\]
 \subsubsection{Validation}
 Validation is done similarly to what we did with multi-dataset finetuning.
-As a prior only generates artificial data, it is not possible to validate the current state of the model on it, and this would lead to ...
-Since we later apply TabPFN only to real-world datasets, we also need to validate it on them.
+As a prior only generates artificial data, it is not possible to validate the current state of the model on it, and since we later apply TabPFN only to real-world datasets, we also need to validate it on them.
 For this endeavor, we selected a subset of the datasets currently in GIFT-Eval that provide a wide range of different metadata.
 This includes context length, frequency, and other special features that are not easy to quantify but can be seen, e.g., \ noisiness.
 
-For validation datasets, we chose:
+For validation datasets, we chose those listed in Table~\ref{tab:continued_pretraining_val}.
 \begin{table}[h]
 \centering
 \begin{tabular}{lccc}
@@ -46,23 +46,26 @@ saugeenday/W & 3391 & W & 1 \\
 \hline
 \end{tabular}
 \caption{}
+\label{tab:continued_pretraining_val}
 \end{table}
 \subsubsection{Hyperparameters}
-Different from our finetuning setup, we do not take the batch sizes 16, 32, and 64 into account.
+In contrast to our finetuning setup, we do not consider batch sizes of 16, 32, and 64.
 In an earlier test run, these batch sizes showed little to no training progress, as batch generation took too long due to the creation of time series.
+Instead, we only evaluate batch sizes of 2, 4, and 8.
 \newline
 The second setting that is different is the time limit.
-Instead of training for a maximum time of 2400 seconds or 40 minutes, with continued pretraining, we train for 3600 seconds or 60 minutes.
+Instead of training for a maximum time of 2400 seconds (40 minutes), with continued pretraining, we train for 3600 seconds (60 minutes).
 This is also due to the fact that dynamically generating time series takes longer than using real-world data.
 \section{Results}
-After evaluating the top 5 checkpoints we selected based on their best validation loss on the datasets mentioned above, we have now accumulated the following results.
+\label{sec:continued_results}
+After evaluating the top 5 configurations we selected based on their best validation loss on the datasets mentioned above, we obtain the following results.
 \begin{figure}[H]
     \centering
 
     \begin{subfigure}[t]{0.3\textwidth}
         \centering
         \includegraphics[width=\linewidth]{pictures/prior/mase_mean_delta_plot.pdf}
-        \caption{Mean delta over all checkpoints}
+        \caption{Mean delta over all configurations}
         \label{fig:mase_mean_delta_plot}
     \end{subfigure}
     \hfill
@@ -106,18 +109,20 @@ After evaluating the top 5 checkpoints we selected based on their best validatio
     \caption{Comparison of mean and checkpoint-wise delta plots. Lower is better. }
     \label{fig:combined_delta_plots}
 \end{figure}
-As shown in Figure~\ref{fig:mase_mean_delta_plot}, the mean performance across all five checkpoints improves on only three datasets, while it deteriorates on the remaining ones.
-However, when analyzing individual checkpoints, differences become apparent. Checkpoints 1 and 2 both improve performance on 9 out of 18 datasets, whereas checkpoints 3, 4, and 5 show improvements on only a small number of datasets.
-Furthermore, the improvements vary noticeably across datasets. While some datasets show noticeable gains, others exhibit negligible changes or even significant performance degradation.
+As shown in Figure~\ref{fig:mase_mean_delta_plot}, the mean performance across all five configurations improves on only three datasets, while it deteriorates on the remaining ones.
+A closer look at the individual setups reveals some clear contrasts.
+Configurations 1 and 2 each show improvements on 11 and 14 of the 33 datasets, while configurations 3, 4, and 5 lead to improvements in only a limited number of cases.
+The extent of the improvements differs substantially between datasets.
+In some cases, there are clear gains, whereas in others the changes are minimal or performance even drops considerably.
 
-The results also indicate that the effect of continued pretraining is highly dataset-dependent.
-For example, datasets such as \textit{ett2/D} show consistent improvements across multiple checkpoints, whereas others such as \textit{ett2/W} and \textit{solar/W} do not benefit from continued pretraining at all.
+Overall, the findings suggest that the impact of continued pretraining depends strongly on the specific dataset.
+For example, datasets such as \textit{ett2/D} show consistent improvements across multiple configurations, whereas others such as \textit{ett2/W} and \textit{solar/W} do not benefit from continued pretraining at all.
 Notably, datasets with shorter context lengths, such as \textit{solar/W} (context length 52), appear to be particularly challenging.
 
 \iffalse
 As one can see in plot~\ref{fig:mase_mean_delta_plot}, the mean performance over a selected set of datasets improved only on three datasets but worsened on all others.
-This is a result of averaging the MASE scores over all 5 selected checkpoints.
-Checkpoints 1 and 2 in the selection improved better as they both improved on 9 datasets.
+This is a result of averaging the MASE scores over all 5 selected configurations.
+Configurations 1 and 2 in the selection improved better as they both improved on 9 datasets.
 But some of this performance is so minimal that one can say it stayed the same.
 Another thing that is interesting to observe is that continued pretraining does not work on some datasets at all.
 These are, for example, ett2/W and solar/W.
@@ -125,7 +130,7 @@ Both of which are datasets that have a short context length (103 and 52)
 \fi
 % Erster und zweiter Checkpoint performt auf mehreren Datensets gut aber hat auf manchen auch sehr starke Verluste
 
-% Andere 3 Checkpoints sind viel schlechter zt -> nur auf 2 Datensets maximal
+% Andere 3 Configurations sind viel schlechter zt -> nur auf 2 Datensets maximal
 
 % Es gibt Datensets, auf denen der Prior generell gut ist, und manche, auf denen er überhaupt nicht gut ist.
 
@@ -146,29 +151,32 @@ ckpt\_5 & 3600 & 0.0005 & 4 & 0.0    & 0.0 & 3669.10 & 0.3624 & 0.2912 & 0.2912 
 \hline
 \end{tabular}
 }
-\caption{Training results across checkpoints.}
+\caption{Training results across configurations.}
 \label{tab:training_results}
 \end{table}
-Table~\ref{tab:training_results} summarizes the hyperparameter configurations and training results of the top five checkpoints.
-All selected checkpoints were trained with a learning rate of 0.0005. Configurations using smaller learning rates (e.g., 0.00005 and 0.000005) resulted in consistently worse validation performance and were therefore not included among the top checkpoints.
-Regarding batch size, the top-performing checkpoints (ckpt\_1 and ckpt\_2) were trained with a batch size of 8, while other checkpoints used batch sizes of 2 or 4.
-Additionally, a difference in the number of training steps can be observed. Checkpoints 1 and 2 performed significantly fewer steps (approximately 115) compared to checkpoints 3–5, which executed up to 427 steps.
+Table~\ref{tab:training_results} summarizes the hyperparameter configurations and training results of the top five configurations.
+All selected configurations were trained with a learning rate of 0.0005.
+Configurations using smaller learning rates (e.g., 0.00005 and 0.000005) resulted in consistently worse validation performance and were therefore not included among the top configurations.
+\newline
+Regarding batch size, the top-performing configurations (ckpt\_1 and ckpt\_2) were trained with a batch size of 8, while other configurations used batch sizes of 2 or 4.
+Additionally, a difference in the number of training steps can be observed.
+Configurations 1 and 2 performed significantly fewer steps (approximately 115) compared to configurations 3–5, which executed up to 427 steps.
 
-Another notable observation is that four out of five checkpoints stopped training due to the time limit rather than early stopping based on validation performance.
+Another notable observation is that four out of five configurations stopped training due to the time limit rather than early stopping based on validation performance.
 Only checkpoint 4 terminated due to early stopping (AdaptiveES), indicating that most runs were constrained by the predefined training time.
 
 \iffalse
-By looking at table~\ref{tab:training_results}, one can see that all five checkpoints were trained with a learning rate of 0.0005.
-The other checkpoints that yielded worse validation loss were mostly trained with learning rates smaller than this (0.00005, 0.000005), as shown in~\ref{TODO}.
+By looking at table~\ref{tab:training_results}, one can see that all five configurations were trained with a learning rate of 0.0005.
+The other configurations that yielded worse validation loss were mostly trained with learning rates smaller than this (0.00005, 0.000005), as shown in~\ref{TODO}.
 
 Another interesting aspect is the step amount.
-As mentioned above, the first two checkpoints performed significantly better on multiple datasets than the last three.
-These two checkpoints also happen to have many fewer steps than the last three.
+As mentioned above, the first two configurations performed significantly better on multiple datasets than the last three.
+These two configurations also happen to have many fewer steps than the last three.
 While ckpt\_1 and ckpt\_2 have a total of 115 and 114 steps, ckpt\_3, ckpt\_4, and ckpt\_5 have at least double the number of steps.
-A cause for this could possibly be that the batch size of checkpoints 1 and 2 is both 8, thus needing more data to generate (that is why they also need double the time)
+A cause for this could possibly be that the batch size of configurations 1 and 2 is both 8, thus needing more data to generate (that is why they also need double the time)
 But they also perform significantly better.
 Batch size 8 seems to be superior.
-Another thing that comes to mind is that 4 of 5 checkpoints stopped training due to the time limit, not because the validation loss did not improve.
+Another thing that comes to mind is that 4 of 5 configurations stopped training due to the time limit, not because the validation loss did not improve.
 This is another important factor since ckpt\_1 and ckpt\_2 both needed much more time per step and could possibly improve even more
 \fi
 % hier so wie Single-Finetuning-Graphen und so zeigen weil ist ja nicht viel anders und wir haben auch viele Datensets
@@ -177,46 +185,50 @@ This is another important factor since ckpt\_1 and ckpt\_2 both needed much more
 % prozentual Plot der Verbesserung zeigen Balkendiagramm
 
 % Performance von 1. Checkpoint alleine auch zeigen
-% vielleicht auch Performance von allen anderen Checkpoints auch zeigen
+% vielleicht auch Performance von allen anderen Configurations auch zeigen
 
 
 
 % Viele Trainingsläufe haben nicht aufgehört weil Patience auslief sondern weil Zeit vorbei war
 % beste HP Konfig auf jeden Fall mit 0.0005 lr
 \section{Discussion}
-In our expose we defined the following question for this section:
+In our exposé we defined the following question for this section:
 "Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)?"
-This question can be answered positively, although the results indicate limitations, and the approach does not perform as well as initially expected.
+The results do not provide clear evidence that continued pretraining with a time-series prior consistently improves performance.
+While improvements can be observed in some cases, the overall effect is heterogeneous and often negative.
 
 A prior for time series should be able to generalize across different time series characteristics and yield better, more consistent results.
-However, in our case with the prior we used from \citep{dooley2023forecastpfn}, this is not the case, as the effect we observed is very heterogeneous and, on average, only leads to better results on a small number of datasets.
-A worsening of TabPFNs' performance is an effect we are looking at.
-In the results section and what can be seen in <fig ref>, we can conclude that TabPFN only improved on 4 datasets but deteriorated on 20 other datasets.
-These results alone are not sufficient to conclude that training with these prior results results in improved performance.
+However, in our case with the prior we used from \citet{dooley2023forecastpfn}, this is not the case, as the effect we observed is very heterogeneous and, on average, only leads to better results on a small number of datasets.
+Instead, we observe a deterioration of performance on most of the datasets for every checkpoint.
+In \ref{sec:continued_results} and what can be seen in the appendix in Table~\ref{tab:prior_results}, we can conclude that TabPFN only improved on 8 datasets but deteriorated on 25 other datasets.
+These results alone are not sufficient to conclude that training with these prior results in improved performance.
 
-An especially interesting aspect was the behavior of the five checkpoints we selected based on their validation loss during training.
-Checkpoints 1 and 2 perform significantly better than the other three checkpoints.
-TabPFN improved performance on 12 and 11 datasets using these two checkpoints.
-This suggests that these two checkpoints have different characteristics during training that allowed them to better adapt to the time series training data.
+An especially interesting aspect was the behavior of the five configurations we selected based on their validation loss during training.
+Configurations 1 and 2 perform significantly better than the other three configurations.
+TabPFN improved performance on 11 and 14 datasets using these two configurations.
+This suggests that these two configurations have different characteristics during training that allowed them to better adapt to the time series training data.
 
-If we take a look at the hyperparameters that were used for the five checkpoints, we can observe that both of the top checkpoints used a batch size of 8, contrary to the other three, which used 2 and 4.
-Empirically, this lets us assert that a batch size of 8 with a learning rate of 0.0005 is a good hyperparameter configuration for continued pretraining.
+If we take a look at the hyperparameters that were used for the five configurations, we can observe that both of the top configurations were trained with a batch size of 8, contrary to the other three, which used 2 and 4.
+Empirically, this lets us assert that a batch size of 8 with a learning rate of 0.0005 is a more suitable hyperparameter configuration for continued pretraining, although further experiments would be required to confirm this.
 
-The training duration, measured by the number of steps/epochs we trained TabPFN on, also helps us conclude on another important factor for continued pretraining.
-Both checkpoints 1 and 2 were trained for a total of 114/115 steps and reached their best performance at steps 79 and 89.
-The other three checkpoints trained significantly longer, with up to 400 steps, while reaching their best state at step 189.
-The consistently stronger performance of the early checkpoints suggests that moderate continued pretraining may be beneficial, while prolonged training may instead be harmful.
+The training duration, measured by the number of steps we trained TabPFN on, also helps us conclude on another important factor for continued pretraining.
+Both configurations 1 and 2 were trained for a total of 114/115 steps and reached their best performance at steps 79 and 89.
+The other three configurations trained significantly longer, with up to 400 steps, while reaching their best state at step 189.
+The consistently stronger performance of the early configurations may indicate that moderate continued pretraining may be beneficial, while prolonged training could lead to degradation, although this effect is not systematically validated.
 \newline
-All checkpoints also ended due to the time limit of at most 40 minutes, instead of early stopping due to no improvements regarding the validation loss.
+All configurations also ended due to the time limit of at most 40 minutes, instead of early stopping due to no improvements regarding the validation loss.
 On the one hand, the reaching of this time limit comes from the data generation that is done dynamically while training.
 On the other hand, this suggests that, since all runs were terminated due to the time limit rather than exhausted patience, the current results may not yet fully reflect the method’s potential.
 
-For some datasets, it can be observed that the performance of all checkpoints consistently deteriorates, whereas for others it consistently improves.
-This suggests that, while evaluation can also be different between checkpoints, it is also dataset-dependent.
+For some datasets, it can be observed that the performance of all configurations consistently deteriorates, whereas for others it consistently improves.
+This suggests that, while evaluation can also be different between configurations, it is also dataset-dependent.
 Datasets that only experience a worsening mostly show difficult characteristics, such as noisy or intermittent time series, that even initially make it hard for TabPFN to forecast.
 
-Finally, we can conclude that continued pretraining with a time-series-generating prior shows promising results, but it is not as general as one might think.
-Our work here is limited only to the prior constructed by \citep{dooley2023forecastpfn}.
+In summary, continued pretraining with the evaluated time-series prior does not provide consistent or generalizable improvements.
+While isolated gains can be observed, the overall results indicate that this approach, in its current form, is not yet reliable.
+Therefore, the findings should be interpreted as an exploratory assessment of this approach rather than a definitive evaluation of its effectiveness.
+\newline
+Our work here is limited only to the prior constructed by \citet{dooley2023forecastpfn}.
 Future work should also focus on other time-series priors, as the general concept of further training a model with artificial time-series data yielded acceptable results.
 % 1. High-level conclusion
 % 2. Overall prior effect (heterogeneous)
@@ -231,14 +243,14 @@ Future work should also focus on other time-series priors, as the general concep
 
 % dataset dependent
 
-% Checkpoints unterschiedlich -> frühe Checkpoints waren hier besser was darauf hindeuten kann dass mehr Training nicht gleich besser ist
+% Configurations unterschiedlich -> frühe Configurations waren hier besser was darauf hindeuten kann dass mehr Training nicht gleich besser ist
 % effizientes Training besser
 
 % sehr hyperparameter empfindlich
 % zu große Batch Sizes führen zu nichts und brauchen zu lange
 % zu kleine Learning Rate zu konservativ
 
-% Die konsistent besseren Ergebnisse der frühen Checkpoints deuten darauf hin, dass moderates Continued Pretraining nützlich sein kann, während längeres Training eher schadet.
+% Die konsistent besseren Ergebnisse der frühen Configurations deuten darauf hin, dass moderates Continued Pretraining nützlich sein kann, während längeres Training eher schadet.
 % „Da alle Runs durch das Zeitlimit und nicht durch ausgeschöpfte Patience beendet wurden, ist es plausibel, dass die derzeitigen Ergebnisse das Potenzial der Methode noch nicht vollständig abbilden.“
 
 % für manche Datensets stellt der Prior die Verteilung besser dar als für andere

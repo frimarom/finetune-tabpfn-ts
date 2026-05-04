@@ -2,7 +2,109 @@
 TODO:
 - data path variabel als parameter übergeben
 - alles besser dokumentieren
-- randomization rausnehmen für finetuning
-    - dafür vielleicht gift_eval struktur anschauen weil es da ja für ein dataset auch viele untersets gibt
-    - step by step inkerementell die datensets machen statt randomized. wenn zuende neues unterset benutzen
 - pr bei finetuning projekt machen
+- validation erstellung auch im finetuning code anpassen
+- validation ganz anpassen sodass die val Zeitreihe in X_test und X_train aufgeteilt wird
+- add logging
+- add tensorboard support
+- fork lennart puruckers finetuning repo for time series data
+- val data weniger
+- predicted values logging(warum ist training loss so viel höher als validation loss obwohl gleich länge und pred länge)
+ -> validation wird immer noch aufgeteilt
+Evaluated Datasets:
+- bitbrains_rnd/H
+- hospital
+- m4_daily
+- solar/W
+- m4_quarterly
+
+
+
+Extrapolation Beyond the Conditioning Range für Prior Training bspw
+
+TODO wenn viele Zeitreihen eine gleiche länge haben und nur ein paar Zeitreihen eine kleinere/größere Länge haben die zeitreihen einfach entfernen
+
+TODO dataset loading anders?
+
+
+sbatch summarize_finetuning_scripts.sh wind_farms_hourly 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36
+Submitted batch job 39499114
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh wind_farms_daily 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36
+Submitted batch job 39499116
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh uber_tlc_daily 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36
+Submitted batch job 39499117
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh taxi_1h 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+Submitted batch job 39499227
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh taxi_30min 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+Submitted batch job 39499228
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh weatherbench_hourly_temperature 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+Submitted batch job 39499229
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh weatherbench_hourly_10m_v_component_of_wind 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+Submitted batch job 39499230
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh solar_1h 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+Submitted batch job 39499231
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh monash_traffic 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+Submitted batch job 39499232
+
+
+
+
+ sbatch summarize_finetuning_scripts.sh monash_electricity_hourly 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54
+Submitted batch job 39515486
+(base) [smfrromb@gw01 finetuning]$ sbatch summarize_finetuning_scripts.sh monash_traffic 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54
+Submitted batch job 39515487
+
+
+
+-vielleicht noch austesten auf grundlage von realTABPFN code:
+ - learning rate scheduler wie in realTABPFN: 3e-7 linear warmup followed by a cosine annealing schedule
+ - maximum 4000000 total cells
+ - only 1 batch size
+
+
+Fragen Katharina:
+- tabpfn hyperparameter search
+- text zu grob(?)
+- phi in tabpfnts auch benutzen? bisschen schade gewählt das phi auch den raum der priors beschreibt
+
+ToDos für die woche:
+- tabelle mit allen Datensets fertig bekommen
+- prior fertig bekommen
+- training starten wenn cluster wieder da ist
+- evaluations plan machen auf basis von dem was mit katharina besprochen wurde
+- text überarbeiten
+- windows doch reinpacken
+- alles auf gift eval umstellen (trainingsdata erstellung(load_homongenous, X_val y_val direkt übergeben/Option machen direkt das Datenset zu übergeben und alles im dataloader zu laden und im validation ding das auch zu laden))
+- (wenn zeit)
+
+Für später:
+- entropy graph zeichnen
+- bar dist graph zeichnen
+- prediction graph zeichen
+alles für alle vier methoden
+
+
+
+Was muss wo rein?
+Appendix/finetuning/continued pretraining
+noch mehr drum herum
+
+Katharina:
+website zitieren?
+transformer vielleicht doch erklären?(marlon meinte)
+TabPFN permutation invariant?
+
+
+TODOS
+- noch mal continued pretraining
+- vielleicht nochmal large context und short context
+- single finetuning text schreiben
+- graph mit single und multi finetuning machen
+- graph von single finetuning mit graidenten für schlechteren/besseren fehler
+
+
+
+
+so viele tabellen?
+Was kommt wo hin?
+noch eine Tabelle mit echten MASE werten?

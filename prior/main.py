@@ -101,6 +101,7 @@ if __name__ == "__main__":
         # 3 weekly
         # 4 monthly
         # 5 yearly
+    """
     cfg, sample = generate(
         100, #number of observations per time series
         freq_index=1,
@@ -108,11 +109,4 @@ if __name__ == "__main__":
         options={},
     )
     print(sample)
-
-
-    print("X train Shape", X_train.shape)
-    print("y train shape", y_train.shape)
-    print("X test Shape", X_test.shape)
-    print("y test shape", y_test.shape)
-    plt.plot()
-    plt.savefig("series.png")
+    """
