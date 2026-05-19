@@ -1,0 +1,357 @@
+\documentclass[t,aspectratio=169,svgnames]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Wenn ihre Folien auf Deutsch sind (die letzte ist der Default)
+\usepackage[english,ngerman]{babel}
+\usepackage[autostyle=true,german=quotes]{csquotes}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% for English slides, use this:
+%\usepackage[german,english]{babel}
+%\usepackage[autostyle=true]{csquotes}
+
+% Theme mit kleinen Anpassungen
+\usetheme[progressbar=frametitle]{moloch}
+\usecolortheme{moloch-highcontrast}
+\setbeamercolor{title separator}{fg=YellowGreen}
+\setbeamercolor{progress bar}{fg=YellowGreen,bg=YellowGreen!15!white}
+\setbeamercolor{frametitle}{fg=black,bg=white}
+\hypersetup{colorlinks,linkcolor=,urlcolor=YellowGreen!66!black}
+\usepackage{appendixnumberbeamer}
+\setbeamertemplate{frametitle continuation}{}
+\setbeamertemplate{itemize items}[triangle]
+\setbeamertemplate{frame footer}{\strut\insertshorttitle{} -- \insertshortauthor{}}
+
+
+% Fonts
+\usepackage[medium]{FiraSans}
+\usepackage[medium]{FiraMono} % für code
+\usepackage{newtxsf} % Mathe-Font
+
+\setlength{\parskip}{\baselineskip}
+
+% Erweiterungen
+\usepackage{booktabs}
+\usepackage{amsmath,mathtools}
+\usepackage{pgfplots}
+
+%%% OPTIONAL:
+\usepackage[lined,noend]{algorithm2e} % nur eine von mehreren Möglichkeiten!
+\usepackage{minted}\usemintedstyle{friendly} % eine Möglichkeit für echten code
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Literaturmanagement
+\usepackage[backend=biber, % moderneres backend als bibtex
+            style=alphabetic, sorting=none, % Lesbare Schlüssel statt zahlen
+            doi=true, isbn=true, url=true,  % DOI, ISBN und URLs anzeigen
+            maxnames=3, minnames=1,         % Ab 4 Autoren bei Quellenangaben et al. verwenden
+            maxbibnames=99, minbibnames=99, % Literaturverzeichnis vollständig
+]{biblatex}
+\addbibresource{literatur.bib} % Dateiname der Literaturdatenbank(en)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% METADATEN
+\title{Continued Pretraining on TabPFN with Time Series Data}
+
+\author{Friedrich Romberg}
+\institute{Lammar Insitute, TU Dortmund University}
+\date{Thesis presentation, \today}
+
+\begin{document}
+\begin{frame}[c]\titlepage\end{frame}
+
+\section{Motivation}
+%Folie 1
+%TabPFN
+\begin{frame}
+\frametitle{Tabular data}
+Tabular data is one of the most common datatypes in fields like finance or healthcare
+
+GBDT or random forest excel on tabular
+
+Until TabPFN:
+\begin{itemize}
+    \item Lightweight Deep Learning model
+    \item Solves classification, regression and inference tasks in one single forward pass
+    \item Trained solely on artificial tabular data
+\end{itemize}
+\end{frame}
+%Folie 2
+%Time series forecasting
+\begin{frame}
+\frametitle{Time series forecasting}
+    \includegraphics{timeseries_forecast.png}
+\end{frame}
+
+%Folie 3
+%TabPFN for time series data
+\begin{frame}
+\frametitle{Time series forecasting with TabPFN}
+    time series data is similar to tabular data
+    % hier beispiel zeigen mit tabelle
+
+    TabPFN-TS takes on this task
+
+    applies an additional featurization to the time series data to add 28 new features
+
+    achieves top-rank performance on various time series benchmarks
+\end{frame}
+%Folie 4
+% Finetuning und continued pretraining
+\begin{frame}
+    \frametitle{Enhancing performance of a pretrained model}
+    But can we enhance the performance of this model?
+
+    Two methods:
+
+    -finetuning
+
+    -continued pretraining
+\end{frame}
+
+\begin{frame}
+\frametitle{Abstract}
+TabPFN performes well on time series data with the right encoding (see TabPFN-TS paper)
+
+We evaluated three methods to presumably enhance its performance on such data
+
+\begin{itemize}
+\item Finetuning on one dataset
+\item Finetuning on multiple datasets
+\item Continued Pretraining with synthetic data from a prior developed
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Abstract}
+Single Finetuning is especially dependent on dataset characteristics
+
+Multi Finetuning additionally showed good generalization results
+
+Continued Pretraining did not generalize as expected and was the worst of the three methods
+
+All methods showed promising but not decisive results
+\end{frame}
+
+\begin{frame}
+\frametitle{Structure of this presentation}
+    \begin{itemize}
+        \item Motivation
+        \item Background
+        \item Finetuning
+        \item Continued Pretraining
+        \item Conclusion
+    \end{itemize}
+\end{frame}
+
+
+
+%Folie 5
+% Welche Fragen haben wir evaluiert
+\begin{frame}
+    \frametitle{Structure of this thesis}
+    In our thesis we evaluated four questions
+\begin{itemize}
+    \item Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?
+    \item Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?
+    \item Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)?
+    \item Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?
+\end{itemize}
+\end{frame}
+\section{Background}
+%Folie 1 Time series forecasting
+\begin{frame}
+    \frametitle{Time series}
+    Time Series Definition:
+
+    $X=\{x_1, x_2, …, x_n\} \in \mathbb{R}^{d \times n}$ where $n$ is the number of temporal observations and $d$ the number of observed values at time point $t$
+
+    Observation $x_t$ Definition:
+    $x_t = t_t + z_t + s_t + \epsilon_t$ \textit{or} $x_t = t_t \cdot z_t \cdot s_t \cdot \epsilon_t$
+
+    $t_t$: trend component
+
+    $z_t$: cyclic component
+
+    $s_t$: season component
+
+    $\epsilon_t$: noise component
+\end{frame}
+%Folie 2 connection time series to tabular data
+\begin{frame}
+\frametitle{}
+\end{frame}
+%Folie 3 Time series benchmark (GIFT Eval) (vielleicht hier noch eine folge für die drei split(train, val, test))
+\begin{frame}
+\frametitle{GIFT-Eval}
+    \textbf{G}eneral T\textbf{I}me Series \textbf{F}orecas\textbf{T}ing Model \textbf{Eval}uation
+
+    - time series forevasting benchmark with 23 datasets with over 144.000 time series
+
+    - generalizes by providing datasets from different domains with varying forecast horizons, context lengths, frequencies and univariate or multivariate data
+
+    - provides guidance to split time series into train, validation and test data
+\end{frame}
+%Folie 4 Hier vielleicht einmal kurz das Standing von TabPFN-TS zeigen
+\begin{frame}
+\frametitle{TabPFN-TS in GIFT-Eval}
+    %TODO
+\end{frame}
+%Folie 5 Autogluon Chronos datasets
+\begin{frame}
+\frametitle{autogluon/chronos-datasets}
+    - another dataset collection
+
+    - we will take additional 4 datasets from this collection to help with multi finetuning
+\end{frame}
+%Folie 6 Prior fitted networks (vielleicht 2 folien eher 1 weil sehr theoretisch und für vortrag nicht sehr relevant)
+\begin{frame}
+\frametitle{PFN - Prior Fitted Networks}
+    - transformer based architecture
+
+    - trains on artificial tasks generated by a prior
+
+    - approximates posterior predictive distribution $p(y | x, D) = \int_{t} p(y|x, t)p(t, D)$
+
+    - prior is a generative process used to produce large amounts of training data that imitates real-world data
+\end{frame}
+
+%Prior
+\begin{frame}
+\frametitle{Prior of TabPFN}
+\end{frame}
+
+%Folie 9 ForecastPFN Prior einmal kurz und eine Folie mit Beispiel time series. (Vielleicht mehrere auf einer folie für konsistenz)
+\begin{frame}
+\frametitle{ForecastPFN Prior}
+    - prior that generates artificial time series data
+
+    - we will use this prior for continued pretraining with TabPFN-TS
+
+    - samples trend, seasonal and noise component and multiplies all together to create
+
+    - the random parts of the components are all gaussian distributed except for the noise component that is weibull distributed
+\end{frame}
+
+\begin{frame}
+\frametitle{Example Time series}
+    %TODO
+\end{frame}
+
+%Folie 7 TabPFN noch mal besser erklären(vielleicht 2 Folien)
+\begin{frame}
+\frametitle{TabPFN}
+    - prior fitted network
+
+    - trains on artificial tabular training tasks
+
+    - uses inter-feature and sample attention to be invariant in order of samples
+    %TODO picture from nature paper or normal paper
+
+    - predicts $y_{test}$ based on $X_{test}$ with context $D_{train} = \{(x_1, y_1), …, (x_n, y_n)\}$ in one forward pass
+    % important!!: Fitting and prediction is done in same forward pass
+\end{frame}
+\begin{frame}
+\frametitle{TabPFN}
+\includegraphics[width=0.8\textwidth]{pictures/bardist_hospital.png}
+    - returns target distribution that captures uncertainty of the prediction
+
+
+    - outperforms comparable models like CatBoost or Autogluon
+
+    - does not need hyperparameter tuning
+
+    - can also perform good on time series data
+
+\end{frame}
+
+%Folie 8 TabPFN-TS einmal featuritzation erklären
+\begin{frame}
+\frametitle{TabPFN-TS}
+    - uses advanced featurization
+
+    - state-of-the-art in covariate-informed forecasting
+
+    - has competitive accuracy in univariate time series forecasting
+\end{frame}
+
+%Folie 10 RealTabPFN
+\begin{frame}
+\frametitle{RealTabPFN}
+    - finetuning TabPFN with multiple datasets at once
+
+    - showed significant performance boost
+
+    - able to generalize better %TODO
+\end{frame}
+
+% TODO vielleicht noch eine Folie zu finetuning an sich und continued pretraining
+\section{Finetuning}
+\section{Experimental Setup}
+%Folie 1 Lennart Purucker repo erwähnen
+%Folie 2 Data Creation mittles GIFT Eval und transformation (vielleicht 2-3 folien weil auch noch ein beispiel für die splits zeigen)
+%Folie 3 Data Loading nur einmal kurz(1 Folie)
+%Folie 4 Hyperparameters erklären (Vielleicht 2)
+%Folie 5 Evaluation
+\section{Results} %TODO vielleicht results und discussion zusammen packen
+\section{Single Finetuning}
+%Folie 1 Kurze Zusammenfassung von allen Single finetuning ergebnissen (wie viele es geschafft haben etc 14 sind besser etc)
+%Folie 2 Validation and Evaluation order not the same with picture 3.2
+%Folie 3 die beiden plots aus 3.3 zeigen
+\section{Multi Finetuning}
+%Folie 1 Kurz prozedere erklären. Verschiedene Kategorien
+%Folie 2 Small Context Length Train und evaluation splits zeigen
+%Folie 3 Small Context Ergebnisse
+%Folie 4 Medium Context Length Train und evaluation splits zeigen
+%Folie 5 Medium Context Ergebnisse
+%Folie 6 Large Context Length Train und evaluation splits zeigen
+%Folie 7 Large Context Ergebnisse
+\section{Discussion}
+\section{Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?}
+%Folie 1 MSE und Evaluation korrelieren nicht so wie gedacht
+%Folie 2 Number of observation and in one dataset
+%Folie 3 Exception exmaples with noisy and intermittent data
+
+\section{Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?}
+%Folie 1 Short
+%Folie 2 Medium
+%Folie 3 Large
+
+\section{Continued Pretraining}
+\section{Experimental Setup}
+%Folie 1 Similar to Finetuning. Only difference in dataloading, validation and hyperparameters
+%Folie 2 Data Loading
+%Folie 3 Validation
+%Folie 4 Hyperparameters
+\section{Results}
+%Folie 1 Plots zeigen
+%Folie 2 Hyperparameter
+\section{Discussion}
+\section{Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)?}
+%Folie 1 Very Heterogenous and deterioration
+%Folie 2 Hyperparameters Batch size
+%Folie 3 HP Training duration(step amount)
+
+\section{Conclusion}
+%1. Folie Tabelle mit allen Ergebnissen und Methoden zeigen
+%2. Folie Finetuning highly dataset dependent
+%3. Folie Validation nicht so gut. sehr wahrscheinlich wegen MSE und MASE
+%4. Multi Finetuning can lead to better generalization but in small context length it only leads to deterioration
+%5. Continued Pretraining
+%6. Final Conclusion
+
+\section{Limitations}
+
+\section{Outlook}
+
+\section{Thank you for your Attention}
+\section{Backup Slides}
+\begin{frame}
+\frametitle{TabPFN-TS Featurization}
+    - Running Index: $\Phi_{index}(t) = t \in \mathbb{R}$
+
+    - Calendar Features: \Phi_{cal}(t)=\left(cos\left(\frac{2 \pi t}{P_1}\right), sin\left(\frac{2 \pi t}{P_1}\right), …, cos\left(\frac{2 \pi t}{P_8}\right), sin\left(\frac{2 \pi t}{P_8}\right), year(t)\right) \in \mathbb{R}^{17} %TODO hier vielleicht noch second of minute etc
+
+    - Automatic Season Features: \Phi_{auto}(t) = (cos(2\pi f_1 t), sin(2 \pi f_1 t), …, cos(2\pi f_k t), sin(2 \pi f_k t)) \in \mathbb{R}^{2k}
+
+    - Time-varying Covariates (when available): $z_{1:C+H} = [z_1, …, z_{C+H}]$ where $z_t \in \mathbb{R}^{D_{z}}$ represents $D_z$ external variables observed at time \textbf{t}
+
+\end{frame}
+\end{document}
