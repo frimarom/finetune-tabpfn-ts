@@ -1,0 +1,11 @@
+Real TabPFN:
+    - finetuning TabPFN with multiple datasets at once
+    - showed significant performance boost
+    - able to generalize better %TODO
+
+Forecast PFN Prior:
+    - prior that generates artificial time series data
+    - we will use this prior for continued pretraining with TabPFN-TS
+    - samples trend, seasonal and noise component and multiplies all together to create
+    - the random parts of the components are all gaussian distributed except for the noise component that is weibull distributed
+
