@@ -11,7 +11,7 @@
 
 % Theme mit kleinen Anpassungen
 \usetheme[progressbar=frametitle]{moloch}
-\usecolortheme{moloch-highcontrast}
+\usecolortheme{default}
 \setbeamercolor{title separator}{fg=YellowGreen}
 \setbeamercolor{progress bar}{fg=YellowGreen,bg=YellowGreen!15!white}
 \setbeamercolor{frametitle}{fg=black,bg=white}
@@ -36,7 +36,7 @@
 
 %%% OPTIONAL:
 \usepackage[lined,noend]{algorithm2e} % nur eine von mehreren Möglichkeiten!
-\usepackage{minted}\usemintedstyle{friendly} % eine Möglichkeit für echten code
+%\usepackage{minted}\usemintedstyle{friendly} % eine Möglichkeit für echten code
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Literaturmanagement
 \usepackage[backend=biber, % moderneres backend als bibtex
@@ -45,7 +45,6 @@
             maxnames=3, minnames=1,         % Ab 4 Autoren bei Quellenangaben et al. verwenden
             maxbibnames=99, minbibnames=99, % Literaturverzeichnis vollständig
 ]{biblatex}
-\addbibresource{literatur.bib} % Dateiname der Literaturdatenbank(en)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% METADATEN
 \title{Continued Pretraining on TabPFN with Time Series Data}
@@ -62,57 +61,64 @@
 %TabPFN
 \begin{frame}
 \frametitle{Tabular data}
-Tabular data is one of the most common datatypes in fields like finance or healthcare
-
-GBDT or random forest excel on tabular
-
-Until TabPFN:
 \begin{itemize}
-    \item Lightweight Deep Learning model
-    \item Solves classification, regression and inference tasks in one single forward pass
-    \item Trained solely on artificial tabular data
+\item Tabular data is one of the most common datatypes in fields like finance or healthcare
+
+\item GBDT or random forest excel on tabular
+
+\item TabPFN utilizes a deep learning approach:
+    \begin{itemize}
+        \item Lightweight Deep Learning model
+        \item Solves classification, regression and inference tasks in one single forward pass
+        \item Trained solely on artificial tabular data
+    \end{itemize}
 \end{itemize}
 \end{frame}
 %Folie 2
 %Time series forecasting
-\begin{frame}
-\frametitle{Time series forecasting}
-    \includegraphics{timeseries_forecast.png}
+\begin{frame}{Time series forecasting}
+\centering
+\includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{timeseries_forecast.png}
 \end{frame}
 
 %Folie 3
 %TabPFN for time series data
 \begin{frame}
 \frametitle{Time series forecasting with TabPFN}
-    time series data is similar to tabular data
+\begin{itemize}
+    \item time series data is similar to tabular data
+    %TODO vielleicht hier doch tabelle aus time series data von unteren folien
     % hier beispiel zeigen mit tabelle
 
-    TabPFN-TS takes on this task
+    \item TabPFN-TS handles this task very well
 
-    applies an additional featurization to the time series data to add 28 new features
+    \item applies an additional featurization to the time series data to add 28 new features
 
-    achieves top-rank performance on various time series benchmarks
+    \item achieves top-rank performance on various time series benchmarks
+\end{itemize}
 \end{frame}
 %Folie 4
 % Finetuning und continued pretraining
 \begin{frame}
     \frametitle{Enhancing performance of a pretrained model}
-    But can we enhance the performance of this model?
+    \begin{itemize}
+    \item But can we enhance the performance of this model?
 
-    Two methods:
+    \item Two methods:
+    \begin{itemize}
+        \item finetuning
 
-    -finetuning
-
-    -continued pretraining
-
-    RealTabPFN finetuned on multiple dataset and showed effects of continued pretraining with a prior
+        \item continued pretraining
+    \end{itemize}
+    \item RealTabPFN finetuned on multiple dataset and yield superior downstream accuracy
+    \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Abstract}
-TabPFN performes well on time series data with the right encoding (see TabPFN-TS paper)
+% TabPFN performes well on time series data with the right encoding (see TabPFN-TS paper)
 
-We evaluated three methods to presumably enhance its performance on such data
+We evaluated three methods to presumably enhance its performance on time series data
 
 \begin{itemize}
 \item Finetuning on one dataset
@@ -122,89 +128,156 @@ We evaluated three methods to presumably enhance its performance on such data
 \end{frame}
 
 \begin{frame}
+\frametitle{Structure of this thesis}
+
+In our thesis we evaluated four questions
+
+\begin{itemize}
+    \item<2-> Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?
+
+    \item<3-> Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?
+
+    \item<4-> Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)?
+
+    \item<5-> Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Structure of this thesis}
+
+In our thesis we evaluated four questions
+
+\begin{itemize}
+    \item \textbf{Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?}
+
+    \item Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?
+
+    \item Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)?
+
+    \item Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Structure of this thesis}
+
+In our thesis we evaluated four questions
+
+\begin{itemize}
+    \item \textbf{Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?}
+
+    \item Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?
+
+    \item Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)?
+
+    \item \textbf{Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
 \frametitle{Abstract}
-Single Finetuning is especially dependent on dataset characteristics
+    Our Results show that:
 
-Multi Finetuning additionally showed good generalization results
+    \begin{itemize}
+        \item Single Finetuning is especially dependent on dataset characteristics
 
-Continued Pretraining did not generalize as expected and was the worst of the three methods
+        \item Multi Finetuning additionally showed good generalization results
 
-All methods showed promising but not decisive results
+        \item Continued Pretraining did not generalize as expected and was the worst of the three methods
+
+    \end{itemize}
+    %\item All methods showed promising but not decisive results TODO
 \end{frame}
 
 \begin{frame}
 \frametitle{Structure of this presentation}
     \begin{itemize}
-        \item Motivation
         \item Background
-        \item Finetuning
-        \item Continued Pretraining
+        \item Single Finetuning
         \item Conclusion
     \end{itemize}
 \end{frame}
-
-
-
 %Folie 5
 % Welche Fragen haben wir evaluiert
-\begin{frame}
-    \frametitle{Structure of this thesis}
-    In our thesis we evaluated four questions
-\begin{itemize}
-    \item Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?
-    \item Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?
-    \item Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)?
-    \item Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?
-\end{itemize}
-\end{frame}
+
 \section{Background}
 %Folie 1 Time series forecasting
-\begin{frame}
-    \frametitle{Time series}
-    Time Series Definition:
+\begin{frame}{Time series}
 
-    $X=\{x_1, x_2, …, x_n\} \in \mathbb{R}^{d \times n}$ where $n$ is the number of temporal observations and $d$ the number of observed values at time point $t$
+\begin{columns}[T]
 
-    Observation $x_t$ Definition:
-    $x_t = t_t + z_t + s_t + \epsilon_t$ \textit{or} $x_t = t_t \cdot z_t \cdot s_t \cdot \epsilon_t$
+\column{0.58\textwidth}
 
-    $t_t$: trend component
+\textbf{Time Series Definition}
 
-    $z_t$: cyclic component
+\vspace{0.2cm}
 
-    $s_t$: season component
+\[
+X = \{x_1, x_2, \dots, x_n\} \in \mathbb{R}^{d \times n}
+\]
+\pause
+\[
+x_t = t_t + z_t + s_t + \epsilon_t
+\]
 
-    $\epsilon_t$: noise component
-\end{frame}
-%Folie 2 connection time series to tabular data
-\begin{frame}
-\frametitle{}
-    % Hier Pfeil
+\pause
+\centering
+\textit{or}
+\[
+x_t = t_t \cdot z_t \cdot s_t \cdot \epsilon_t
+\]
+\begin{align*}
+t_t &:\ \text{trend component} & z_t &:\ \text{cyclic component} \\
+s_t &:\ \text{seasonal component} & \epsilon_t &:\ \text{noise component}\\
+\end{align*}
+
+\column{0.42\textwidth}
+
+\pause
+\centering
+\textbf{TS as Tabular Data}
+
+\vspace{0.3cm}
+
+\begin{tabular}{cc}
+\toprule
+Timestamp $t$ & Observation $x_t$ \\
+\midrule
+2024-01-01 & 21.3 \\
+2024-01-02 & 22.1 \\
+2024-01-03 & 20.8 \\
+2024-01-04 & 23.4 \\
+2024-01-05 & 24.0 \\
+\bottomrule
+\end{tabular}
+
+\end{columns}
 \end{frame}
 %Folie 3 Time series benchmark (GIFT Eval) (vielleicht hier noch eine folge für die drei split(train, val, test))
-\begin{frame}
-\frametitle{GIFT-Eval}
-    \textbf{G}eneral T\textbf{I}me Series \textbf{F}orecas\textbf{T}ing Model \textbf{Eval}uation
+\begin{frame}{GIFT-Eval}
 
-    - time series forevasting benchmark with 23 datasets with over 144.000 time series
+\textbf{G}eneral T\textbf{I}me Series
+\textbf{F}orecas\textbf{T}ing Model
+\textbf{Eval}uation
 
-    - generalizes by providing datasets from different domains with varying forecast horizons, context lengths, frequencies and univariate or multivariate data
+\vspace{0.3cm}
 
-    - provides guidance to split time series into train, validation and test data
+\begin{columns}[T]
+
+\column{0.5\textwidth}
+\centering
+\includegraphics<2->[width=\textwidth,height=0.7\textheight,keepaspectratio]{gift_eval2.png}
+
+\column{0.5\textwidth}
+\centering
+\includegraphics<3->[width=\textwidth,height=0.6\textheight,keepaspectratio]{gift_eval1.png}
+
+\end{columns}
 \end{frame}
-%Folie 4 Hier vielleicht einmal kurz das Standing von TabPFN-TS zeigen
-\begin{frame}
-\frametitle{TabPFN-TS in GIFT-Eval}
-    %TODO
-\end{frame}
-%Folie 5 Autogluon Chronos datasets
-\begin{frame}
-\frametitle{autogluon/chronos-datasets}
-    - another dataset collection
 
-    - we will take additional 4 datasets from this collection to help with multi finetuning
-\end{frame}
 %Folie 6 Prior fitted networks (vielleicht 2 folien eher 1 weil sehr theoretisch und für vortrag nicht sehr relevant)
+\iffalse
 \begin{frame}
 \frametitle{PFN - Prior Fitted Networks}
     - transformer based architecture
@@ -215,26 +288,45 @@ All methods showed promising but not decisive results
 
     - prior is a generative process used to produce large amounts of training data that imitates real-world data
 \end{frame}
+\fi
+
+\begin{frame}
+\frametitle{TabPFN}
+    \begin{itemize}
+        \item prior fitted network
+        \item trains on artificial tabular training tasks
+    \end{itemize}
+    \centering
+    \includegraphics[width=\textwidth,height=0.6\textheight,keepaspectratio]{tabpfn.jpg}
+    % important!!: Fitting and prediction is done in same forward pass
+\end{frame}
 
 %Folie 9 ForecastPFN Prior einmal kurz und eine Folie mit Beispiel time series. (Vielleicht mehrere auf einer folie für konsistenz)
-\begin{frame}
-\frametitle{ForecastPFN Prior}
-%TODO Example time series
+\begin{frame}{ForecastPFN Prior}
+
+\begin{columns}[T]
+
+\column{0.38\textwidth}
+
+\vspace{0.5cm}
+
+\begin{itemize}
+    \item<1-> Used for training ForecastPFN
+    \item<2-> Generates synthetic time series data
+    \item<3-> We use it for continued pretraining
+\end{itemize}
+
+\column{0.62\textwidth}
+
+\centering
+\includegraphics<1->[width=\textwidth,height=0.75\textheight,keepaspectratio]
+{forecastpfn_example_ts.png}
+
+\end{columns}
+
 \end{frame}
 
 %Folie 7 TabPFN noch mal besser erklären(vielleicht 2 Folien)
-\begin{frame}
-\frametitle{TabPFN}
-    - prior fitted network
-
-    - trains on artificial tabular training tasks
-
-    - uses inter-feature and sample attention to be invariant in order of samples
-    %TODO picture from nature paper or normal paper
-
-    - predicts $y_{test}$ based on $X_{test}$ with context $D_{train} = \{(x_1, y_1), …, (x_n, y_n)\}$ in one forward pass
-    % important!!: Fitting and prediction is done in same forward pass
-\end{frame}
 
 %Folie 8 TabPFN-TS einmal featuritzation erklären
 \begin{frame}
@@ -244,6 +336,8 @@ All methods showed promising but not decisive results
     - state-of-the-art in covariate-informed forecasting
 
     - has competitive accuracy in univariate time series forecasting
+
+
 \end{frame}
 
 %Folie 10 RealTabPFN
@@ -254,7 +348,7 @@ All methods showed promising but not decisive results
 \frametitle{Experimental Setup}
     - Code from Lennart Puruckers repository "finetune-tabpfn-v2"
 
-    - data loading from GIFT Eval
+    - data loading with \textbf{code} from \textbf{GIFT Eval}
 
     - transformation with featurization code from TabPFN-TS
 
@@ -262,36 +356,108 @@ All methods showed promising but not decisive results
 
     - evaluation script from GIFT Eval
 \end{frame}
+
 \begin{frame}
-\maketitle{Single Finetuning Results}
-\includegraphics{mase_mean_delta_plot.png}
+\frametitle{Single Finetuning Results}
+\centering
+\includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{single_results.png}
 \end{frame}
+
 \section{Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?}
+\begin{frame}{Context Length and Number of Time Series}
+
+\begin{columns}[T]
+
+\column{0.5\textwidth}
+\centering
+\includegraphics<1->[width=\textwidth,height=0.7\textheight,keepaspectratio]
+{plot1_score_series.pdf}
+
+\vspace{0.2cm}
+
+\only<1->{\small Score Series}
+
+\column{0.5\textwidth}
+\centering
+\includegraphics<2->[width=\textwidth,height=0.7\textheight,keepaspectratio]
+{plot2_context_vs_series.pdf}
+
+\vspace{0.2cm}
+
+\only<2->{\small Context vs Series}
+
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{Intermittent Data}
+
+\begin{columns}[T]
+
+\column{0.38\textwidth}
+
+\vspace{0.5cm}
+
+\begin{itemize}
+    \item<1-> Example of a difficult structure for finetuning
+    \item<2-> Many zero values
+    \item<3-> Sudden spikes
+    \item<4-> Hard to generalize
+\end{itemize}
+
+\column{0.62\textwidth}
+
+\centering
+\includegraphics<1->[width=\textwidth,height=0.75\textheight,keepaspectratio]
+{bizitobs_service_plot.png}
+
+\end{columns}
+
+\end{frame}
 %Folie 1 MSE und Evaluation korrelieren nicht so wie gedacht
 %Folie 2 Number of observation and in one dataset
 %Folie 3 Exception exmaples with noisy and intermittent data
-%TODO hier mit context und improvement sachen reintun
-\section{Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?}
-%Folie 1 Short
-%Folie 2 Medium
-%Folie 3 Large
-
-\section{Continued Pretraining}
-\section{Experimental Setup}
-%Folie 1 Similar to Finetuning. Only difference in dataloading, validation and hyperparameters
-%Folie 2 Data Loading
-%Folie 3 Validation
-%Folie 4 Hyperparameters
-\section{Results}
-%Folie 1 Plots zeigen
-%Folie 2 Hyperparameter
-\section{Discussion}
-\section{Can we continue pre-training TabPFN for time series with a prior that generates time series data (and does it improve performance)?}
-%Folie 1 Very Heterogenous and deterioration
-%Folie 2 Hyperparameters Batch size
-%Folie 3 HP Training duration(step amount)
-
 \section{Conclusion}
+
+\begin{frame}
+\frametitle{Conclusion}
+    \begin{itemize}
+        \item finetuning on a single dataset works but is dependent on
+        \begin{itemize}
+            \item number of time series
+            \item context length
+            \item dataset structure
+            \begin{itemize}
+                \item clear patterns are beneficial
+                \item noisy or intermittent data remain challenging
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Other Two Methods}
+
+\textbf{Multi Finetuning}
+\begin{itemize}
+    \item<1-> Clustering into three categories
+    \begin{itemize}
+        \item<2-> Small only led to deterioration
+        \item<3-> Medium showed the best generalization results
+        \item<4-> Large showed acceptable results
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.5cm}
+
+\uncover<5->{
+\textbf{Continued Pretraining}
+}
+\begin{itemize}
+    \item<6-> Very \textbf{heterogeneous} improvements
+    \item<7-> Mostly \textbf{deterioration}
+\end{itemize}
+
+\end{frame}
 %1. Folie Tabelle mit allen Ergebnissen und Methoden zeigen
 %2. Folie Finetuning highly dataset dependent
 %3. Folie Validation nicht so gut. sehr wahrscheinlich wegen MSE und MASE
@@ -299,9 +465,42 @@ All methods showed promising but not decisive results
 %5. Continued Pretraining
 %6. Final Conclusion
 
-\section{Limitations}
+\begin{frame}
+\frametitle{Limitations}
+    \begin{itemize}
+        \item<1-> datasets only provide \textbf{limited perspective}
+        \item<2-> not all \textbf{evaluation scores} could be reproduced
+        \item<3-> \textbf{mismatch} between validation loss and evaluation metric
+        \item<4-> computational limitations
+        \item<5-> \textbf{TabPFN 2.5} was released during the thesis
+    \end{itemize}
+\end{frame}
 
-\section{Outlook}
+\begin{frame}
+\frametitle{Outlook}
+    \begin{itemize}
+        \item<1-> improving \textbf{evaluation procedure}
+        \item<2-> \textbf{dataset selection} for multi-dataset finetuning
+        \item<3-> systematic \textbf{hyperparameter search}
+        \item<4-> effect of newer model versions (TabPFN 2.5)
+        \item<5-> sensitivity of \textbf{prior-based continued pretraining}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conclusion}
+    \textbf{Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?}
+    \begin{itemize}
+        \item no finetuning strategy dominates all scenarios
+        \item based on use case for finetuning
+        \item based on dataset availability structure and quality of the underlying data
+        \begin{itemize}
+            \item not much available data $\rightarrow$ Prior
+            \item not much real world data but many different datasets $\rightarrow$ Multi finetuning
+            \item much real world datasets and many time series in it $\rightarrow$ Single finetuning
+        \end{itemize}
+    \end{itemize}
+\end{frame}
 
 \section{Thank you for your Attention}
 \section{Backup Slides}

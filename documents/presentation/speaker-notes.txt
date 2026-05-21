@@ -1,3 +1,10 @@
+GIFT-Eval:
+    - time series forevasting benchmark with 23 datasets with over 144.000 time series
+    - generalizes by providing datasets from different domains with varying forecast horizons, context lengths, frequencies and univariate or multivariate data
+    - provides guidance to split time series into train, validation and test data
+    - TabPFN currently is rank 50 out of 88 models in MASE ranking but also smaller model
+    - 4 additional datasets from autogluon/chronos-datasets dataset collection
+
 Real TabPFN:
     - finetuning TabPFN with multiple datasets at once
     - showed significant performance boost
