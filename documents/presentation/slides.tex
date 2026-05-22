@@ -60,19 +60,36 @@
 %Folie 1
 %TabPFN
 \begin{frame}
-\frametitle{Tabular data}
-\begin{itemize}
-\item Tabular data is one of the most common datatypes in fields like finance or healthcare
+    \frametitle{Tabular data}
 
-\item GBDT or random forest excel on tabular
+    \begin{columns}[T]
+        % Linke Spalte: Text
+        \begin{column}{0.55\textwidth}
+            \begin{itemize}
+                \setlength{\itemsep}{10pt}
+                \item<1-> Tabular data is one of the most common datatypes in fields like finance or healthcare
 
-\item TabPFN utilizes a deep learning approach:
-    \begin{itemize}
-        \item Lightweight Deep Learning model
-        \item Solves classification, regression and inference tasks in one single forward pass
-        \item Trained solely on artificial tabular data
-    \end{itemize}
-\end{itemize}
+                \item<2-> GBDT or random forest excel on tabular data
+
+                \item<3-> TabPFN utilizes a deep learning approach:
+                \begin{itemize}
+                    \item<4-> Lightweight Deep Learning model
+                    \item<5-> Solves classification, regression and inference tasks in one single forward pass
+                    \item<6-> Trained solely on artificial tabular data
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+
+        % Rechte Spalte: Bild
+        \begin{column}{0.45\textwidth}
+            \centering
+            \includegraphics[
+                width=\linewidth,
+                keepaspectratio
+            ]{tabulardata.jpg}
+        \end{column}
+    \end{columns}
+
 \end{frame}
 %Folie 2
 %Time series forecasting
@@ -86,15 +103,16 @@
 \begin{frame}
 \frametitle{Time series forecasting with TabPFN}
 \begin{itemize}
-    \item time series data is similar to tabular data
+    \setlength{\itemsep}{10pt}
+    \item Time series data is similar to tabular data
     %TODO vielleicht hier doch tabelle aus time series data von unteren folien
     % hier beispiel zeigen mit tabelle
 
     \item TabPFN-TS handles this task very well
 
-    \item applies an additional featurization to the time series data to add 28 new features
+    \item Applies an additional featurization to the time series data to add 28 new features
 
-    \item achieves top-rank performance on various time series benchmarks
+    \item Achieves top-rank performance on various time series benchmarks
 \end{itemize}
 \end{frame}
 %Folie 4
@@ -102,15 +120,16 @@
 \begin{frame}
     \frametitle{Enhancing performance of a pretrained model}
     \begin{itemize}
+        \setlength{\itemsep}{10pt}
     \item But can we enhance the performance of this model?
 
-    \item Two methods:
+    \item<2-> Two methods:
     \begin{itemize}
-        \item finetuning
-
-        \item continued pretraining
+        \setlength{\itemsep}{10pt}
+        \item<3-> \textbf{Finetuning}
+        \item<4-> \textbf{Continued pretraining}
     \end{itemize}
-    \item RealTabPFN finetuned on multiple dataset and yield superior downstream accuracy
+    \item<5-> RealTabPFN finetuned on multiple dataset and yield superior downstream accuracy
     \end{itemize}
 \end{frame}
 
@@ -121,9 +140,10 @@
 We evaluated three methods to presumably enhance its performance on time series data
 
 \begin{itemize}
-\item Finetuning on one dataset
-\item Finetuning on multiple datasets
-\item Continued Pretraining with synthetic data from a prior developed
+    \setlength{\itemsep}{10pt}
+    \item Finetuning on one dataset
+    \item Finetuning on multiple datasets
+    \item Continued Pretraining with synthetic data from a prior developed
 \end{itemize}
 \end{frame}
 
@@ -133,6 +153,7 @@ We evaluated three methods to presumably enhance its performance on time series 
 In our thesis we evaluated four questions
 
 \begin{itemize}
+    \setlength{\itemsep}{10pt}
     \item<2-> Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?
 
     \item<3-> Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?
@@ -149,6 +170,7 @@ In our thesis we evaluated four questions
 In our thesis we evaluated four questions
 
 \begin{itemize}
+    \setlength{\itemsep}{10pt}
     \item \textbf{Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?}
 
     \item Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?
@@ -165,6 +187,7 @@ In our thesis we evaluated four questions
 In our thesis we evaluated four questions
 
 \begin{itemize}
+    \setlength{\itemsep}{10pt}
     \item \textbf{Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?}
 
     \item Can we further improve performance by finetuning on multiple datasets similar to RealTabPFN?
@@ -180,11 +203,12 @@ In our thesis we evaluated four questions
     Our Results show that:
 
     \begin{itemize}
-        \item Single Finetuning is especially dependent on dataset characteristics
+        \setlength{\itemsep}{10pt}
+        \item<2-> Single Finetuning is especially dependent on dataset characteristics
 
-        \item Multi Finetuning additionally showed good generalization results
+        \item<3-> Multi Finetuning additionally showed good generalization results
 
-        \item Continued Pretraining did not generalize as expected and was the worst of the three methods
+        \item<4-> Continued Pretraining did not generalize as expected and was the worst of the three methods
 
     \end{itemize}
     %\item All methods showed promising but not decisive results TODO
@@ -193,6 +217,7 @@ In our thesis we evaluated four questions
 \begin{frame}
 \frametitle{Structure of this presentation}
     \begin{itemize}
+        \setlength{\itemsep}{10pt}
         \item Background
         \item Single Finetuning
         \item Conclusion
@@ -280,21 +305,21 @@ Timestamp $t$ & Observation $x_t$ \\
 \iffalse
 \begin{frame}
 \frametitle{PFN - Prior Fitted Networks}
-    - transformer based architecture
+    - Transformer based architecture
 
-    - trains on artificial tasks generated by a prior
+    - Trains on artificial tasks generated by a prior
 
-    - approximates posterior predictive distribution $p(y | x, D) = \int_{t} p(y|x, t)p(t, D)$
+    - Approximates posterior predictive distribution $p(y | x, D) = \int_{t} p(y|x, t)p(t, D)$
 
-    - prior is a generative process used to produce large amounts of training data that imitates real-world data
+    - Prior is a generative process used to produce large amounts of training data that imitates real-world data
 \end{frame}
 \fi
 
 \begin{frame}
 \frametitle{TabPFN}
     \begin{itemize}
-        \item prior fitted network
-        \item trains on artificial tabular training tasks
+        \item Prior fitted network
+        \item Trains on artificial tabular training tasks
     \end{itemize}
     \centering
     \includegraphics[width=\textwidth,height=0.6\textheight,keepaspectratio]{tabpfn.jpg}
@@ -311,15 +336,16 @@ Timestamp $t$ & Observation $x_t$ \\
 \vspace{0.5cm}
 
 \begin{itemize}
-    \item<1-> Used for training ForecastPFN
-    \item<2-> Generates synthetic time series data
-    \item<3-> We use it for continued pretraining
+    \setlength{\itemsep}{10pt}
+    \item Used for training ForecastPFN
+    \item Generates synthetic time series data
+    \item We use it for continued pretraining
 \end{itemize}
 
 \column{0.62\textwidth}
 
 \centering
-\includegraphics<1->[width=\textwidth,height=0.75\textheight,keepaspectratio]
+\includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]
 {forecastpfn_example_ts.png}
 
 \end{columns}
@@ -331,12 +357,16 @@ Timestamp $t$ & Observation $x_t$ \\
 %Folie 8 TabPFN-TS einmal featuritzation erklären
 \begin{frame}
 \frametitle{TabPFN-TS}
-    - uses advanced featurization
+\begin{itemize}
+    \item Uses advanced featurization
 
-    - state-of-the-art in covariate-informed forecasting
+    \item State-of-the-art in covariate-informed forecasting
 
-    - has competitive accuracy in univariate time series forecasting
+    \item Has competitive accuracy in univariate time series forecasting
+\end{itemize}
 
+\centering
+    \includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]{tabpfn_ts.png}
 
 \end{frame}
 
@@ -346,15 +376,18 @@ Timestamp $t$ & Observation $x_t$ \\
 \section{Finetuning}
 \begin{frame}
 \frametitle{Experimental Setup}
-    - Code from Lennart Puruckers repository "finetune-tabpfn-v2"
+    \begin{itemize}
+        \setlength{\itemsep}{10pt}
+        \item<2-> \textbf{Code} from Lennart Puruckers repository "finetune-tabpfn-v2"
 
-    - data loading with \textbf{code} from \textbf{GIFT Eval}
+        \item<3-> Data loading with \textbf{code} from GIFT Eval
 
-    - transformation with featurization code from TabPFN-TS
+        \item<4-> Transformation with \textbf{featurization code} from TabPFN-TS
 
-    - no HP search $\rightarrow$ 54 HP config for finetuning $\rightarrow$ take 5 best configurations
+        \item<5-> No HP search $\rightarrow$ \textbf{54 HP config} for finetuning $\rightarrow$ take \textbf{5} best configurations
 
-    - evaluation script from GIFT Eval
+        \item<6-> \textbf{Evaluation script} from GIFT Eval
+    \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -399,10 +432,11 @@ Timestamp $t$ & Observation $x_t$ \\
 \vspace{0.5cm}
 
 \begin{itemize}
-    \item<1-> Example of a difficult structure for finetuning
+    \setlength{\itemsep}{10pt}
+    \item<1-> Example of a \textbf{difficult structure} for finetuning
     \item<2-> Many zero values
     \item<3-> Sudden spikes
-    \item<4-> Hard to generalize
+    \item<4-> \textbf{Hard} to generalize
 \end{itemize}
 
 \column{0.62\textwidth}
@@ -420,16 +454,18 @@ Timestamp $t$ & Observation $x_t$ \\
 \section{Conclusion}
 
 \begin{frame}
-\frametitle{Conclusion}
+\frametitle{Conclusion of Single Finetuning}
     \begin{itemize}
         \item finetuning on a single dataset works but is dependent on
         \begin{itemize}
-            \item number of time series
-            \item context length
-            \item dataset structure
+            \setlength{\itemsep}{10pt}
+            \item \textbf{number} of time series
+            \item \textbf{context length}
+            \item dataset \textbf{structure}
             \begin{itemize}
-                \item clear patterns are beneficial
-                \item noisy or intermittent data remain challenging
+                \setlength{\itemsep}{10pt}
+                \item \textbf{clear patterns} are beneficial
+                \item \textbf{noisy} or \textbf{intermittent} data remain \textbf{challenging}
             \end{itemize}
         \end{itemize}
     \end{itemize}
@@ -441,9 +477,9 @@ Timestamp $t$ & Observation $x_t$ \\
 \begin{itemize}
     \item<1-> Clustering into three categories
     \begin{itemize}
-        \item<2-> Small only led to deterioration
-        \item<3-> Medium showed the best generalization results
-        \item<4-> Large showed acceptable results
+        \item<2-> \textbf{Small} only led to \textbf{deterioration}
+        \item<3-> \textbf{Medium} showed the \textbf{best} generalization results
+        \item<4-> \textbf{Large} showed \textbf{acceptable} results
     \end{itemize}
 \end{itemize}
 
@@ -468,22 +504,24 @@ Timestamp $t$ & Observation $x_t$ \\
 \begin{frame}
 \frametitle{Limitations}
     \begin{itemize}
-        \item<1-> datasets only provide \textbf{limited perspective}
-        \item<2-> not all \textbf{evaluation scores} could be reproduced
-        \item<3-> \textbf{mismatch} between validation loss and evaluation metric
-        \item<4-> computational limitations
-        \item<5-> \textbf{TabPFN 2.5} was released during the thesis
+        \setlength{\itemsep}{10pt}
+        \item<2-> datasets only provide \textbf{limited perspective}
+        \item<3-> not all \textbf{evaluation scores} could be reproduced
+        \item<4-> \textbf{mismatch} between validation loss and evaluation metric
+        \item<5-> computational limitations
+        \item<6-> \textbf{TabPFN 2.5} was released during the thesis
     \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Outlook}
     \begin{itemize}
-        \item<1-> improving \textbf{evaluation procedure}
-        \item<2-> \textbf{dataset selection} for multi-dataset finetuning
-        \item<3-> systematic \textbf{hyperparameter search}
-        \item<4-> effect of newer model versions (TabPFN 2.5)
-        \item<5-> sensitivity of \textbf{prior-based continued pretraining}
+        \setlength{\itemsep}{10pt}
+        \item<2-> improving \textbf{evaluation procedure}
+        \item<3-> \textbf{dataset selection} for multi-dataset finetuning
+        \item<4-> systematic \textbf{hyperparameter search}
+        \item<5-> effect of newer model versions (TabPFN 2.5)
+        \item<6-> sensitivity of \textbf{prior-based continued pretraining}
     \end{itemize}
 \end{frame}
 
@@ -491,13 +529,14 @@ Timestamp $t$ & Observation $x_t$ \\
 \frametitle{Conclusion}
     \textbf{Which one of the following models performs best on various high-scale benchmarks: TabPFN-TS, finetuned TabPFN-TS, or continued pre-trained TabPFN-TS?}
     \begin{itemize}
-        \item no finetuning strategy dominates all scenarios
-        \item based on use case for finetuning
-        \item based on dataset availability structure and quality of the underlying data
+        \setlength{\itemsep}{10pt}
+        \item<2-> \textbf{no} finetuning strategy dominates all scenarios
+        \item<3-> Based on \textbf{use case} for finetuning
+        \item<4-> Based on \textbf{dataset availability}, \textbf{structure} and \textbf{quality} of the underlying data
         \begin{itemize}
-            \item not much available data $\rightarrow$ Prior
-            \item not much real world data but many different datasets $\rightarrow$ Multi finetuning
-            \item much real world datasets and many time series in it $\rightarrow$ Single finetuning
+            \item<5-> \textbf{Prior} should be used carefully
+            \item<5-> Not much real world data but many different datasets $\rightarrow$ \textbf{Multi finetuning}
+            \item<5-> Much real world datasets and many time series in it $\rightarrow$ \textbf{Single finetuning}
         \end{itemize}
     \end{itemize}
 \end{frame}
