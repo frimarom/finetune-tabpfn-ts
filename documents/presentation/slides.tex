@@ -39,24 +39,36 @@
 %\usepackage{minted}\usemintedstyle{friendly} % eine Möglichkeit für echten code
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Literaturmanagement
-\usepackage[backend=biber, % moderneres backend als bibtex
-            style=alphabetic, sorting=none, % Lesbare Schlüssel statt zahlen
-            doi=true, isbn=true, url=true,  % DOI, ISBN und URLs anzeigen
-            maxnames=3, minnames=1,         % Ab 4 Autoren bei Quellenangaben et al. verwenden
-            maxbibnames=99, minbibnames=99, % Literaturverzeichnis vollständig
-]{biblatex}
-
+%\usepackage[backend=biber, % moderneres backend als bibtex
+%            style=alphabetic, sorting=none, % Lesbare Schlüssel statt zahlen
+%            doi=true, isbn=true, url=true,  % DOI, ISBN und URLs anzeigen
+%            maxnames=3, minnames=1,         % Ab 4 Autoren bei Quellenangaben et al. verwenden
+%            maxbibnames=99, minbibnames=99, % Literaturverzeichnis vollständig
+%]{biblatex}
+\usepackage[authoryear]{natbib}
+\usepackage{wasysym}
+%\addbibresource{references.bib}
+\usepackage[table]{xcolor}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% METADATEN
 \title{Continued Pretraining on TabPFN with Time Series Data}
 
 \author{Friedrich Romberg}
-\institute{Lammar Insitute, TU Dortmund University}
+\institute{Lammar Institute, TU Dortmund University}
 \date{Thesis presentation, \today}
 
 \begin{document}
 \begin{frame}[c]\titlepage\end{frame}
 
-\section{Motivation}
+\begin{frame}
+\frametitle{Contents}
+\begin{itemize}
+    \setlength{\itemsep}{10pt}
+    \item \textbf{Motivation \& Background}
+    \item Research Question
+    \item Experiments
+    \item Conclusion
+\end{itemize}
+\end{frame}
 %Folie 1
 %TabPFN
 \begin{frame}
@@ -71,9 +83,9 @@
 
                 \item<2-> GBDT or random forest excel on tabular data
 
-                \item<3-> TabPFN utilizes a deep learning approach:
+                \item<3-> TabPFN \citep{hollmann2025accurate} utilizes a deep learning approach:
                 \begin{itemize}
-                    \item<4-> Lightweight Deep Learning model
+                    \item<4-> Lightweight pretrained Deep Learning model
                     \item<5-> Solves classification, regression and inference tasks in one single forward pass
                     \item<6-> Trained solely on artificial tabular data
                 \end{itemize}
@@ -96,24 +108,55 @@
 \begin{frame}{Time series forecasting}
 \centering
 \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{timeseries_forecast.png}
+    \vspace{0.2cm}
+
+    {\tiny Source: \url{https://syllepsis.live/wp-content/uploads/2019/10/RackForecast-1024x642.png}}
 \end{frame}
 
 %Folie 3
 %TabPFN for time series data
-\begin{frame}
-\frametitle{Time series forecasting with TabPFN}
+\begin{frame}{Time Series Forecasting with TabPFN}
+
+\begin{columns}[T]
+
+\column{0.58\textwidth}
+
 \begin{itemize}
     \setlength{\itemsep}{10pt}
-    \item Time series data is similar to tabular data
-    %TODO vielleicht hier doch tabelle aus time series data von unteren folien
-    % hier beispiel zeigen mit tabelle
 
-    \item TabPFN-TS handles this task very well
+    \item<1-> Time series data is similar to tabular data
 
-    \item Applies an additional featurization to the time series data to add 28 new features
+    \item<1-> TabPFN-TS \citep{hoo2025tables} handles this task very well
 
-    \item Achieves top-rank performance on various time series benchmarks
+    \item<1-> Applies additional featurization to generate 28 new features
+
+    \item<1-> Achieves top-rank performance on various forecasting benchmarks
 \end{itemize}
+
+\column{0.42\textwidth}
+
+\centering
+
+\textbf<1->{Time Series as Tabular Data}
+
+\vspace{0.4cm}
+
+\only<2->{
+\begin{tabular}{cc}
+\toprule
+Timestamp $t$ & Observation $x_t$ \\
+\midrule
+2024-01-01 & 21.3 \\
+2024-01-02 & 22.1 \\
+2024-01-03 & 20.8 \\
+2024-01-04 & 23.4 \\
+2024-01-05 & 24.0 \\
+\bottomrule
+\end{tabular}
+}
+
+\end{columns}
+
 \end{frame}
 %Folie 4
 % Finetuning und continued pretraining
@@ -129,21 +172,95 @@
         \item<3-> \textbf{Finetuning}
         \item<4-> \textbf{Continued pretraining}
     \end{itemize}
-    \item<5-> RealTabPFN finetuned on multiple dataset and yield superior downstream accuracy
+    \item<5-> RealTabPFN \citep{Hollmann_2025} finetuned on multiple dataset and yield superior downstream accuracy %TODO vielleicht raus
     \end{itemize}
 \end{frame}
 
-\begin{frame}
-\frametitle{Abstract}
-% TabPFN performes well on time series data with the right encoding (see TabPFN-TS paper)
 
-We evaluated three methods to presumably enhance its performance on time series data
+%Folie 5
+% Welche Fragen haben wir evaluiert
+
+%Folie 1 Time series forecasting
+
+%Folie 3 Time series benchmark (GIFT Eval) (vielleicht hier noch eine folge für die drei split(train, val, test))
+
+%Folie 6 Prior fitted networks (vielleicht 2 folien eher 1 weil sehr theoretisch und für vortrag nicht sehr relevant)
+\iffalse
+\begin{frame}
+\frametitle{PFN - Prior-data Fitted Networks}
+    - Transformer based architecture
+
+    - Trains on artificial tasks generated by a prior
+
+    - Approximates posterior predictive distribution $p(y | x, D) = \int_{t} p(y|x, t)p(t, D)$
+
+    - Prior is a generative process used to produce large amounts of training data that imitates real-world data
+\end{frame}
+\fi
+
+%Folie 9 ForecastPFN Prior einmal kurz und eine Folie mit Beispiel time series. (Vielleicht mehrere auf einer folie für konsistenz)
+\begin{frame}{ForecastPFN Prior}
+
+\begin{columns}[T]
+
+\column{0.38\textwidth}
+
+\vspace{0.5cm}
 
 \begin{itemize}
     \setlength{\itemsep}{10pt}
-    \item Finetuning on one dataset
-    \item Finetuning on multiple datasets
-    \item Continued Pretraining with synthetic data from a prior developed
+    \item Used for training ForecastPFN
+    \item Generates synthetic time series data
+    \item We use it for continued pretraining
+\end{itemize}
+
+\column{0.62\textwidth}
+
+\centering
+\includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]
+{forecastpfn_example_ts.png}
+
+\end{columns}
+
+\end{frame}
+
+%Folie 7 TabPFN noch mal besser erklären(vielleicht 2 Folien)
+
+%Folie 8 TabPFN-TS einmal featuritzation erklären
+\begin{frame}{GIFT-Eval}
+
+\textbf{G}eneral T\textbf{I}me Series
+\textbf{F}orecas\textbf{T}ing Model
+\textbf{Eval}uation
+
+\vspace{0.3cm}
+
+\begin{columns}[T]
+
+\column{0.5\textwidth}
+\centering
+\includegraphics<2->[width=\textwidth,height=0.7\textheight,keepaspectratio]{gift_eval2.png}
+
+\column{0.5\textwidth}
+\centering
+\includegraphics<3->[width=\textwidth,height=0.6\textheight,keepaspectratio]{gift_eval1.png}
+
+    \vspace{0.2cm}
+
+    {\tiny Source: \citet{aksu2024giftevalbenchmarkgeneraltime}}
+
+\end{columns}
+\end{frame}
+%Folie 10 RealTabPFN
+
+\begin{frame}
+\frametitle{Contents}
+\begin{itemize}
+    \setlength{\itemsep}{10pt}
+    \item Motivation \& Background
+    \item \textbf{Research Question}
+    \item Experiments
+    \item Conclusion
 \end{itemize}
 \end{frame}
 
@@ -198,15 +315,32 @@ In our thesis we evaluated four questions
 \end{itemize}
 \end{frame}
 
+%TODO Vielleicht raus? weil es passt nicht so in den flow
+\iffalse
 \begin{frame}
 \frametitle{Abstract}
+% TabPFN performes well on time series data with the right encoding (see TabPFN-TS paper)
+
+We evaluated three methods to presumably enhance TabPFN-TS' performance on time series data
+
+\begin{itemize}
+    \setlength{\itemsep}{10pt}
+    \item Finetuning on one time series dataset
+    \item Finetuning on multiple time series datasets
+    \item Continued Pretraining with synthetic time series data
+\end{itemize}
+\end{frame}
+\fi
+
+\begin{frame}
+\frametitle{Brief summary}
     Our Results show that:
 
     \begin{itemize}
         \setlength{\itemsep}{10pt}
-        \item<2-> Single Finetuning is especially dependent on dataset characteristics
+        \item<2-> Single Finetuning is especially dependent on time series characteristics
 
-        \item<3-> Multi Finetuning additionally showed good generalization results
+        \item<3-> Multi Finetuning showed good generalization results
 
         \item<4-> Continued Pretraining did not generalize as expected and was the worst of the three methods
 
@@ -214,166 +348,18 @@ In our thesis we evaluated four questions
     %\item All methods showed promising but not decisive results TODO
 \end{frame}
 
+% TODO vielleicht noch eine Folie zu finetuning an sich und continued pretraining
 \begin{frame}
-\frametitle{Structure of this presentation}
-    \begin{itemize}
-        \setlength{\itemsep}{10pt}
-        \item Background
-        \item Single Finetuning
-        \item Conclusion
-    \end{itemize}
-\end{frame}
-%Folie 5
-% Welche Fragen haben wir evaluiert
-
-\section{Background}
-%Folie 1 Time series forecasting
-\begin{frame}{Time series}
-
-\begin{columns}[T]
-
-\column{0.58\textwidth}
-
-\textbf{Time Series Definition}
-
-\vspace{0.2cm}
-
-\[
-X = \{x_1, x_2, \dots, x_n\} \in \mathbb{R}^{d \times n}
-\]
-\pause
-\[
-x_t = t_t + z_t + s_t + \epsilon_t
-\]
-
-\pause
-\centering
-\textit{or}
-\[
-x_t = t_t \cdot z_t \cdot s_t \cdot \epsilon_t
-\]
-\begin{align*}
-t_t &:\ \text{trend component} & z_t &:\ \text{cyclic component} \\
-s_t &:\ \text{seasonal component} & \epsilon_t &:\ \text{noise component}\\
-\end{align*}
-
-\column{0.42\textwidth}
-
-\pause
-\centering
-\textbf{TS as Tabular Data}
-
-\vspace{0.3cm}
-
-\begin{tabular}{cc}
-\toprule
-Timestamp $t$ & Observation $x_t$ \\
-\midrule
-2024-01-01 & 21.3 \\
-2024-01-02 & 22.1 \\
-2024-01-03 & 20.8 \\
-2024-01-04 & 23.4 \\
-2024-01-05 & 24.0 \\
-\bottomrule
-\end{tabular}
-
-\end{columns}
-\end{frame}
-%Folie 3 Time series benchmark (GIFT Eval) (vielleicht hier noch eine folge für die drei split(train, val, test))
-\begin{frame}{GIFT-Eval}
-
-\textbf{G}eneral T\textbf{I}me Series
-\textbf{F}orecas\textbf{T}ing Model
-\textbf{Eval}uation
-
-\vspace{0.3cm}
-
-\begin{columns}[T]
-
-\column{0.5\textwidth}
-\centering
-\includegraphics<2->[width=\textwidth,height=0.7\textheight,keepaspectratio]{gift_eval2.png}
-
-\column{0.5\textwidth}
-\centering
-\includegraphics<3->[width=\textwidth,height=0.6\textheight,keepaspectratio]{gift_eval1.png}
-
-\end{columns}
-\end{frame}
-
-%Folie 6 Prior fitted networks (vielleicht 2 folien eher 1 weil sehr theoretisch und für vortrag nicht sehr relevant)
-\iffalse
-\begin{frame}
-\frametitle{PFN - Prior Fitted Networks}
-    - Transformer based architecture
-
-    - Trains on artificial tasks generated by a prior
-
-    - Approximates posterior predictive distribution $p(y | x, D) = \int_{t} p(y|x, t)p(t, D)$
-
-    - Prior is a generative process used to produce large amounts of training data that imitates real-world data
-\end{frame}
-\fi
-
-\begin{frame}
-\frametitle{TabPFN}
-    \begin{itemize}
-        \item Prior fitted network
-        \item Trains on artificial tabular training tasks
-    \end{itemize}
-    \centering
-    \includegraphics[width=\textwidth,height=0.6\textheight,keepaspectratio]{tabpfn.jpg}
-    % important!!: Fitting and prediction is done in same forward pass
-\end{frame}
-
-%Folie 9 ForecastPFN Prior einmal kurz und eine Folie mit Beispiel time series. (Vielleicht mehrere auf einer folie für konsistenz)
-\begin{frame}{ForecastPFN Prior}
-
-\begin{columns}[T]
-
-\column{0.38\textwidth}
-
-\vspace{0.5cm}
-
+\frametitle{Contents}
 \begin{itemize}
     \setlength{\itemsep}{10pt}
-    \item Used for training ForecastPFN
-    \item Generates synthetic time series data
-    \item We use it for continued pretraining
+    \item Motivation \& Background
+    \item Research Question
+    \item \textbf{Experiments}
+    \item Conclusion
 \end{itemize}
-
-\column{0.62\textwidth}
-
-\centering
-\includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]
-{forecastpfn_example_ts.png}
-
-\end{columns}
-
 \end{frame}
 
-%Folie 7 TabPFN noch mal besser erklären(vielleicht 2 Folien)
-
-%Folie 8 TabPFN-TS einmal featuritzation erklären
-\begin{frame}
-\frametitle{TabPFN-TS}
-\begin{itemize}
-    \item Uses advanced featurization
-
-    \item State-of-the-art in covariate-informed forecasting
-
-    \item Has competitive accuracy in univariate time series forecasting
-\end{itemize}
-
-\centering
-    \includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]{tabpfn_ts.png}
-
-\end{frame}
-
-%Folie 10 RealTabPFN
-
-% TODO vielleicht noch eine Folie zu finetuning an sich und continued pretraining
-\section{Finetuning}
 \begin{frame}
 \frametitle{Experimental Setup}
     \begin{itemize}
@@ -396,7 +382,6 @@ Timestamp $t$ & Observation $x_t$ \\
 \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{single_results.png}
 \end{frame}
 
-\section{Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?}
 \begin{frame}{Context Length and Number of Time Series}
 
 \begin{columns}[T]
@@ -451,17 +436,30 @@ Timestamp $t$ & Observation $x_t$ \\
 %Folie 1 MSE und Evaluation korrelieren nicht so wie gedacht
 %Folie 2 Number of observation and in one dataset
 %Folie 3 Exception exmaples with noisy and intermittent data
-\section{Conclusion}
+\begin{frame}
+\frametitle{Contents}
+\begin{itemize}
+    \setlength{\itemsep}{10pt}
+    \item Motivation \& Background
+    \item Research Question
+    \item Experiments
+    \item \textbf{Conclusion}
+\end{itemize}
+\end{frame}
 
 \begin{frame}
 \frametitle{Conclusion of Single Finetuning}
+    \textbf{Can we improve the performance of TabPFN-TS by finetuning on downstream tasks?}
     \begin{itemize}
         \item finetuning on a single dataset works but is dependent on
         \begin{itemize}
             \setlength{\itemsep}{10pt}
-            \item \textbf{number} of time series
-            \item \textbf{context length}
             \item dataset \textbf{structure}
+            \begin{itemize}
+                \item \textbf{number} of time series
+                \item \textbf{context length}
+            \end{itemize}
+            \item time series \textbf{structure}
             \begin{itemize}
                 \setlength{\itemsep}{10pt}
                 \item \textbf{clear patterns} are beneficial
@@ -470,8 +468,14 @@ Timestamp $t$ & Observation $x_t$ \\
         \end{itemize}
     \end{itemize}
 \end{frame}
+%1. Folie Tabelle mit allen Ergebnissen und Methoden zeigen
+%2. Folie Finetuning highly dataset dependent
+%3. Folie Validation nicht so gut. sehr wahrscheinlich wegen MSE und MASE
+%4. Multi Finetuning can lead to better generalization but in small context length it only leads to deterioration
+%5. Continued Pretraining
+%6. Final Conclusion
 
-\begin{frame}{Other Two Methods}
+\begin{frame}{Multi-Finetuning and Continued Pretraining}
 
 \textbf{Multi Finetuning}
 \begin{itemize}
@@ -492,14 +496,7 @@ Timestamp $t$ & Observation $x_t$ \\
     \item<6-> Very \textbf{heterogeneous} improvements
     \item<7-> Mostly \textbf{deterioration}
 \end{itemize}
-
 \end{frame}
-%1. Folie Tabelle mit allen Ergebnissen und Methoden zeigen
-%2. Folie Finetuning highly dataset dependent
-%3. Folie Validation nicht so gut. sehr wahrscheinlich wegen MSE und MASE
-%4. Multi Finetuning can lead to better generalization but in small context length it only leads to deterioration
-%5. Continued Pretraining
-%6. Final Conclusion
 
 \begin{frame}
 \frametitle{Limitations}
@@ -508,8 +505,7 @@ Timestamp $t$ & Observation $x_t$ \\
         \item<2-> datasets only provide \textbf{limited perspective}
         \item<3-> not all \textbf{evaluation scores} could be reproduced
         \item<4-> \textbf{mismatch} between validation loss and evaluation metric
-        \item<5-> computational limitations
-        \item<6-> \textbf{TabPFN 2.5} was released during the thesis
+        \item<5-> \textbf{TabPFN 2.5} was released during the thesis
     \end{itemize}
 \end{frame}
 
@@ -517,13 +513,15 @@ Timestamp $t$ & Observation $x_t$ \\
 \frametitle{Outlook}
     \begin{itemize}
         \setlength{\itemsep}{10pt}
-        \item<2-> improving \textbf{evaluation procedure}
+        \item<2-> improving \textbf{validation/evaluation procedure}
         \item<3-> \textbf{dataset selection} for multi-dataset finetuning
         \item<4-> systematic \textbf{hyperparameter search}
         \item<5-> effect of newer model versions (TabPFN 2.5)
         \item<6-> sensitivity of \textbf{prior-based continued pretraining}
     \end{itemize}
 \end{frame}
+
+% NUR GANZ KURZ
 
 \begin{frame}
 \frametitle{Conclusion}
@@ -545,13 +543,403 @@ Timestamp $t$ & Observation $x_t$ \\
 \section{Backup Slides}
 \begin{frame}
 \frametitle{TabPFN-TS Featurization}
-    - Running Index: $\Phi_{index}(t) = t \in \mathbb{R}$
+\begin{itemize}
+    \item Running Index: $\Phi_{index}(t) = t \in \mathbb{R}$
 
-    - Calendar Features: $\Phi_{cal}(t)=\left(cos\left(\frac{2 \pi t}{P_1}\right), sin\left(\frac{2 \pi t}{P_1}\right), …, cos\left(\frac{2 \pi t}{P_8}\right), sin\left(\frac{2 \pi t}{P_8}\right), year(t)\right) \in \mathbb{R}^{17}$ %TODO hier vielleicht noch second of minute etc
+    \item Calendar Features: $\Phi_{cal}(t)=\left(cos\left(\frac{2 \pi t}{P_1}\right), sin\left(\frac{2 \pi t}{P_1}\right), …, cos\left(\frac{2 \pi t}{P_8}\right), sin\left(\frac{2 \pi t}{P_8}\right), year(t)\right) \in \mathbb{R}^{17}$ %TODO hier vielleicht noch second of minute etc
 
-    - Automatic Season Features: $\Phi_{auto}(t) = (cos(2\pi f_1 t), sin(2 \pi f_1 t), …, cos(2\pi f_k t), sin(2 \pi f_k t)) \in \mathbb{R}^{2k}$
+    \item Automatic Season Features: $\Phi_{auto}(t) = (cos(2\pi f_1 t), sin(2 \pi f_1 t), …, cos(2\pi f_k t), sin(2 \pi f_k t)) \in \mathbb{R}^{2k}$
 
-    - Time-varying Covariates (when available): $z_{1:C+H} = [z_1, …, z_{C+H}]$ where $z_t \in \mathbb{R}^{D_{z}}$ represents $D_z$ external variables observed at time \textbf{t}
+    \item Time-varying Covariates (when available): $z_{1:C+H} = [z_1, …, z_{C+H}]$ where $z_t \in \mathbb{R}^{D_{z}}$ represents $D_z$ external variables observed at time \textbf{t}
+\end{itemize}
+\end{frame}
+\begin{frame}{Time series}
+
+\begin{columns}[T]
+
+\column{0.58\textwidth}
+
+\textbf{Time Series Definition}
+
+\vspace{0.2cm}
+
+\[
+X = \{x_1, x_2, \dots, x_n\} \in \mathbb{R}^{d \times n}
+\]
+\[
+x_t = t_t + z_t + s_t + \epsilon_t
+\]
+
+\centering
+\textit{or}
+\[
+x_t = t_t \cdot z_t \cdot s_t \cdot \epsilon_t
+\]
+\begin{align*}
+t_t &:\ \text{trend component} & z_t &:\ \text{cyclic component} \\
+s_t &:\ \text{seasonal component} & \epsilon_t &:\ \text{noise component}\\
+\end{align*}
+
+\column{0.42\textwidth}
+
+\centering
+\textbf{TS as Tabular Data}
+
+\vspace{0.3cm}
+
+\begin{tabular}{cc}
+\toprule
+Timestamp $t$ & Observation $x_t$ \\
+\midrule
+2024-01-01 & 21.3 \\
+2024-01-02 & 22.1 \\
+2024-01-03 & 20.8 \\
+2024-01-04 & 23.4 \\
+2024-01-05 & 24.0 \\
+\bottomrule
+\end{tabular}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}{ForecastPFN Prior}
+
+\small
+
+\begin{columns}[T]
+
+\column{0.5\textwidth}
+
+\textbf{Global Trend}
+
+\vspace{0.3cm}
+
+\[
+\text{trend}(t)
+=
+(1+m_{lin}t+c_{lin})
+(m_{exp}c_{exp}^t)
+\]
+
+\vspace{0.4cm}
+
+\[
+m_{lin},m_{exp}
+\sim
+\mathcal{N}(\mu_m,\sigma_m)
+\]
+
+\[
+c_{lin}
+\sim
+\mathcal{N}(0,\sigma_{lin})
+\]
+
+\[
+c_{exp}
+\sim
+\mathcal{N}(0,\sigma_{exp})
+\]
+
+\column{0.5\textwidth}
+
+\textbf{Noise}
+
+\vspace{0.3cm}
+
+\[
+z_t
+=
+1+m_{noise}(z-\bar z)
+\]
+
+\vspace{0.4cm}
+
+\[
+z
+\sim
+\text{Weibull}(1,k)
+\]
+
+\[
+\bar z
+=
+(\ln(2))^{1/k}
+\]
+
+\vspace{0.6cm}
+
+\[
+y_t
+=
+\text{trend}(t)\cdot z_t
+\]
+
+\end{columns}
 
 \end{frame}
+
+\begin{frame}{ForecastPFN Prior}
+
+\small
+
+\begin{columns}[T]
+
+\column{0.58\textwidth}
+
+\textbf{Seasonal Component}
+
+\vspace{0.3cm}
+
+\[
+\text{seasonal}(t)
+=
+\prod_{\nu \in \{\text{week,month,year}\}}
+\text{seasonal}_{\nu}(t)
+\]
+
+\vspace{0.4cm}
+
+\[
+\text{seasonal}_{\nu}(t)
+=
+1+m_\nu
+\sum_f
+\left[
+c_{f,\nu}
+\sin\left(
+2\pi f \frac{t}{p_\nu}
+\right)
++
+d_{f,\nu}
+\cos\left(
+2\pi f \frac{t}{p_\nu}
+\right)
+\right]
+\]
+
+\column{0.42\textwidth}
+
+\textbf{Periods}
+
+\vspace{0.3cm}
+
+\[
+p_{week}=7
+\]
+
+\[
+p_{month}=30.5
+\]
+
+\[
+p_{year}=365.25
+\]
+
+\vspace{0.5cm}
+
+\[
+c_{f,\nu},d_{f,\nu}
+\sim
+\mathcal{N}(0,1/f)
+\]
+
+\vspace{0.6cm}
+
+\[
+y_t
+=
+\text{trend}(t)
+\cdot
+\text{seasonal}(t)
+\cdot
+z_t
+\]
+
+\end{columns}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{TabPFN-TS}
+\begin{itemize}
+    \item Uses advanced featurization
+
+    \item State-of-the-art in covariate-informed forecasting
+
+    \item Has competitive accuracy in univariate time series forecasting
+\end{itemize}
+
+\centering
+    \includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]{tabpfn_ts.png}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{TabPFN}
+    \begin{itemize}
+        \item Prior-data fitted network
+        \item Trains on artificial tabular training tasks
+    \end{itemize}
+    \centering
+    \includegraphics[width=\textwidth,height=0.6\textheight,keepaspectratio]{tabpfn.jpg}
+    % important!!: Fitting and prediction is done in same forward pass
+\end{frame}
+
+\begin{frame}{Main Results Across Methods}
+
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.05}
+
+\begin{columns}[T]
+
+% LEFT TABLE
+\column{0.5\textwidth}
+
+\centering
+
+\begin{tabular}{lrrrrr}
+\toprule
+Dataset & S & Sh & M & L & P \\
+\midrule
+bitbrains/H & -2.17 & -- & -1.70 & -- & \cellcolor{yellow}\textbf{-2.89} \\
+bizitobs app. & \cellcolor{yellow}31.84 & -- & -- & -- & 69.52 \\
+bizitobs serv. & \cellcolor{yellow}5.48 & -- & -- & -- & 35.28 \\
+covid/D & \cellcolor{yellow}\textbf{-5.82} & 26.75 & 15.58 & 48.80 & 14.92 \\
+electricity/D & \cellcolor{yellow}\textbf{-0.91} & -- & -- & -0.68 & 4.33 \\
+electricity/W & 8.82 & 4.16 & -- & -- & \cellcolor{yellow}3.60 \\
+ett1/15T & 2.21 & -- & -- & \cellcolor{yellow}\textbf{-5.80} & 1.03 \\
+ett1/D & \cellcolor{yellow}0.00 & -- & 2.21 & -- & 1.34 \\
+ett1/H & -2.07 & -- & -- & \cellcolor{yellow}\textbf{-2.58} & 5.37 \\
+ett1/W & -1.21 & \cellcolor{yellow}\textbf{-9.47} & -- & -- & 5.64 \\
+ett2/15T & \cellcolor{yellow}\textbf{-1.48} & -- & -- & -0.30 & 6.27 \\
+ett2/D & -17.49 & -- & \cellcolor{yellow}\textbf{-31.26} & -- & -19.23 \\
+ett2/H & \cellcolor{yellow}\textbf{-6.78} & -- & -- & -0.90 & 3.89 \\
+ett2/W & \cellcolor{yellow}62.49 & 73.16 & -- & -- & 109.70 \\
+hier. sales/D & \cellcolor{yellow}\textbf{-1.29} & -- & -- & -1.01 & -0.00 \\
+hier. sales/W & 3.22 & -- & \cellcolor{yellow}\textbf{-0.30} & -- & 1.93 \\
+\bottomrule
+\end{tabular}
+
+% RIGHT TABLE
+\column{0.5\textwidth}
+
+\centering
+
+\begin{tabular}{lrrrrr}
+\toprule
+Dataset & S & Sh & M & L & P \\
+\midrule
+hospital/M & \cellcolor{yellow}1.15 & 2.68 & -- & -- & 16.43 \\
+jena 10T & \cellcolor{yellow}0.00 & -- & -- & -- & 21.76 \\
+jena/D & 6.91 & -- & 0.71 & -- & \cellcolor{yellow}\textbf{-5.06} \\
+jena/H & \cellcolor{yellow}1.54 & -- & -- & -- & 13.99 \\
+loop/D & -1.87 & 4.28 & -1.54 & \cellcolor{yellow}\textbf{-2.27} & -0.53 \\
+m\_dense/D & 19.68 & -- & \cellcolor{yellow}2.22 & -- & 14.91 \\
+m\_dense/H & \cellcolor{yellow}\textbf{-2.35} & 15.98 & -- & 0.28 & 5.71 \\
+saugeen/D & \cellcolor{yellow}\textbf{-2.97} & -- & -- & -1.00 & -2.23 \\
+saugeen/M & 7.89 & -- & -0.45 & -- & \cellcolor{yellow}\textbf{-0.81} \\
+saugeen/W & 5.21 & -- & -- & -- & \cellcolor{yellow}\textbf{-1.23} \\
+solar/D & 13.60 & -- & \cellcolor{yellow}0.07 & -- & 16.30 \\
+solar/W & 130.74 & \cellcolor{yellow}9.98 & -- & -- & 34.04 \\
+sz\_taxi/15T & \cellcolor{yellow}\textbf{-1.80} & -- & -0.22 & 0.05 & 1.08 \\
+sz\_taxi/H & \cellcolor{yellow}\textbf{-1.93} & -- & -1.04 & -- & 1.59 \\
+us\_births/D & \cellcolor{yellow}23.16 & -- & -- & 23.53 & 25.17 \\
+us\_births/M & 7.02 & -- & \cellcolor{yellow}\textbf{-0.44} & -- & 40.20 \\
+us\_births/W & 5.71 & -- & \cellcolor{yellow}\textbf{1.49} & -- & 19.10 \\
+\bottomrule
+\end{tabular}
+
+\end{columns}
+
+\vspace{0.2cm}
+
+{\tiny
+S = Single, Sh = Multi Short, M = Multi Medium, L = Multi Large, P = Prior
+}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Single Finetuning full results}
+    \centering
+    \includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]
+{single_mase_mean_delta_plot.png}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Continued Pretraining full results}
+    \centering
+    \includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]
+{prior_mase_mean_delta_plot.png}
+\end{frame}
+
+\begin{frame}{Multi-Finetuning Results}
+
+\begin{columns}[T]
+
+\column{0.33\textwidth}
+\centering
+\textbf{Small}
+
+\vspace{0.2cm}
+\includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]
+{small_multi_mase_mean_delta_plot.png}
+
+\column{0.33\textwidth}
+\centering
+\textbf{Medium}
+
+\vspace{0.2cm}
+\includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]
+{medium_multi_mase_mean_delta_plot.png}
+
+\column{0.33\textwidth}
+\centering
+\textbf{Large}
+
+\vspace{0.2cm}
+\includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]
+{big_multi_mase_mean_delta_plot.png}
+
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{Multi-Finetuning Results}
+
+\centering
+
+\only<1>{
+\textbf{Small}
+
+\includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]
+{small_multi_mase_mean_delta_plot.png}
+}
+
+\only<2>{
+\textbf{Medium}
+
+\includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]
+{medium_multi_mase_mean_delta_plot.png}
+}
+
+\only<3>{
+\textbf{Large}
+
+\includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]
+{big_multi_mase_mean_delta_plot.png}
+}
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{frame}
 \end{document}
+%TODO hier noch tabelle mit allen Methoden und benchmark ergebnissen
+%TODO wie die daten beim prior erzeugt werden
+%HP Configs
